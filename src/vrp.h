@@ -19,14 +19,14 @@
                                  
 //data structures  
 typedef struct {
-	int x;
-	int y;
+	double x;
+	double y;
 } Pair;
 
 typedef struct {   
 	//input data
 	int nnodes; 	  
-	Pair *coord;
+	Pair * coord;
 
 	// parameters 
 	int verbosity;							// verbosity (1: incumbement, 5:debug)
