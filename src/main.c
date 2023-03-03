@@ -132,6 +132,7 @@ void parse_command_line(int argc, char **argv, Instance *inst)
 		switch (opt)
 		{
 			case 'f':
+			 	//TODO debug input file, probably cuts the adress
 				strcpy(inst->input_file, optarg);
 				break; // input file
 			case 'l':
