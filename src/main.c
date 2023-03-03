@@ -7,6 +7,7 @@ void debug(const char *err)
 	printf("\nDEBUG: %s \n", err);
 	fflush(NULL);
 }
+
 void print_error(const char *err)
 {
 	printf("\n\n ERROR: %s \n\n", err);
@@ -49,11 +50,11 @@ int main(int argc, char **argv)
 	return 0;
 }
 
-//TODO salva punti 
+//TODO aggiungi verbose per avere più log e qualche check interessante 
 void read_input(Instance *inst) // simplified CVRP parser, not all SECTIONs detected
 {
 
-	FILE *fin = fopen(inst->input_file, "r");
+	FILE * fin = fopen(inst->input_file, "r");
 	if (fin == NULL)
 		print_error(" input file not found!");
 
@@ -61,8 +62,10 @@ void read_input(Instance *inst) // simplified CVRP parser, not all SECTIONs dete
 	
 	char line[1024];
     int num_nodes = 0;
+	int num_nodes_check = 0;
     int reading_nodes = 0;
-    int node_num, node_x, node_y;
+    double node_x, node_y;
+	int node_num;
 
     while (fgets(line, 1024, fin)) {
         // Strip trailing newline
@@ -71,24 +74,47 @@ void read_input(Instance *inst) // simplified CVRP parser, not all SECTIONs dete
             line[len-1] = '\0';
         }
 
+		if (sscanf(line, "DIMENSION : %d", &num_nodes) == 1){
+				printf("Number of nodes: %d \n", num_nodes);
+				num_nodes_check = num_nodes;
+			}
+
         if (reading_nodes) {
-            if (sscanf(line, "%d %d %d", &node_num, &node_x, &node_y) == 3) {
-                printf("Node %d: (%d, %d)\n", node_num, node_x, node_y);
+			/*
+			From each line take the node_num, allocate after a fixed memory
+			with calloc of size of nom_nodes, store inside pair the 2 coordinates
+			*/
+            if (sscanf(line, "%d %lf %lf", &node_num, &node_x, &node_y) == 3) { 	  
+				
+				Pair* points = (Pair *) calloc(num_nodes, sizeof(double));
+				points->x = node_x;
+				points->y = node_y;
                 num_nodes++;
-            } else {
+				
+				//if (VERBOSE >= 90) printf("Node %d: (%lf, %lf)\n", node_num, node_x , node_y);
+            
+			} else {
                 // Reached end of node coordinates section
                 break;
             }
         } else {
+
             if (strcmp(line, "NODE_COORD_SECTION") == 0) {
                 reading_nodes = 1;
-            } else if (sscanf(line, "DIMENSION : %d", &num_nodes) == 1) {
-                // Found number of nodes in file
-            }
+            } else if (sscanf(line, "DIMENSION : %d", &num_nodes) == 1) ;
         }
-    }
 
-    printf("Parsed %d nodes.\n", num_nodes);
+    }
+	/*
+	Check if the actual number of the nodes defined in the file is different 
+	from the real one
+	*/
+	if((num_nodes / 2) != num_nodes_check){
+		print_error("... NUMBER_NODES differes from the actual number of nodes in the file");
+	}
+	
+
+    printf("Parsed %d nodes.\n", num_nodes / 2);
 
     fclose(fin);
 }
