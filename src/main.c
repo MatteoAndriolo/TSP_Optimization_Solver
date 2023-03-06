@@ -66,6 +66,7 @@ void read_input(Instance *inst) // simplified CVRP parser, not all SECTIONs dete
     int reading_nodes = 0;
     double node_x, node_y;
 	int node_num;
+	int i = 0;
 
     while (fgets(line, 1024, fin)) {
         // Strip trailing newline
@@ -77,6 +78,7 @@ void read_input(Instance *inst) // simplified CVRP parser, not all SECTIONs dete
 		if (sscanf(line, "DIMENSION : %d", &num_nodes) == 1){
 				printf("Number of nodes: %d \n", num_nodes);
 				num_nodes_check = num_nodes;
+				
 			}
 
         if (reading_nodes) {
@@ -86,13 +88,15 @@ void read_input(Instance *inst) // simplified CVRP parser, not all SECTIONs dete
 			*/
             if (sscanf(line, "%d %lf %lf", &node_num, &node_x, &node_y) == 3) { 	  
 				
-				Pair* points = (Pair *) calloc(num_nodes, sizeof(double));
-				points->x = node_x;
-				points->y = node_y;
-                num_nodes++;
+				printf("Node %d: (%lf, %lf)\n", node_num, node_x , node_y);
 				
-				//if (VERBOSE >= 90) printf("Node %d: (%lf, %lf)\n", node_num, node_x , node_y);
-            
+				Pair* points = (Pair *) malloc(sizeof(Pair));
+				i ++;
+				points[i-1].x = node_x;
+				points[i-1].y = node_y;
+				inst->coord = points;
+				
+                
 			} else {
                 // Reached end of node coordinates section
                 break;
@@ -109,10 +113,13 @@ void read_input(Instance *inst) // simplified CVRP parser, not all SECTIONs dete
 	Check if the actual number of the nodes defined in the file is different 
 	from the real one
 	*/
-	if((num_nodes / 2) != num_nodes_check){
+	if((i ) != num_nodes_check){
 		print_error("... NUMBER_NODES differes from the actual number of nodes in the file");
 	}
-	
+
+	for (int i = 0; i < num_nodes / 2; i++) {
+    printf("Point %d: (%lf, %lf)\n", i, inst->coord[i].x, inst->coord[i].y);
+	}
 
     printf("Parsed %d nodes.\n", num_nodes / 2);
 
@@ -151,7 +158,6 @@ void parse_command_line(int argc, char **argv, Instance *inst)
 		{"int", required_argument, 0, 'i'},
 		{"help", required_argument, 0, 'h'},
 		{0, 0, 0, 0}};
-	
 	int opt;
 	while ((opt = getopt(argc, argv, "f:m:M:s:h:l:L:n:N:c:i:t")) != -1)
 	{
