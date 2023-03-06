@@ -67,6 +67,7 @@ void read_input(Instance *inst) // simplified CVRP parser, not all SECTIONs dete
     double node_x, node_y;
 	int node_num;
 	int i = 0;
+	Pair* coordinates;
 
     while (fgets(line, 1024, fin)) {
         // Strip trailing newline
@@ -78,8 +79,11 @@ void read_input(Instance *inst) // simplified CVRP parser, not all SECTIONs dete
 		if (sscanf(line, "DIMENSION : %d", &num_nodes) == 1){
 				printf("Number of nodes: %d \n", num_nodes);
 				num_nodes_check = num_nodes;
-				
+				Pair* coordinates = (Pair* ) calloc(num_nodes_check, sizeof(Pair));
+				inst->coord = coordinates;	
 			}
+
+		
 
         if (reading_nodes) {
 			/*
@@ -88,14 +92,14 @@ void read_input(Instance *inst) // simplified CVRP parser, not all SECTIONs dete
 			*/
             if (sscanf(line, "%d %lf %lf", &node_num, &node_x, &node_y) == 3) { 	  
 				
-				printf("Node %d: (%lf, %lf)\n", node_num, node_x , node_y);
+				//printf("Node %d: (%lf, %lf)\n", node_num, node_x , node_y);
+
 				
-				Pair* points = (Pair *) malloc(sizeof(Pair));
-				i ++;
-				points[i-1].x = node_x;
-				points[i-1].y = node_y;
-				inst->coord = points;
-				
+				Pair* points = (Pair*) calloc(1,sizeof(Pair));
+        		points->x = node_x;
+        		points->y = node_y;
+        		inst->coord[i++] = *points;
+				free(points);
                 
 			} else {
                 // Reached end of node coordinates section
@@ -117,8 +121,8 @@ void read_input(Instance *inst) // simplified CVRP parser, not all SECTIONs dete
 		print_error("... NUMBER_NODES differes from the actual number of nodes in the file");
 	}
 
-	for (int i = 0; i < num_nodes / 2; i++) {
-    printf("Point %d: (%lf, %lf)\n", i, inst->coord[i].x, inst->coord[i].y);
+	for (int i = 0; i < num_nodes_check; i++) {
+     	printf("Point %d: (%lf, %lf)\n", i, inst->coord[i].x , inst->coord[i].y);
 	}
 
     printf("Parsed %d nodes.\n", num_nodes / 2);
