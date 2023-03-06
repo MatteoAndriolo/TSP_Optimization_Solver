@@ -232,13 +232,13 @@ void plot(Instance *inst){
 
     // Send commands to gnuplot to create a 2D graph and plot the points
     fprintf(gnuplotPipe, "set title 'My Plot'\n");
-    /*fprintf(gnuplotPipe, "set xlabel 'X Axis'\n");
+    fprintf(gnuplotPipe, "set xlabel 'X Axis'\n");
     fprintf(gnuplotPipe, "set ylabel 'Y Axis'\n");
-    fprintf(gnuplotPipe, "plot '-' with lines\n");
+    fprintf(gnuplotPipe, "plot '-'  with points\n");
 	
     for (int i = 0; i < inst->nnodes; i++) {
         fprintf(gnuplotPipe, "%lf %lf\n", inst->x[i], inst->y[i]);
-    }*/
+    }
     //fprintf(gnuplotPipe, "e\n");
 
 	fclose(gnuplotPipe);
