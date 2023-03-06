@@ -16,17 +16,13 @@
 #define EPSILON		  		  1e-9		// 1e-9		// very small numerical tolerance 
 #define TICKS_PER_SECOND 	  1000.0  	// cplex's ticks on Intel Core i7 quadcore @2.3GHZ
 #define INFTY				  1e+30
-                                 
-//data structures  
-typedef struct {
-	double x;
-	double y;
-} Pair;
+                                
 
 typedef struct {   
 	//input data
 	int nnodes; 	  
-	Pair * coord;
+	double *x; 
+	double *y;
 
 	// parameters 
 	int verbosity;							// verbosity (1: incumbement, 5:debug)

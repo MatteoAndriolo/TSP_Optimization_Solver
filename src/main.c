@@ -46,7 +46,7 @@ int main(int argc, char **argv)
 	//{
 		//printf("... VRP problem solved in %lf sec.s\n", t2 - t1);
 	//}
-
+	plot(&inst);
 	return 0;
 }
 
@@ -67,7 +67,6 @@ void read_input(Instance *inst) // simplified CVRP parser, not all SECTIONs dete
     double node_x, node_y;
 	int node_num;
 	int i = 0;
-	Pair* coordinates;
 
     while (fgets(line, 1024, fin)) {
         // Strip trailing newline
@@ -78,9 +77,10 @@ void read_input(Instance *inst) // simplified CVRP parser, not all SECTIONs dete
 
 		if (sscanf(line, "DIMENSION : %d", &num_nodes) == 1){
 				printf("Number of nodes: %d \n", num_nodes);
-				num_nodes_check = num_nodes;
-				Pair* coordinates = (Pair* ) calloc(num_nodes_check, sizeof(Pair));
-				inst->coord = coordinates;	
+				inst->nnodes = num_nodes;
+				inst->x = (double* ) calloc(num_nodes, sizeof(double));
+				inst->y = (double* ) calloc(num_nodes, sizeof(double));
+				printf("Memory for x and y allocated\n");
 			}
 
 		
@@ -91,16 +91,9 @@ void read_input(Instance *inst) // simplified CVRP parser, not all SECTIONs dete
 			with calloc of size of nom_nodes, store inside pair the 2 coordinates
 			*/
             if (sscanf(line, "%d %lf %lf", &node_num, &node_x, &node_y) == 3) { 	  
-				
-				//printf("Node %d: (%lf, %lf)\n", node_num, node_x , node_y);
-
-				
-				Pair* points = (Pair*) calloc(1,sizeof(Pair));
-        		points->x = node_x;
-        		points->y = node_y;
-        		inst->coord[i++] = *points;
-				free(points);
-                
+				printf("Node %d: (%lf, %lf)\n", node_num, node_x , node_y);
+        		inst->x[i++] = node_x; //TODO replace i with node_num
+				inst->y[i++] = node_y;
 			} else {
                 // Reached end of node coordinates section
                 break;
@@ -113,19 +106,11 @@ void read_input(Instance *inst) // simplified CVRP parser, not all SECTIONs dete
         }
 
     }
-	/*
-	Check if the actual number of the nodes defined in the file is different 
-	from the real one
-	*/
-	if((i ) != num_nodes_check){
-		print_error("... NUMBER_NODES differes from the actual number of nodes in the file");
-	}
 
 	for (int i = 0; i < num_nodes_check; i++) {
-     	printf("Point %d: (%lf, %lf)\n", i, inst->coord[i].x , inst->coord[i].y);
+     	printf("Point %d: (%lf, %lf)\n", i, inst->x[i] , inst->y[i]);
 	}
-
-    printf("Parsed %d nodes.\n", num_nodes / 2);
+    //printf("Parsed %d nodes.\n", num_nodes);
 
     fclose(fin);
 }
@@ -237,5 +222,25 @@ void parse_command_line(int argc, char **argv, Instance *inst)
 }
 
 void plot(Instance *inst){
-	return;
+
+	FILE* gnuplotPipe = fopen("script.p", "w");
+
+	if (!gnuplotPipe) {
+        fprintf(stderr, "Error: could not open gnuplot pipe.\n");
+        exit(1);
+    }
+
+    // Send commands to gnuplot to create a 2D graph and plot the points
+    fprintf(gnuplotPipe, "set title 'My Plot'\n");
+    /*fprintf(gnuplotPipe, "set xlabel 'X Axis'\n");
+    fprintf(gnuplotPipe, "set ylabel 'Y Axis'\n");
+    fprintf(gnuplotPipe, "plot '-' with lines\n");
+	
+    for (int i = 0; i < inst->nnodes; i++) {
+        fprintf(gnuplotPipe, "%lf %lf\n", inst->x[i], inst->y[i]);
+    }*/
+    //fprintf(gnuplotPipe, "e\n");
+
+	fclose(gnuplotPipe);
+	printf("%i", system("gnuplot -p script.p"));
 }
