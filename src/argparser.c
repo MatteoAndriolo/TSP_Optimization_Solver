@@ -16,6 +16,7 @@ static struct argp_option options[] = {
     {"node_file", 'n', "FILE", 0, "Cplex's node file"},
     {"max_nodes", 'N', "NUM", 0, "Max number of nodes"},
     {"cutoff", 'c', "VALUE", 0, "Master cutoff"},
+    {"verbosity", 'v', "NUM", 0, "Set verbosity 1-100"},
     {"int", 'i', 0, 0, "Integer costs"},
     {"help", 'h', 0, 0, "Show help"},
     {0}
@@ -63,6 +64,9 @@ static error_t parse_option(int key, char *arg, struct argp_state *state)
         case 'i':
             args->inst.integer_costs = 1;
             break;
+        case 'v':
+            args->inst.verbosity = atoi(arg);
+            break;
         case 'h':
             args->help = 1;
             break;
@@ -96,14 +100,39 @@ void parse_command_line(int argc, char  **argv, struct arguments *args)
     argp_parse(&argp_parser, argc, argv, 0, 0, args);
 }
 
+static void usage(FILE *fp, int status) {
+    argp_help(&argp_parser, fp, ARGP_HELP_LONG | ARGP_HELP_DOC, "TODO programm name");
+    exit(status);
+}
+
+static void print_arguments(FILE *fp, struct arguments* args){
+    //TODO complete
+    fprintf(fp,"%s", args->inst.input_file);
+    fprintf(fp,"%f", args->inst.timelimit );
+    fprintf(fp,"%i", args->inst.model_type );
+    fprintf(fp,"%i", args->inst.randomseed );
+    fprintf(fp,"%i", args->inst.num_threads );
+    fprintf(fp,"%i", args->inst.available_memory );
+    fprintf(fp,"%s", args->inst.node_file);
+    fprintf(fp,"%i", args->inst.max_nodes );
+    fprintf(fp,"%f", args->inst.cutoff );
+    fprintf(fp,"%i", args->inst.integer_costs );
+    fprintf(fp,"%i", args->inst.verbosity);
+    fprintf(fp,"%i", args->help);
+}
+
 int main(int argc, char  *argv[])
 {
     struct arguments args;
-    /* Parse command-line arguments. */
     parse_command_line(argc, argv, &args);
 
-    /* Do something with the arguments... */
-    printf(args.inst.input_file);
+    if(args.help){
+        usage(stdout, 0);
+    }
+    if(args.inst.verbosity>10){ 
+        argp_help(&argp_parser, stdout, ARGP_HELP_LONG | ARGP_HELP_DOC, "TODO programm name");
+        printf(args.inst.input_file);
+    }
 
 
     return 0;
