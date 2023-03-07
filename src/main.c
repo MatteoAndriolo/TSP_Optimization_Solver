@@ -7,7 +7,13 @@ void debug(const char *err)
 	printf("\nDEBUG: %s \n", err);
 	fflush(NULL);
 }
-
+/*VERBOSITY
+1) only the output
+2) essencial passes
+3) passes and some information
+4) verbose almost all 
+5) every think the log as well 
+*/
 void print_error(const char *err)
 {
 	printf("\n\n ERROR: %s \n\n", err);
@@ -46,6 +52,7 @@ int main(int argc, char **argv)
 	//{
 		//printf("... VRP problem solved in %lf sec.s\n", t2 - t1);
 	//}
+	
 	plot(&inst);
 	return 0;
 }
@@ -53,13 +60,15 @@ int main(int argc, char **argv)
 //TODO aggiungi verbose per avere più log e qualche check interessante 
 void read_input(Instance *inst) // simplified CVRP parser, not all SECTIONs detected
 {
+	if(inst->verbosity >= 4){
+		printf("... START reading the file");
+	}
 
 	FILE * fin = fopen(inst->input_file, "r");
 	if (fin == NULL)
 		print_error(" input file not found!");
 
 	inst->nnodes = -1;
-	
 	char line[1024];
     int num_nodes = 0;
 	int num_nodes_check = 0;
@@ -76,11 +85,11 @@ void read_input(Instance *inst) // simplified CVRP parser, not all SECTIONs dete
         }
 
 		if (sscanf(line, "DIMENSION : %d", &num_nodes) == 1){
-				printf("Number of nodes: %d \n", num_nodes);
+				if (inst->verbosity >= 3) printf("Number of nodes in the field DIMENTION: %d \n", num_nodes);
 				inst->nnodes = num_nodes;
 				inst->x = (double* ) calloc(num_nodes, sizeof(double));
 				inst->y = (double* ) calloc(num_nodes, sizeof(double));
-				printf("Memory for x and y allocated\n");
+				if (inst->verbosity >= 4) printf("Memory for x and y allocated\n");
 			}
 
 		
@@ -91,8 +100,9 @@ void read_input(Instance *inst) // simplified CVRP parser, not all SECTIONs dete
 			with calloc of size of nom_nodes, store inside pair the 2 coordinates
 			*/
             if (sscanf(line, "%d %lf %lf", &node_num, &node_x, &node_y) == 3) { 	  
-				printf("Node %d: (%lf, %lf)\n", node_num, node_x , node_y);
-        		inst->x[i++] = node_x; //TODO replace i with node_num
+				
+				if (inst->verbosity>=4)("Node %d: (%lf, %lf)\n", node_num, node_x , node_y);
+        		inst->x[i++] = node_x; //TODO replace i with node_num node could be placed in different location
 				inst->y[i++] = node_y;
 			} else {
                 // Reached end of node coordinates section
@@ -106,12 +116,17 @@ void read_input(Instance *inst) // simplified CVRP parser, not all SECTIONs dete
         }
 
     }
+	
 
+	if(inst->verbosity >= 3){
 	for (int i = 0; i < num_nodes_check; i++) {
      	printf("Point %d: (%lf, %lf)\n", i, inst->x[i] , inst->y[i]);
 	}
-    //printf("Parsed %d nodes.\n", num_nodes);
 
+	if (inst->verbosity >= 3) printf("Parsed %d nodes.\n", num_nodes);
+	}
+    
+	if(inst->verbosity >= 2) printf("... ENDING reading the file");
     fclose(fin);
 }
 
@@ -147,7 +162,9 @@ void parse_command_line(int argc, char **argv, Instance *inst)
 		{"int", required_argument, 0, 'i'},
 		{"help", required_argument, 0, 'h'},
 		{0, 0, 0, 0}};
+
 	int opt;
+
 	while ((opt = getopt(argc, argv, "f:m:M:s:h:l:L:n:N:c:i:t")) != -1)
 	{
 		switch (opt)
@@ -194,13 +211,13 @@ void parse_command_line(int argc, char **argv, Instance *inst)
 		}
 	}
 
-	if (inst->verbosity >= 100)
+	if (inst->verbosity >= 3)
 		printf(" running %s with %d parameters \n", argv[0], argc - 1);
 
 	if (argc < 1)
 		help = 1;
 
-	if (help || (inst->verbosity >= 1)) // print current parameters
+	if (help || (inst->verbosity >= 3)) // print current parameters
 	{
 		printf("\n\navailable parameters (vers. 16-may-2015) --------------------------------------------------\n");
 		printf("-f -file %s\n", inst->input_file);
@@ -222,7 +239,9 @@ void parse_command_line(int argc, char **argv, Instance *inst)
 }
 
 void plot(Instance *inst){
-
+	if (inst->verbosity >= 2){
+		printf("... PLOTTING with gnu plot");
+	}
 	FILE* gnuplotPipe = fopen("script.p", "w");
 
 	if (!gnuplotPipe) {
@@ -234,13 +253,14 @@ void plot(Instance *inst){
     fprintf(gnuplotPipe, "set title 'My Plot'\n");
     fprintf(gnuplotPipe, "set xlabel 'X Axis'\n");
     fprintf(gnuplotPipe, "set ylabel 'Y Axis'\n");
-    fprintf(gnuplotPipe, "plot '-'  with points\n");
+    fprintf(gnuplotPipe, "plot '-'  with line\n");
 	
+	// Implicit draw the line 
     for (int i = 0; i < inst->nnodes; i++) {
         fprintf(gnuplotPipe, "%lf %lf\n", inst->x[i], inst->y[i]);
     }
-    //fprintf(gnuplotPipe, "e\n");
 
 	fclose(gnuplotPipe);
+
 	printf("%i", system("gnuplot -p script.p"));
 }
