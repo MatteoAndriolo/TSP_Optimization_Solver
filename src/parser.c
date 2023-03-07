@@ -156,6 +156,7 @@ void parse_command_line(int argc, char  **argv, struct arguments *args)
     args->inst.integer_costs = 0;
     args->inst.available_memory = 0;
     args->inst.max_nodes = 0;
+    args->inst.verbosity = 1;
     //args->inst.node_file = 0;
     args->help = 0;
 
