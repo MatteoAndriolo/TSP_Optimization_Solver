@@ -105,33 +105,31 @@ static void usage(FILE *fp, int status) {
     exit(status);
 }
 
-static void print_arguments(FILE *fp, struct arguments* args){
-    //TODO complete
-    fprintf(fp,"%s", args->inst.input_file);
-    fprintf(fp,"%f", args->inst.timelimit );
-    fprintf(fp,"%i", args->inst.model_type );
-    fprintf(fp,"%i", args->inst.randomseed );
-    fprintf(fp,"%i", args->inst.num_threads );
-    fprintf(fp,"%i", args->inst.available_memory );
-    fprintf(fp,"%s", args->inst.node_file);
-    fprintf(fp,"%i", args->inst.max_nodes );
-    fprintf(fp,"%f", args->inst.cutoff );
-    fprintf(fp,"%i", args->inst.integer_costs );
-    fprintf(fp,"%i", args->inst.verbosity);
-    fprintf(fp,"%i", args->help);
+static void print_arguments(FILE *fp, const Instance* inst){
+    fprintf(fp,"-c\tcutoff value\t%f\t\n", inst->cutoff );             
+    fprintf(fp,"-f\tinput file\t%s\t\n", inst->input_file);                   
+    fprintf(fp,"-i\tinteger cost\t%i\t\n", inst->integer_costs );             
+    fprintf(fp,"-l\ttime limit\t%f\t\n", inst->timelimit );                   
+    fprintf(fp,"-L\tmemory limit\t%i\t\n", inst->available_memory );          
+    fprintf(fp,"-m\tmodel type\t%i\t\n", inst->model_type );                  
+    fprintf(fp,"-n\tnode file\t%s\t\n", inst->node_file);                     
+    fprintf(fp,"-N\tmax nodes\t%i\t\n", inst->max_nodes );                    
+    fprintf(fp,"-s\tseed\t\t%i\t\n", inst->randomseed );                        
+    fprintf(fp,"-t\tnum threads\t%i\t\n", inst->num_threads );                
+    fprintf(fp,"-v\tverbosity\t%i\t\n", inst->verbosity);                     
 }
 
 int main(int argc, char  *argv[])
 {
     struct arguments args;
     parse_command_line(argc, argv, &args);
+    Instance inst= args.inst;
 
     if(args.help){
         usage(stdout, 0);
     }
     if(args.inst.verbosity>10){ 
-        argp_help(&argp_parser, stdout, ARGP_HELP_LONG | ARGP_HELP_DOC, "TODO programm name");
-        printf(args.inst.input_file);
+        print_arguments(stdout, &inst);
     }
 
 
