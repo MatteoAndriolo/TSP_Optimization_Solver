@@ -32,6 +32,7 @@ typedef struct {
 	double timelimit;						// overall time limit, in sec.s
 	char input_file[1000];		  			// input file
 	char node_file[1000];		  			// cplex node file
+	char log_file[1000];					// output log file
 	int available_memory;
 	int max_nodes; 							// max n. of branching nodes in the final run (-1 unlimited)
 	double cutoff; 							// cutoff (upper bound) for master

@@ -46,12 +46,13 @@ void read_input(Instance *inst) // simplified CVRP parser, not all SECTIONs dete
             */
             if (sscanf(line, "%d %lf %lf", &node_number, &node_x, &node_y) == 3)
             {
-                int nn=node_number-1;
-                inst->x[nn] = node_x; // TODO replace i with node_num node could be placed in different location
+                int nn = node_number - 1;
+                inst->x[nn] = node_x;
                 inst->y[nn] = node_y;
-                if (inst->verbosity >= 4){
+                if (inst->verbosity >= 4)
+                {
                     printf("Node %d: (%lf, %lf)\n", node_number, node_x, node_y);
-                    printf("Poin %d: (%lf, %lf)\n", nn, inst->x[nn], inst->y[nn] );
+                    printf("Poin %d: (%lf, %lf)\n", nn, inst->x[nn], inst->y[nn]);
                 }
                 node_saved++;
             }
@@ -104,7 +105,7 @@ struct argp_option options[] = {
     {"verbosity", 'v', "NUM", 0, "Set verbosity 1-100"},
     {"int", 'i', 0, 0, "Integer costs"},
     {"help", 'h', 0, 0, "Show help"},
-    {0}};
+    };
 
 /* Parse a single option. */
 error_t parse_option(int key, char *arg, struct argp_state *state)
@@ -136,6 +137,9 @@ error_t parse_option(int key, char *arg, struct argp_state *state)
         break;
     case 'N':
         args->inst.max_nodes = atoi(arg);
+        break;
+    case 'p':
+        strcpy(args->inst.log_file, arg);
         break;
     case 'c':
         args->inst.cutoff = atof(arg);
@@ -196,6 +200,7 @@ void print_arguments(FILE *fp, const Instance *inst)
     fprintf(fp, "-m\tmodel type\t%i\t\n", inst->model_type);
     fprintf(fp, "-n\tnode file\t%s\t\n", inst->node_file);
     fprintf(fp, "-N\tmax nodes\t%i\t\n", inst->max_nodes);
+    fprintf(fp, "-o\toutput log file\t%i\t\n", inst->max_nodes);
     fprintf(fp, "-s\tseed\t\t%i\t\n", inst->randomseed);
     fprintf(fp, "-t\tnum threads\t%i\t\n", inst->num_threads);
     fprintf(fp, "-v\tverbosity\t%i\t\n", inst->verbosity);
