@@ -1,8 +1,9 @@
+
 CC = gcc
 CFLAGS = -Wall -Werror -pedantic -I./include
 LDFLAGS = -lm
 SRC_DIR = ./src
-OBJ_DIR = ./obj
+OBJ_DIR = ./log
 BIN_DIR = ./bin
 
 SRC_FILES = $(wildcard $(SRC_DIR)/*.c)
@@ -21,4 +22,4 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:
-	rm -rf $(OBJ_DIR)/*.o $(TARGET) script.p
+	rm -rf $(OBJ_DIR)/*.o $(TARGET) script.p example.log

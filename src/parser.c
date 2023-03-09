@@ -1,16 +1,17 @@
 #include "parser.h"
+#include "logger.h"
 
 void read_input(Instance *inst) // simplified CVRP parser, not all SECTIONs detected
 {
-    if (inst->verbosity >= 4)
-    {
-        printf("... START reading the file");
-    }
 
+    log_message(DEBUG, "parser::read_input","Opening the TSP file in reading mode");
+    
     FILE *fin = fopen(inst->input_file, "r");
-    if (fin == NULL)
-        print_error(" input file not found!");
 
+    if (fin == NULL)
+        log_message(ERROR, "parser::read_input","File not found/not exists");
+    
+    log_message(DEBUG, "parser::read_input","inizialize the variables");
     inst->nnodes = -1;
     char line[1024];
     int number_nodes = 0;
@@ -27,15 +28,16 @@ void read_input(Instance *inst) // simplified CVRP parser, not all SECTIONs dete
             line[len - 1] = '\0';
         }
 
-        if (sscanf(line, "DIMENSION : %d", &number_nodes) == 1)
+        if (sscanf(line, "DIMENSION : %d", &number_nodes) == 1)//add optional blank or non blank 
         {
-            if (inst->verbosity >= 3)
-                printf("Number of nodes in the field DIMENTION: %d \n", number_nodes);
+            
+            log_message(DEBUG, "parser::read_input","Number of nodes in the field DIMENSION: %d", number_nodes);
+
             inst->nnodes = number_nodes;
-            inst->x = (double *)calloc(number_nodes, sizeof(double));
+            inst->x = (double *)calloc(number_nodes, sizeof(double));//TODO ? MALLOC IS BETTER 
             inst->y = (double *)calloc(number_nodes, sizeof(double));
-            if (inst->verbosity >= 4)
-                printf("Memory for x and y allocated\n");
+
+            log_message(DEBUG, "parser::read_input","Memory for x and y allocated");
         }
 
         if (reading_nodes)
@@ -44,21 +46,18 @@ void read_input(Instance *inst) // simplified CVRP parser, not all SECTIONs dete
             From each line take the node_num, allocate after a fixed memory
             with calloc of size of nom_nodes, store inside pair the 2 coordinates
             */
-            if (sscanf(line, "%d %lf %lf", &node_number, &node_x, &node_y) == 3)
+
+            if (sscanf(line, "%d %lf %lf", &node_number, &node_x, &node_y) == 3)//TODO: can use %*d to just read and don't use it 
             {
                 int nn = node_number - 1;
                 inst->x[nn] = node_x;
                 inst->y[nn] = node_y;
-                if (inst->verbosity >= 4)
-                {
-                    printf("Node %d: (%lf, %lf)\n", node_number, node_x, node_y);
-                    printf("Poin %d: (%lf, %lf)\n", nn, inst->x[nn], inst->y[nn]);
-                }
+                log_message(DEBUG, "parser::read_input","[NodesIndex: ( x , y ) ] [%d: (%lf, %lf)]", nn, inst->x[nn], inst->y[nn]);
                 node_saved++;
             }
             else
             {
-                // Reached end of node coordinates section
+                log_message(DEBUG, "parser::read_input","Reached end of the file");
                 break;
             }
         }
@@ -66,26 +65,21 @@ void read_input(Instance *inst) // simplified CVRP parser, not all SECTIONs dete
         {
             if (strcmp(line, "NODE_COORD_SECTION") == 0)
             {
+                log_message(DEBUG, "parser::read_input","Reading in the file the NODE_COORD_SECTION and start reading the node");
                 reading_nodes = 1;
             }
-            else if (sscanf(line, "DIMENSION : %d", &number_nodes) == 1)
-                ;
+            else if (sscanf(line, "DIMENSION : %d", &number_nodes) == 1){
+                log_message(ERROR, "parser::read_input","The file does not contain any node");
+            }
         }
     }
 
-    if (inst->verbosity >= 3)
-    {
-        for (int i = 0; i < number_nodes; i++)
-        {
-            printf("Point %d: (%lf, %lf)\n", i, inst->x[i], inst->y[i]);
-        }
-
-        if (inst->verbosity >= 3)
-            printf("Parsed %d nodes.\n", number_nodes);
+    if(number_nodes != node_saved){
+        log_message(WARNING, "parser::read_input","field DIMENTION != real number of nodes in the file");
     }
 
-    if (inst->verbosity >= 2)
-        printf("... ENDING reading the file");
+    log_message(INFO, "parser::read_input","Reading is finished, close the file");
+
     fclose(fin);
 }
 

@@ -1,31 +1,44 @@
+/* TOFO ggc -o3 or -o4 -o bin/main src/main && bin/main */
 #include "vrp.h"
 #include "log.h"
 #include "parser.h"
+#include "logger.h"
 #include "plot.h"
 #include <stdlib.h>
 #include <unistd.h>
 
 int main(int argc, char **argv)
 {
+	logger_init("example.log");
+	
+    // Log messages at various log levels
 	Instance inst;
 
 	// Parsing Arguments
+	log_message(INFO, "main::parse_command_line", "Parsing arguments");
 	struct arguments args;
 	parse_command_line(argc, argv, &args);
 	inst = args.inst;
 
 	if (args.help)
-		usage(stdout, 0);
-	if (inst.verbosity > 1)
-		print_arguments(stdout, &inst);
+    {
+        usage(stdout, 0);
+        log_message(INFO, "main::args.help","Help message displayed");
+    }
+
+	log_message(INFO, "main::print_arguments", "Printing arguments");
+	print_arguments(stdout, &inst);
+	
 
 	// Read TLP library
+	log_message(INFO, "main::read_input","Reading input");
 	read_input(&inst);
-	if (inst.verbosity > 1)
-		("Number nodes %d", inst.nnodes);
+
+	log_message(DEBUG, "main::read_input","Reading input %d", inst.nnodes);
 	
-	// Plot 
-	plot_solution(&inst);
+	// Plot
+	log_message(INFO,"main::plot", "Plotting with gnuplot"); 
+	plot(&inst);
 
 	return 0;
 }
