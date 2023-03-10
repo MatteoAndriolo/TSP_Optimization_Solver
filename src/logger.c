@@ -13,6 +13,10 @@ void logger_init(const char* log_filename) {
     }
 }
 
+void ffflush() {
+    fflush(log_file);
+}
+
 void log_message(LogLevel level, const char* namefile_and_func, const char* format, ...) {
     // Get the current time
     time_t now = time(NULL);
@@ -53,9 +57,6 @@ void log_message(LogLevel level, const char* namefile_and_func, const char* form
     vfprintf(log_file, combined_str, args);
     fprintf(log_file, "\n");
     va_end(args);
-    //sleep(1);
+    ffflush();
 }
 
-void ffflush() {
-    fflush(log_file);
-}

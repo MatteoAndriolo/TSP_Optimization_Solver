@@ -7,11 +7,11 @@
 
 double distance(double point1_x, double point1_y, double point_x, double point_y);
 
-void extra_mileage(Instance* inst);
+void model_nearest_neighboor(const Instance *inst);
 
-void model_nearest_neighboor(Instance *inst);
+void extra_mileage(const Instance* inst);
 
-void generate_distance_matrix(double ** matrix, Instance* inst);
+void generate_distance_matrix(double ** matrix, const Instance* inst);
 
 void swap(int** arr, int i, int j);
 
