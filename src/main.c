@@ -42,7 +42,10 @@ int main(int argc, char **argv)
 
 	log_message(INFO,"main", "Start model_nearest_neighboor"); 
 	ffflush();
-	model_nearest_neighboor(&inst);
+	//model_nearest_neighboor(&inst);
+	log_message(INFO,"main", "Start extra_mileage");
+	ffflush();
+	extra_mileage(&inst);
 
 	return 0;
 }
