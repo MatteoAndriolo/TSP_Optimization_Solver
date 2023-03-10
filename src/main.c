@@ -1,6 +1,6 @@
 /* TOFO ggc -o3 or -o4 -o bin/main src/main && bin/main */
 #include "vrp.h"
-#include "log.h"
+#include "greedy.h"
 #include "parser.h"
 #include "logger.h"
 #include "plot.h"
@@ -37,8 +37,12 @@ int main(int argc, char **argv)
 	log_message(DEBUG, "main::read_input","Reading input %d", inst.nnodes);
 	
 	// Plot
-	log_message(INFO,"main::plot", "Plotting with gnuplot"); 
-	plot(&inst);
+	//log_message(INFO,"main::plot", "Plotting with gnuplot"); 
+	//plot(&inst);
+
+	log_message(INFO,"main", "Start model_nearest_neighboor"); 
+	ffflush();
+	model_nearest_neighboor(&inst);
 
 	return 0;
 }

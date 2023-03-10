@@ -49,7 +49,7 @@ typedef struct {
 	double *load_min;						// minimum load when leaving a node
 	double *load_max;						// maximum load when leaving a node
 	
-	// model;     
+	// model;     Optimal?
 	int xstart;
 	int ystart;
 	int qstart;

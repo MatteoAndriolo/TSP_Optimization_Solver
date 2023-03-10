@@ -17,7 +17,8 @@ void read_input(Instance *inst) // simplified CVRP parser, not all SECTIONs dete
     int number_nodes = 0;
     int reading_nodes = 0;
     double node_x, node_y;
-    int node_number, node_saved;
+    int node_number;
+    int node_saved = 0;
 
     while (fgets(line, 1024, fin))
     {

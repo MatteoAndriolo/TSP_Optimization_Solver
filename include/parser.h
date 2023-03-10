@@ -4,7 +4,6 @@
 #include <argp.h>
 #include <stdio.h>
 #include "vrp.h"
-#include "log.h"
 
 // Parse arguments
 struct arguments {

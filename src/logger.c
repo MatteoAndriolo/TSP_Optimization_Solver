@@ -2,6 +2,7 @@
 #include <stdarg.h>
 #include <time.h>
 #include <string.h>
+#include <unistd.h>
 
 static FILE* log_file;
 
@@ -52,4 +53,9 @@ void log_message(LogLevel level, const char* namefile_and_func, const char* form
     vfprintf(log_file, combined_str, args);
     fprintf(log_file, "\n");
     va_end(args);
+    //sleep(1);
+}
+
+void ffflush() {
+    fflush(log_file);
 }
