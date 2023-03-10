@@ -94,6 +94,7 @@ void model_nearest_neighboor(const Instance *inst) {
 }
 
 void extra_mileage(const Instance *inst) {
+    // INITIALIZE nodes array and distance matrix
     log_message(DEBUG , "greedy::Extra_mileage", "start extra mileage");
     double * distance_matrix=NULL;
     generate_distance_matrix(&distance_matrix, inst);
@@ -104,9 +105,8 @@ void extra_mileage(const Instance *inst) {
             nodes[j] = j;
             remaining_nodes[j] = j;
     }
-    log_message(DEBUG , "greedy::Extra_mileage", "nodes array generated");
-    log_message(DEBUG , "greedy::Extra_mileage", "%lf",distance_matrix[1]);
 
+    // INITIALIZE diameter
     int row = 0;
     int col = 0;
     double max_distance=0;
@@ -127,10 +127,7 @@ void extra_mileage(const Instance *inst) {
 
         log_message(DEBUG , "greedy::Extra_mileage", "max distance %f", max_distance);
         log_message(DEBUG , "greedy::Extra_mileage", "max distance index %d", max_index);
-        log_message(DEBUG , "greedy::Extra_mileage", "row %d", row);
-        log_message(DEBUG , "greedy::Extra_mileage", "col %d", col);
-        ffflush();
-
+        log_message(DEBUG , "greedy::Extra_mileage", "correspond to node %d and %d", row<col ? row:col, row>col ? row:col);
     }
 
     int tour_length=2*max_distance;
@@ -139,34 +136,45 @@ void extra_mileage(const Instance *inst) {
     swap(&nodes, 0, row);
     swap(&nodes, 1, col);
 
-    // START SEARCH
+    /*----- START SEARCH -----*/
     for (int i = 2; i < inst->nnodes; i++){
-        double min = INFINITY;
-        int min_index=-1;
+        int node1,node2,node3;
 
+        int min_index=-1;
+        int *best_nodes={-1,-1,-1};
+        double best_value=INFTY;
         for(int j=1; j<i;i++){ // node1 node2 adjacent, node3 completes the triangle
-            int node1=nodes[j-1];
-            int node2=nodes[j];
-            for (int k = i; k < inst->nnodes; k++){
-                int node3=nodes[k];
-                if (distance_matrix[node1 * inst->nnodes + node3] + distance_matrix[node2 * inst->nnodes + node3] < min){
-                    min = distance_matrix[node1 * inst->nnodes + node3] + distance_matrix[node2 * inst->nnodes + nodes3];
+            node1=nodes[j-1]; 
+            node2=nodes[j]; 
+            for (int k = i; k < inst->nnodes; k++){ 
+                node3=nodes[k];
+                if (distance_matrix[node1 * inst->nnodes + node3] + distance_matrix[node2 * inst->nnodes + node3] < best_value){
+                    best_value = distance_matrix[node1 * inst->nnodes + node3] + distance_matrix[node2 * inst->nnodes + node3];
+                    best_nodes=(int*){node1,node2,node3};
                     min_index = k;
                 }
             }
-            // find distance with nodes not visited
-                // altro array con nodi rimanenti
         }
         //find best between first and last
-
-
-
-        swap(&nodes, i, min_index);
-        tour_length += min;
+        node1=nodes[0];
+        node2=nodes[i-1];
+        for (int k = i; k < inst->nnodes; k++){ 
+            node3=nodes[k];
+            if (distance_matrix[node1 * inst->nnodes + node3] + distance_matrix[node2 * inst->nnodes + node3] < best_value){
+                best_value = distance_matrix[node1 * inst->nnodes + node3] + distance_matrix[node2 * inst->nnodes + node3];
+                best_nodes=(int*){node1,node2,node3};
+                min_index = k;
+            }
+        }
+        
+        //insert node3 in position min_index in nodes
+        for (int k = i; k > min_index; k--){         //check if position of replacement is correct, in particular >min_index
+            nodes[k]=nodes[k-1];
+        }
+        nodes[min_index]=best_nodes[2];
+        tour_length+=(best_value-distance_matrix[best_nodes[0] * inst->nnodes + best_nodes[1]]);
 
     }
-
-    tour_length += distance_matrix[nodes[inst->nnodes-1] * inst->nnodes + nodes[0]]; //+ max as well, it works
 
 }
 
