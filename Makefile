@@ -3,7 +3,7 @@ CC = gcc
 CFLAGS = -Wall -Werror -pedantic -I./include
 LDFLAGS = -lm
 SRC_DIR = ./src
-OBJ_DIR = ./log
+OBJ_DIR = ./obj
 BIN_DIR = ./bin
 
 SRC_FILES = $(wildcard $(SRC_DIR)/*.c)
