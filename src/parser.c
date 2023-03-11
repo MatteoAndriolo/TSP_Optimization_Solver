@@ -90,6 +90,7 @@ struct argp_option options[] = {
     {"file", 'f', "FILE", 0, "Input file"},
     {"input", 'f', "FILE", 0, "Input file"},
     {"model", 'm', "TYPE", 0, "Model type"},
+    {"model", 'M', 0, 0, "Show list models"},
     {"seed", 's', "SEED", 0, "Random seed"},
     {"threads", 't', "NUM", 0, "Number of threads"},
     {"time_limit", 'l', "LIMIT", 0, "Time limit"},
@@ -117,6 +118,9 @@ error_t parse_option(int key, char *arg, struct argp_state *state)
         break;
     case 'm':
         args->inst.model_type = atoi(arg);
+        break;
+    case 'M':
+        args->help_models= 1;
         break;
     case 's':
         args->inst.randomseed = abs(atoi(arg));
@@ -174,6 +178,7 @@ void parse_command_line(int argc, char **argv, struct arguments *args)
     args->inst.verbosity = 1;
     // args->inst.node_file = 0;
     args->help = 0;
+    args->help_models = 0;
 
     /* Parse arguments. */
     argp_parse(&argp_parser, argc, argv, 0, 0, args);
@@ -182,6 +187,15 @@ void parse_command_line(int argc, char **argv, struct arguments *args)
 void usage(FILE *fp, int status)
 {
     argp_help(&argp_parser, fp, ARGP_HELP_LONG | ARGP_HELP_DOC, "TODO programm name");
+    exit(status);
+}
+void show_models(FILE *fp, int status)
+{
+    fprintf(fp, "Available models:");
+    fprintf(fp, "--------------- Greedy Heuristics ---------------\n");
+    fprintf(fp, "1)\tNearest Neighboor\n");
+    fprintf(fp, "2)\tExtra Mileage\n");
+    fprintf(fp, "1)\tModified Extra Mileage\n");
     exit(status);
 }
 
