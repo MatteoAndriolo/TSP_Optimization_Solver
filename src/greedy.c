@@ -232,22 +232,27 @@ void strange_extra_mileage(const Instance *inst) {
         for(int j = i; j - 2 >= 0 ; j =- 2){
             count = 0;
             min = INFINITY;
-            int min_index=-1; 
-            int node1=nodes[j - 1];
-            int node2=nodes[j - 2];
-            for (int k = i; k < inst->nnodes; k++){
+            int min_index =- 1; 
+            int node1 = nodes[j - 1];
+            int node2 = nodes[j - 2];
+            log_message(DEBUG , "greedy::Extra_mileage", "i,j-1,j-2{%d,%d,%d}", i, j-1,j-2);
+            for (int k = count + i; k < inst->nnodes; k++){
                 int node3 = nodes[k];
-                if (distance_matrix[node1 * inst->nnodes + node3] + distance_matrix[node2 * inst->nnodes + node3] < min){
+                if (distance_matrix[node1 * inst->nnodes + node3] + distance_matrix[node2 * inst->nnodes + node3] < min){              
                     min = distance_matrix[node1 * inst->nnodes + node3] + distance_matrix[node2 * inst->nnodes + node3];
                     min_index = k;
+                    log_message(DEBUG , "greedy::Extra_mileage", "min distance %f", min);
                 }
             }
+
+            log_message(DEBUG , "greedy::Extra_mileage", "min distance OVERALL %f", min);
             
             int temp = nodes[j-1];
             nodes[j-1] = nodes[min_index];
             for (int i = inst->nnodes - 1; i >= j; i--) {
                     nodes[i+1] = nodes[i];
             }
+
             nodes[i] = temp;
             count++;
         }
@@ -255,7 +260,8 @@ void strange_extra_mileage(const Instance *inst) {
         tour_length += min;
 
     }
-
+   
     tour_length += max_distance; //+ max as well, it works
+    log_message(DEBUG , "greedy::Extra_mileage", "tour length %f", tour_length);
 
 }
