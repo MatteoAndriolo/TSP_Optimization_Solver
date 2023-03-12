@@ -113,8 +113,7 @@ void extra_mileage(const Instance *inst) {
     int max_index=-1;
     for (int i = 1; i < inst->nnodes * inst->nnodes; i++ ){
         if (distance_matrix[i] == INFINITY){
-            i = i * inst->nnodes + inst->nnodes;//example with 3 nodes
-                                                // 0 * 3 + 3 = 3 --> 3 * 1 + 3 = 6 --> 2 * 3 + 3 = 9 ecc...
+            i = i * inst->nnodes + inst->nnodes;  // 0 * 3 + 3 = 3 --> 3 * 1 + 3 = 6 --> 2 * 3 + 3 = 9 ecc...
         }
 
         if (max_distance < distance_matrix[i]){
@@ -178,90 +177,106 @@ void extra_mileage(const Instance *inst) {
 
 }
 
-
-void strange_extra_mileage(const Instance *inst) {
-    log_message(DEBUG , "greedy::Extra_mileage", "start extra mileage");
-    double * distance_matrix=NULL;
+void updated_extra_mileage(const Instance *inst)
+{
+    log_message(DEBUG, "greedy::Extra_mileage", "start extra mileage");
+    double *distance_matrix = NULL;
     generate_distance_matrix(&distance_matrix, inst);
-    log_message(DEBUG , "greedy::Extra_mileage", "distance matrix generated");
-    int * nodes = malloc(inst->nnodes * sizeof(int));
-    int * remaining_nodes = malloc(inst->nnodes * sizeof(int));
-    for (int j=0; j < inst->nnodes; j++) {
-            nodes[j] = j;
-            remaining_nodes[j] = j;
+    log_message(DEBUG, "greedy::Extra_mileage", "distance matrix generated");
+    int *nodes = malloc(inst->nnodes * sizeof(int));
+    int *remaining_nodes = malloc(inst->nnodes * sizeof(int));
+    for (int j = 0; j < inst->nnodes; j++)
+    {
+        nodes[j] = j;
+        remaining_nodes[j] = j;
     }
-    log_message(DEBUG , "greedy::Extra_mileage", "nodes array generated");
-    log_message(DEBUG , "greedy::Extra_mileage", "%lf",distance_matrix[1]);
+
+    log_message(DEBUG, "greedy::Extra_mileage", "%lf", distance_matrix[1]);
 
     int row = 0;
     int col = 0;
-    double max_distance=0;
-    int max_index=-1;
-    for (int i = 1; i < inst->nnodes * inst->nnodes; i++ ){
-        if (distance_matrix[i] == INFINITY){
-            i = i * inst->nnodes + inst->nnodes;//example with 3 nodes
-                                                // 0 * 3 + 3 = 3 --> 3 * 1 + 3 = 6 --> 2 * 3 + 3 = 9 ecc...
-        }
+    double max_distance = 0;
+    int max_index = -1;
+    for (int i = 1; i < inst->nnodes * inst->nnodes; i++)
+    {
+        if (distance_matrix[i] == INFINITY)
+            i = i * inst->nnodes + inst->nnodes; //  0 * 3 + 3 = 3 --> 3 * 1 + 3 = 6 --> 2 * 3 + 3 = 9 ecc...
 
-        if (max_distance < distance_matrix[i]){
+        if (max_distance < distance_matrix[i])
+        {
             max_distance = distance_matrix[i];
             max_index = i;
         }
-       
+
         row = (int)max_index / inst->nnodes;
         col = max_index % inst->nnodes;
 
-        log_message(DEBUG , "greedy::Extra_mileage", "max distance %f", max_distance);
-        log_message(DEBUG , "greedy::Extra_mileage", "max distance index %d", max_index);
-        log_message(DEBUG , "greedy::Extra_mileage", "row %d", row);
-        log_message(DEBUG , "greedy::Extra_mileage", "col %d", col);
-        ffflush();
-
+        log_message(DEBUG, "greedy::Extra_mileage", "max distance %f", max_distance);
+        log_message(DEBUG, "greedy::Extra_mileage", "max distance index %d", max_index);
+        log_message(DEBUG, "greedy::Extra_mileage", "row %d", row);
+        log_message(DEBUG, "greedy::Extra_mileage", "col %d", col);
     }
 
-    int tour_length=2*max_distance;
+    double tour_length = 2 * max_distance;
 
-    //swap the first 2 elements with the one with the max distance
+    // swap the first 2 elements with the one with the max distance
     swap(&nodes, 0, row);
     swap(&nodes, 1, col);
+
     int count = 0;
-    double min = INFINITY;
+    double min = 9999999999999999999.00000;
+    int i = 2;
+    int j = 2;
+    int k = 0;
+    int min_index = -1;
     // START SEARCH
-    for (int i = 2; i < inst->nnodes; i += count){
-        
-        for(int j = i; j - 2 >= 0 ; j =- 2){
-            count = 0;
-            min = INFINITY;
-            int min_index =- 1; 
-            int node1 = nodes[j - 1];
-            int node2 = nodes[j - 2];
-            log_message(DEBUG , "greedy::Extra_mileage", "i,j-1,j-2{%d,%d,%d}", i, j-1,j-2);
-            for (int k = count + i; k < inst->nnodes; k++){
-                int node3 = nodes[k];
-                if (distance_matrix[node1 * inst->nnodes + node3] + distance_matrix[node2 * inst->nnodes + node3] < min){              
-                    min = distance_matrix[node1 * inst->nnodes + node3] + distance_matrix[node2 * inst->nnodes + node3];
-                    min_index = k;
-                    log_message(DEBUG , "greedy::Extra_mileage", "min distance %f", min);
+    for (i = 2; i < inst->nnodes; i += count)
+    {
+        log_message(DEBUG, "greedy::Extra_mileage", "i-->%d", i);
+        count = 0;
+
+        for (j = i - 1; j - 1 >= 0; j--)
+        {
+            int node1 = nodes[j];
+            int node2 = nodes[j - 1];
+            if (i + count < inst->nnodes)
+            {
+                min = distance_matrix[node1 * inst->nnodes + nodes[i + count]] + distance_matrix[node2 * inst->nnodes + nodes[i + count]];
+                for (k = i + count; k < inst->nnodes; k++)
+                {
+                    int node3 = nodes[k];
+                    if (distance_matrix[node1 * inst->nnodes + node3] + distance_matrix[node2 * inst->nnodes + node3] < min)
+                    {
+                        min = distance_matrix[node1 * inst->nnodes + node3] + distance_matrix[node2 * inst->nnodes + node3];
+                        min_index = k;
+                    }
                 }
-            }
 
-            log_message(DEBUG , "greedy::Extra_mileage", "min distance OVERALL %f", min);
-            
-            int temp = nodes[j-1];
-            nodes[j-1] = nodes[min_index];
-            for (int i = inst->nnodes - 1; i >= j; i--) {
-                    nodes[i+1] = nodes[i];
-            }
+                log_message(DEBUG, "greedy::Extra_mileage", "{j, j - 1} --> {%d,%d}, min index found and cost -->{%d,%f}, count-->%d, starting point k-->%d", j, j - 1, min_index, min, count + 1, count + i);
 
-            nodes[i] = temp;
-            count++;
+                int temp = nodes[j];
+                nodes[j] = nodes[min_index];
+
+                for (int f = min_index; f > j; f--)
+                {
+                    nodes[f] = nodes[f - 1];
+                }
+                nodes[j + 1] = temp;
+                count++;
+                tour_length = tour_length - distance_matrix[node1 * inst->nnodes + node2] + min;
+                log_message(DEBUG, "greedy::Extra_mileage", "tour length %f = %f - %f", tour_length, min, distance_matrix[node1 * inst->nnodes + node2]);
+
+                char nodes_str[1024] = "";
+                for (int o = 0; o < inst->nnodes; o++)
+                {
+                    char node_val[16] = "";
+                    sprintf(node_val, " |%d| ", nodes[o]);
+                    strcat(nodes_str, node_val);
+                }
+                log_message(DEBUG, "greedy::Extra_mileage", "Nodes: %s", nodes_str);
+            }
         }
-
-        tour_length += min;
-
     }
-   
-    tour_length += max_distance; //+ max as well, it works
-    log_message(DEBUG , "greedy::Extra_mileage", "tour length %f", tour_length);
-
+    tour_length = tour_length + max_distance; //+ max as well, it works
+    log_message(DEBUG, "greedy::Extra_mileage", "tour length %f", tour_length);
 }

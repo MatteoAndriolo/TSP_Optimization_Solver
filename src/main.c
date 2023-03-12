@@ -56,7 +56,7 @@ int main(int argc, char **argv)
 		break;
 	case 3:
 		log_message(INFO,"main", "Start model modified_extra_mileage");
-		extra_mileage(&inst);
+		updated_extra_mileage(&inst);
 		break;
 	
 	default:
