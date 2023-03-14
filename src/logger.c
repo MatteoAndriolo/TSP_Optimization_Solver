@@ -9,7 +9,7 @@ static FILE* log_file;
 void logger_init(const char* log_filename) {
     log_file = fopen(log_filename, "w");
     if (log_file == NULL) {
-       log_message(ERROR, "logger::logger_init","File not found/not exists");
+       ERROR_COMMENT("logger::logger_init","File not found/not exists");
     }
 }
 
@@ -41,6 +41,9 @@ void log_message(LogLevel level, const char* namefile_and_func, const char* form
         case CRITICAL:
             level_str = "CRITICAL";
             break;
+        case OUTPUT:
+            level_str = "OUTPUT";
+            break;
         default:
             level_str = "";
             break;
@@ -48,7 +51,7 @@ void log_message(LogLevel level, const char* namefile_and_func, const char* form
 
     // Write the log message to the log file
     va_list args;
-    sprintf(combined_str, "%s %s", namefile_and_func , format);
+    sprintf(combined_str, "%s | %s", namefile_and_func , format);
     va_start(args, format);
     fprintf(log_file, "%04d-%02d-%02d %02d:%02d:%02d [%s] ", 
             tm_info->tm_year + 1900, tm_info->tm_mon + 1, tm_info->tm_mday, 

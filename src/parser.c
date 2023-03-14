@@ -4,14 +4,14 @@
 void read_input(Instance *inst) // simplified CVRP parser, not all SECTIONs detected
 {
 
-    log_message(DEBUG, "parser::read_input","Opening the TSP file in reading mode");
+    DEBUG_COMMENT("parser::read_input","Opening the TSP file in reading mode");
     
     FILE *fin = fopen(inst->input_file, "r");
 
     if (fin == NULL)
-        log_message(ERROR, "parser::read_input","File not found/not exists");
+        ERROR_COMMENT("parser::read_input","File not found/not exists");
     
-    log_message(DEBUG, "parser::read_input","inizialize the variables");
+    DEBUG_COMMENT("parser::read_input","inizialize the variables");
     inst->nnodes = -1;
     char line[1024];
     int number_nodes = 0;
@@ -32,13 +32,13 @@ void read_input(Instance *inst) // simplified CVRP parser, not all SECTIONs dete
         if (sscanf(line, "DIMENSION : %d", &number_nodes) == 1)//add optional blank or non blank 
         {
             
-            log_message(DEBUG, "parser::read_input","Number of nodes in the field DIMENSION: %d", number_nodes);
+            DEBUG_COMMENT("parser::read_input","Number of nodes in the field DIMENSION: %d", number_nodes);
 
             inst->nnodes = number_nodes;
             inst->x = (double *)calloc(number_nodes, sizeof(double));//TODO ? MALLOC IS BETTER 
             inst->y = (double *)calloc(number_nodes, sizeof(double));
 
-            log_message(DEBUG, "parser::read_input","Memory for x and y allocated");
+            DEBUG_COMMENT("parser::read_input","Memory for x and y allocated");
         }
 
         if (reading_nodes)
@@ -53,12 +53,12 @@ void read_input(Instance *inst) // simplified CVRP parser, not all SECTIONs dete
                 int nn = node_number - 1;
                 inst->x[nn] = node_x;
                 inst->y[nn] = node_y;
-                log_message(DEBUG, "parser::read_input","[NodesIndex: ( x , y ) ] [%d: (%lf, %lf)]", nn, inst->x[nn], inst->y[nn]);
+                DEBUG_COMMENT("parser::read_input","[NodesIndex: ( x , y ) ] [%d: (%lf, %lf)]", nn, inst->x[nn], inst->y[nn]);
                 node_saved++;
             }
             else
             {
-                log_message(DEBUG, "parser::read_input","Reached end of the file");
+                DEBUG_COMMENT("parser::read_input","Reached end of the file");
                 break;
             }
         }
@@ -66,20 +66,20 @@ void read_input(Instance *inst) // simplified CVRP parser, not all SECTIONs dete
         {
             if (strcmp(line, "NODE_COORD_SECTION") == 0)
             {
-                log_message(DEBUG, "parser::read_input","Reading in the file the NODE_COORD_SECTION and start reading the node");
+                DEBUG_COMMENT("parser::read_input","Reading in the file the NODE_COORD_SECTION and start reading the node");
                 reading_nodes = 1;
             }
             else if (sscanf(line, "DIMENSION : %d", &number_nodes) == 1){
-                log_message(ERROR, "parser::read_input","The file does not contain any node");
+                ERROR_COMMENT("parser::read_input","The file does not contain any node");
             }
         }
     }
 
     if(number_nodes != node_saved){
-        log_message(WARNING, "parser::read_input","field DIMENTION != real number of nodes in the file");
+        WARNING_COMMENT("parser::read_input","field DIMENTION != real number of nodes in the file");
     }
 
-    log_message(INFO, "parser::read_input","Reading is finished, close the file");
+    INFO_COMMENT("parser::read_input","Reading is finished, close the file");
 
     fclose(fin);
 }
