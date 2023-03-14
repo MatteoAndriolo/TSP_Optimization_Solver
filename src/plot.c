@@ -3,14 +3,14 @@
 /*Use 2 different plot file for solution*/
 void plot(Instance *inst)
 {
-    log_message(DEBUG,"plot::plot","open gnuplot pipe");
+    DEBUG_COMMENT("plot::plot","open gnuplot pipe");
     FILE *gnuplotPipe = fopen("src/script.p", "w");
 
     if (!gnuplotPipe)
     {
         fprintf(stderr, "Error: could not open gnuplot pipe.\n");
         exit(1);
-        log_message(ERROR,"plot::plot","Error: could not open gnuplot pipe");
+        ERROR_COMMENT("plot::plot","Error: could not open gnuplot pipe");
     }
 
     // Send commands to gnuplot to create a 2D graph and plot the points
@@ -48,8 +48,8 @@ void plot(Instance *inst)
     }
 
     fprintf(gnuplotPipe, "e\n");
-    log_message(DEBUG,"plot::plot","close gnuplot pipe");
+    DEBUG_COMMENT("plot::plot","close gnuplot pipe");
     fclose(gnuplotPipe);
-    log_message(DEBUG, "plot::plot", "write on the terminal the command to launch gnuplot");
+    DEBUG_COMMENT("plot::plot", "write on the terminal the command to launch gnuplot");
     printf("\n%i\n", system("gnuplot -p src/script.p"));
 }
