@@ -11,9 +11,9 @@ OBJ_FILES = $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(SRC_FILES))
 
 TARGET = $(BIN_DIR)/main
 
-.PHONY: all clean
+.PHONY: all clean production   # all and clean are not file, just targets.
 
-all: $(TARGET)
+all: clean $(TARGET)
 
 $(TARGET): $(OBJ_FILES)
 	$(CC) -o $@ $^ $(LDFLAGS)
@@ -23,3 +23,6 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 
 clean:
 	rm -rf $(OBJ_DIR)/*.o $(TARGET) script.p example.log
+
+production: CFLAGS+= -DPRODUCTION
+production: all
