@@ -3,6 +3,7 @@
 #include <time.h>
 #include <string.h>
 #include <unistd.h>
+#include "vrp.h"
 
 static FILE* log_file;
 
@@ -63,3 +64,14 @@ void log_message(LogLevel level, const char* namefile_and_func, const char* form
     ffflush();
 }
 
+
+void log_output(const Instance *inst){
+    //TODO implement string maker for final path to output
+    fprintf(log_file, "$STAT;%d;%lf;%lf;%d;%d;%s",
+    inst->model_type,
+    inst->zbest,        //double
+    inst->timelimit,    //double
+    inst->randomseed,
+    inst->nnodes,
+    inst->input_file);
+}

@@ -34,7 +34,7 @@ void read_input(Instance *inst) // simplified CVRP parser, not all SECTIONs dete
             
             DEBUG_COMMENT("parser::read_input","Number of nodes in the field DIMENSION: %d", number_nodes);
 
-            inst->nnodes = number_nodes;
+            inst->nnodes = number_nodes-1;
             inst->x = (double *)calloc(number_nodes, sizeof(double));//TODO ? MALLOC IS BETTER 
             inst->y = (double *)calloc(number_nodes, sizeof(double));
 
