@@ -86,7 +86,6 @@ void log_message(LogLevel level, const char* namefile_and_func, const char* form
 
 
 void log_output_inst(const Instance *inst){
-    //TODO implement string maker for final path to output
     fprintf(log_file, "$STAT\tmod\tstart\tzbest\ttime_limit\tseed\tnnodes\tinput_file\n");
     fprintf(log_file, "$STAT\t%d\t%d\t%lf\t%lf\t%d\t%d\t%s\n",
     inst->model_type,
@@ -100,7 +99,6 @@ void log_output_inst(const Instance *inst){
 
 void log_output(int model_type, int node_start, double zbest, double timelimit, int randomseed, int nnodes, char *input_file)
 {
-    // TODO implement string maker for final path to output
     fprintf(log_file, "$STAT\tmod\tstart\tzbest\ttime_limit\tseed\tnnodes\tinput_file\n");
     fprintf(log_file, "$STAT\t%d\t%d\t%lf\t%lf\t%d\t%d\t%s\n",
             model_type,
