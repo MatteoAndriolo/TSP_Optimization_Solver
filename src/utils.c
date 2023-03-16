@@ -68,4 +68,5 @@ int assert_path(const int* path,const double* distance_matrix, int nnodes, doubl
         ERROR_COMMENT("assert_path", "assert_path failed: check_nnodes=%d, check_tour_length=%lf, nnodes=%d, tour_length=%lf\n", check_nnodes, check_tour_length, tour_length);
         return 0;
     }
+    return 1;
 }
