@@ -46,4 +46,13 @@ void generate_distance_matrix(double *matrix, const int nnodes, const double *x,
  */
 inline void swap(int *arr, int i, int j);
 
+/**
+ * Generates a path for a set of nodes.
+ *
+ * @param path A pointer to an array that will store the path.
+ * @param starting_node The index of the node to start the path at.
+ * @param num_nodes The number of nodes in the graph.
+ */
+inline void generate_path(int * path, int starting_node, int num_nodes);
+
 #endif

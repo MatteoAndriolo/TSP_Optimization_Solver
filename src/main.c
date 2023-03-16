@@ -4,6 +4,7 @@
 #include "parser.h"
 #include "logger.h"
 #include "plot.h"
+#include "utils.h"
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -43,7 +44,7 @@ int main(int argc, char **argv)
 	// Plot -------------------------------------------------------------------
 	//INFO_COMMENT("main::plot", "Plotting with gnuplot"); 
 	//plot(&inst);
-
+	
 	switch (inst.model_type)
 	{
 	case 1:

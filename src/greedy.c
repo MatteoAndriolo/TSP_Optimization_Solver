@@ -1,6 +1,7 @@
-#include <math.h>
 #include "greedy.h"
 #include "utils.h"
+#include "refinement.h"
+#include "logger.h"
 
 double nearest_neighboor(const double* distance_matrix, const int *path, int nnodes){
 // nearest neighbor
@@ -29,7 +30,6 @@ double nearest_neighboor(const double* distance_matrix, const int *path, int nno
         tour_length += distance_matrix[path[nnodes-1] * nnodes + path[0]];
         return tour_length;
 }
-
 
 void model_nearest_neighboor(Instance *inst)
 {
