@@ -1,11 +1,20 @@
 #include "utils.h"
-#include <math.h>
 
-inline void swap(int *arr, int i, int j)
+void swap(int *arr, int i, int j)
 {
     int temp = arr[i];
     arr[i] = arr[j];
     arr[j] = temp;
+}
+
+void swap_and_shift(int *arr, int i, int j, int n)
+{
+    int temp = arr[j]; // Save the value at position j in a temporary variable
+    for (int k = j; k > i; k--)
+    {
+        arr[k] = arr[k - 1]; // Shift all elements to the right from j to i+1
+    }
+    arr[i] = temp; // Put the saved value from position j into position i
 }
 
 inline double distance_euclidean(double x1, double y1, double x2, double y2)
@@ -68,6 +77,7 @@ int assert_path(const int *path, const double *distance_matrix, int nnodes, doub
     if (check_nnodes != 0 || check_tour_length != tour_length)
     {
         ERROR_COMMENT("assert_path", "assert_path failed: check_nnodes=%d, check_tour_length=%lf, nnodes=%d, tour_length=%lf", check_nnodes, check_tour_length, nnodes, tour_length);
+        log_path(path, nnodes);
         return 0;
     }
     return 1;

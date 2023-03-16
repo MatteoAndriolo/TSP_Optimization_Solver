@@ -5,6 +5,25 @@
 #include "logger.h"
 
 /**
+ * Swaps two elements in an integer array.
+ *
+ * @param arr The array containing the elements to swap.
+ * @param i The index of the first element to swap.
+ * @param j The index of the second element to swap.
+ */
+void swap(int *arr, int i, int j);
+
+/**
+ * Swaps two elements in an integer array and shifts all elements between them.
+ *
+ * @param arr The array containing the elements to swap.
+ * @param i The index of the first element to swap.
+ * @param j The index of the second element to swap.
+ * @param n The length of the array. *
+ */
+
+void swap_and_shift(int *arr, int i, int j, int n);
+/**
  * Calculates the Euclidean distance between two points in 2D space.
  *
  * @param x1 The x-coordinate of the first point.
@@ -13,7 +32,7 @@
  * @param y2 The y-coordinate of the second point.
  * @return The Euclidean distance between the two points.
  */
-double distance_euclidean( double x1,  double y1,  double x2,  double y2);
+double distance_euclidean(double x1, double y1, double x2, double y2);
 
 /**
  * Calculates the squared Euclidean distance between two points in 2D space.
@@ -24,7 +43,7 @@ double distance_euclidean( double x1,  double y1,  double x2,  double y2);
  * @param y2 The y-coordinate of the second point.
  * @return The squared Euclidean distance between the two points.
  */
-double distance_euclidean_square( double x1,  double y1,  double x2,  double y2);
+double distance_euclidean_square(double x1, double y1, double x2, double y2);
 
 /**
  * Generates a distance matrix for a set of nodes based on their x-y coordinates.
@@ -39,31 +58,22 @@ double distance_euclidean_square( double x1,  double y1,  double x2,  double y2)
 void generate_distance_matrix(double **matrix, const int nnodes, const double *x, const double *y, int round);
 
 /**
- * Swaps two elements in an integer array.
- *
- * @param arr The array containing the elements to swap.
- * @param i The index of the first element to swap.
- * @param j The index of the second element to swap.
- */
-void swap(int *arr, int i, int j);
-
-/**
  * Generates a path for a set of nodes.
  *
  * @param path A pointer to an array that will store the path.
  * @param starting_node The index of the node to start the path at.
  * @param num_nodes The number of nodes in the graph.
  */
-void generate_path(int * path, int starting_node, int num_nodes);
+void generate_path(int *path, int starting_node, int num_nodes);
 
 /**
  * Asserts that a path is valid.
- * 
+ *
  * @param path The path to check.
  * @param distance_matrix The distance matrix for the graph.
  * @param nnodes The number of nodes in the graph.
  * @param tour_length The length of the tour.
-*/
-int assert_path(const int* path,const double* distance_matrix, int nnodes, double tour_length);
+ */
+int assert_path(const int *path, const double *distance_matrix, int nnodes, double tour_length);
 
 #endif

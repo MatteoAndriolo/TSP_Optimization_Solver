@@ -52,10 +52,11 @@ int main(int argc, char **argv)
 		INFO_COMMENT("main", "Selected model nearest_neighboor"); 
 		model_nearest_neighboor(&inst); 
 		break;
-	// case 2:	
-	// 	INFO_COMMENT("main", "Selected model extra_mileage");
-	// 	extra_mileage(&inst);
-	// 	break;
+	 case 2:	
+	 	INFO_COMMENT("main", "Selected model extra_mileage");
+		//TODO implement starting points
+	 	extra_mileage(&inst);
+	 	break;
 	// case 3:
 	// 	INFO_COMMENT("main", "Selected model modified_extra_mileage");
 	// 	updated_extra_mileage(&inst);
