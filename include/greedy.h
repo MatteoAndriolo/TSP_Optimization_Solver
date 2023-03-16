@@ -5,16 +5,28 @@
 #include <stdlib.h>
 #include <math.h>
 
-double distance(double point1_x, double point1_y, double point_x, double point_y);
 
-void model_nearest_neighboor(const Instance *inst);
+/**
+ * Implements the nearest neighbor heuristic to solve the TSP for the given instance.
+ * 
+ * @param inst a pointer to the instance to be solved
+ */
+void model_nearest_neighboor(Instance *inst);
 
-void extra_mileage(const Instance* inst);
+/**
+ * Implements a variation of the extra mileage heuristic to solve the TSP for the given instance.
+ * 
+ * @param inst a pointer to the instance to be solved
+ */
+void extra_mileage(Instance *inst);
 
-void updated_extra_mileage(const Instance *inst);
+/**
+ * Implements an updated version of the extra mileage heuristic to solve the TSP for the given instance.
+ * 
+ * @param inst a pointer to the instance to be solved
+ */
+void updated_extra_mileage(Instance *inst);
 
-void generate_distance_matrix(double ** matrix, const Instance* inst);
 
-void swap(int** arr, int i, int j);
 
 #endif /* NEAREST_NEIGHBOR_H */
