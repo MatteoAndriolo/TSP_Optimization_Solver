@@ -1,11 +1,6 @@
 #ifndef GREEDY_H
 #define GREEDY_H
 #include "vrp.h"
-#include "logger.h"
-#include "utils.h"
-#include "logger.h"
-#include <stdlib.h>
-#include <math.h>
 
 
 /**
@@ -14,6 +9,13 @@
  * @param inst a pointer to the instance to be solved
  */
 void model_nearest_neighboor(Instance *inst);
+
+/**
+ * Implements the nearest neighbor heuristic to solve the TSP for the given instance.
+ * 
+ * @param inst a pointer to the instance to be solved
+ */
+void nearest_neighboor(double *distance_matrix, int *path, int nnodes, int starting_node, double *tour_length);
 
 /**
  * Implements a variation of the extra mileage heuristic to solve the TSP for the given instance.

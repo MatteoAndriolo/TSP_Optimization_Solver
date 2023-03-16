@@ -6,11 +6,11 @@
 #include "vrp.h"
 
 // Parse arguments
-struct arguments {
+typedef struct arguments {
     Instance inst;
     int help;
     int help_models;
-};
+}Arguments;
 
 /**
  * Prints a usage message to the given file stream and exits with the given status.

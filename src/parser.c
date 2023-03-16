@@ -98,7 +98,7 @@ struct argp_option options[] = {
     {"node_file", 'n', "FILE", 0, "Cplex's node file"},
     {"max_nodes", 'N', "NUM", 0, "Max number of nodes"},
     {"cutoff", 'c', "VALUE", 0, "Master cutoff"},
-    {"verbosity", 'v', "NUM", 0, "Set verbosity 1-100"},
+    //{"verbosity", 'v', "NUM", 0, "Set verbosity 1-100"},
     {"int", 'i', 0, 0, "Integer costs"},
     {"help", 'h', 0, 0, "Show help"},
     };
@@ -113,6 +113,34 @@ error_t parse_option(int key, char *arg, struct argp_state *state)
     case 'f':
         strcpy(args->inst.input_file, arg);
         break;
+    // case 'g':
+    //     char *grasp_prob;
+    //     strcpy(grasp_prob, arg);
+    //     char *token;
+    //     int integers[5];
+    //     int i = 0;
+
+    //     token = strtok(grasp_prob, ",");
+    //     while (token != NULL)
+    //     {
+    //         integers[i++] = atoi(token);
+    //         token = strtok(NULL, ",");
+    //     }
+
+    //     printf("Array of integers: ");
+    //     for (i = 0; i < 4; i++)
+    //     {
+    //         if (i < sizeof(integers) / sizeof(integers[0]))
+    //         {
+    //             printf("%d ", integers[i]);
+    //         }
+    //         else
+    //         {
+    //             printf("0 ");
+    //         }
+    //     }
+    //     printf("\n");
+
     case 'l':
         args->inst.timelimit = atof(arg);
         break;
@@ -146,9 +174,9 @@ error_t parse_option(int key, char *arg, struct argp_state *state)
     case 'i':
         args->inst.integer_costs = 1;
         break;
-    case 'v':
-        args->inst.verbosity = atoi(arg);
-        break;
+    // case 'v':
+    //     args->inst.verbosity = atoi(arg);
+    //     break;
     case 'h':
         args->help = 1;
         break;
@@ -175,8 +203,10 @@ void parse_command_line(int argc, char **argv, struct arguments *args)
     args->inst.integer_costs = 0;
     args->inst.available_memory = 0;
     args->inst.max_nodes = 0;
-    args->inst.verbosity = 1;
+    args->inst.zbest = INFINITY;
+    //args->inst.verbosity = 1;
     // args->inst.node_file = 0;
+
     args->help = 0;
     args->help_models = 0;
 
@@ -212,5 +242,5 @@ void print_arguments(FILE *fp, const Instance *inst)
     fprintf(fp, "-o\toutput log file\t%i\t\n", inst->max_nodes);
     fprintf(fp, "-s\tseed\t\t%i\t\n", inst->randomseed);
     fprintf(fp, "-t\tnum threads\t%i\t\n", inst->num_threads);
-    fprintf(fp, "-v\tverbosity\t%i\t\n", inst->verbosity);
+    //fprintf(fp, "-v\tverbosity\t%i\t\n", inst->verbosity);
 }

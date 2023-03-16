@@ -13,7 +13,7 @@
  * @param y2 The y-coordinate of the second point.
  * @return The Euclidean distance between the two points.
  */
-double distance_euclidean(const double *x1, const double *y1, const double *x2, const double *y2);
+double distance_euclidean( double x1,  double y1,  double x2,  double y2);
 
 /**
  * Calculates the squared Euclidean distance between two points in 2D space.
@@ -24,7 +24,7 @@ double distance_euclidean(const double *x1, const double *y1, const double *x2, 
  * @param y2 The y-coordinate of the second point.
  * @return The squared Euclidean distance between the two points.
  */
-double distance_euclidean_square(const double *x1, const double *y1, const double *x2, const double *y2);
+double distance_euclidean_square( double x1,  double y1,  double x2,  double y2);
 
 /**
  * Generates a distance matrix for a set of nodes based on their x-y coordinates.
@@ -34,8 +34,9 @@ double distance_euclidean_square(const double *x1, const double *y1, const doubl
  * @param x An array of length nnodes containing the x-coordinates of the nodes.
  * @param y An array of length nnodes containing the y-coordinates of the nodes.
  * @param round A flag indicating whether to round the distances to the nearest integer.
+ *
  */
-double *generate_distance_matrix(double *matrix, const int nnodes, const double *x, const double *y, int round);
+void generate_distance_matrix(double **matrix, const int nnodes, const double *x, const double *y, int round);
 
 /**
  * Swaps two elements in an integer array.
@@ -63,6 +64,6 @@ void generate_path(int * path, int starting_node, int num_nodes);
  * @param nnodes The number of nodes in the graph.
  * @param tour_length The length of the tour.
 */
-int assert_path(const int* path,const double* distance_matrix, int nnodes, double tour_length){
+int assert_path(const int* path,const double* distance_matrix, int nnodes, double tour_length);
 
 #endif

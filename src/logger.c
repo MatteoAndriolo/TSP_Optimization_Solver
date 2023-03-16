@@ -1,9 +1,4 @@
 #include "logger.h"
-#include <stdarg.h>
-#include <time.h>
-#include <string.h>
-#include <unistd.h>
-#include "vrp.h"
 
 static FILE* log_file;
 
@@ -16,6 +11,31 @@ void logger_init(const char* log_filename) {
 
 void ffflush() {
     fflush(log_file);
+}
+
+void myfprintf(const char* format, ...) {
+    va_list args;
+    va_start(args, format);
+    vfprintf(log_file, format, args);
+    va_end(args);
+    ffflush();
+}
+
+void log_path(const int*path, int nnodes){
+    fprintf(log_file, "[");
+    for(int i=0; i<nnodes; i++){
+        fprintf(log_file, "%d,", path[i]);
+    }
+    fprintf(log_file, "]\n" );
+}
+
+void log_distancematrix(const double* distance_matrix, int nnodes){
+    fprintf(log_file,"%lf;",distance_matrix[0]);
+    for(int i=1; i<pow(nnodes,2);i++){
+        if(i%nnodes==0) fprintf(log_file,"\n");
+        fprintf(log_file,"%lf;",distance_matrix[i]);
+    }
+    fprintf(log_file,"\n");
 }
 
 void log_message(LogLevel level, const char* namefile_and_func, const char* format, ...) {
@@ -65,13 +85,29 @@ void log_message(LogLevel level, const char* namefile_and_func, const char* form
 }
 
 
-void log_output(const Instance *inst){
+void log_output_inst(const Instance *inst){
     //TODO implement string maker for final path to output
-    fprintf(log_file, "$STAT;%d;%lf;%lf;%d;%d;%s",
+    fprintf(log_file, "$STAT\tmod\tstart\tzbest\ttime_limit\tseed\tnnodes\tinput_file\n");
+    fprintf(log_file, "$STAT\t%d\t%d\t%lf\t%lf\t%d\t%d\t%s\n",
     inst->model_type,
+    inst->node_start,
     inst->zbest,        //double
     inst->timelimit,    //double
     inst->randomseed,
     inst->nnodes,
     inst->input_file);
+}
+
+void log_output(int model_type, int node_start, double zbest, double timelimit, int randomseed, int nnodes, char *input_file)
+{
+    // TODO implement string maker for final path to output
+    fprintf(log_file, "$STAT\tmod\tstart\tzbest\ttime_limit\tseed\tnnodes\tinput_file\n");
+    fprintf(log_file, "$STAT\t%d\t%d\t%lf\t%lf\t%d\t%d\t%s\n",
+            model_type,
+            node_start,
+            zbest,     // double
+            timelimit, // double
+            randomseed,
+            nnodes,
+            input_file);
 }
