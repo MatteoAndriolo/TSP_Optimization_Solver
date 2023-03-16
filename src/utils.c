@@ -43,7 +43,7 @@ double *generate_distance_matrix(double *matrix, const int nnodes, const double 
     return &matrix;
 }
 
-int *generate_path(int * path, int starting_node, int num_nodes){
+void generate_path(int * path, int starting_node, int num_nodes){
     for (int i = 0; i < num_nodes - starting_node; i++)
     {
         path[i] = i + starting_node;
@@ -52,5 +52,20 @@ int *generate_path(int * path, int starting_node, int num_nodes){
     {
         path[i] = i - (num_nodes - starting_node);
     }
-    return &path;
+}
+
+int assert_path(const int* path,const double* distance_matrix, int nnodes, double tour_length){
+    // all nodes used
+    int check_nnodes=((nnodes-1)*(nnodes-2))/2;
+    for(int i=0; i<nnodes; check_nnodes-=path[i++]);
+
+    // tour length correct
+    double check_tour_length=distance_matrix[path[0]*nnodes+path[nnodes-1]];
+    for(int i=0; i<nnodes-1; check_tour_length+=distance_matrix[path[i]*nnodes+path[++i]]);
+
+    
+    if (check_nnodes!=0 || check_tour_length!=tour_length){
+        ERROR_COMMENT("assert_path", "assert_path failed: check_nnodes=%d, check_tour_length=%lf, nnodes=%d, tour_length=%lf\n", check_nnodes, check_tour_length, tour_length);
+        return 0;
+    }
 }

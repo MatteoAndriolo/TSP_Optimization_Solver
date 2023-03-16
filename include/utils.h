@@ -53,6 +53,16 @@ void swap(int *arr, int i, int j);
  * @param starting_node The index of the node to start the path at.
  * @param num_nodes The number of nodes in the graph.
  */
-int *generate_path(int * path, int starting_node, int num_nodes);
+void generate_path(int * path, int starting_node, int num_nodes);
+
+/**
+ * Asserts that a path is valid.
+ * 
+ * @param path The path to check.
+ * @param distance_matrix The distance matrix for the graph.
+ * @param nnodes The number of nodes in the graph.
+ * @param tour_length The length of the tour.
+*/
+int assert_path(const int* path,const double* distance_matrix, int nnodes, double tour_length){
 
 #endif
