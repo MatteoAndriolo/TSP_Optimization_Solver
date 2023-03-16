@@ -133,7 +133,7 @@ void extra_mileage( Instance *inst)
         int node1, node2, node3;
         int min_index = -1;
         int best_nodes[3] = {-1, -1, -1};
-        double best_value = 99999999999999999999.000;
+        double best_value = INFINITY;
         char nodes_str[1024] = "";
         for (int o = 0; o < inst->nnodes; o++)
         {
@@ -234,7 +234,7 @@ void updated_extra_mileage(Instance *inst)
     swap(&nodes, 1, col);
 
     int count = 0;
-    double min = 9999999999999999999.00000;
+    double min = INFINITY;
     int i = 2;
     int j = 2;
     int k = 0;

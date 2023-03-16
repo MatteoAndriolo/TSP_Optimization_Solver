@@ -62,5 +62,6 @@ typedef struct {
 inline int imax(int i1, int i2) { return ( i1 > i2 ) ? i1 : i2; } 
 inline double dmin(double d1, double d2) { return ( d1 < d2 ) ? d1 : d2; } 
 inline double dmax(double d1, double d2) { return ( d1 > d2 ) ? d1 : d2; } 
+in
 
 #endif   /* VRP_H_ */ 
