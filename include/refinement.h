@@ -4,6 +4,6 @@
 #include <stdlib.h>
 #include "logger.h"
 
-void two_opt(double *matrix, int size_node, int *node);
+void two_opt(double *matrix, int size_node, int *path);
 
 #endif
