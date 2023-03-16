@@ -3,7 +3,7 @@
 #include "refinement.h"
 #include "logger.h"
 
-double nearest_neighboor(const double* distance_matrix, const int *path, int nnodes){
+double nearest_neighboor(double* distance_matrix, int *path, int nnodes){
 // nearest neighbor
         double tour_length = 0;
         int cur_node;

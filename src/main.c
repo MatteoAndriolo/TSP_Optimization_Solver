@@ -59,7 +59,16 @@ int main(int argc, char **argv)
 		INFO_COMMENT("main", "Start model modified_extra_mileage");
 		updated_extra_mileage(&inst);
 		break;
-	
+	case 4: 
+		INFO_COMMENT("main", "generate all istance for eache algortihm");
+		double *matrix = (double *) malloc(sizeof(double) * inst.nnodes * inst.nnodes);
+		int *path = (int *) malloc(sizeof(int) * inst.nnodes);
+		//TODO: change the starting node
+		//TODO: fix rounding error
+		*path = generate_path(path, 4, inst.nnodes);
+		matrix = generate_distance_matrix(matrix, inst.nnodes, path, path, 2);
+
+
 	default:
 		ERROR_COMMENT("main", "Model not found");
 		show_models(stdout, 0);

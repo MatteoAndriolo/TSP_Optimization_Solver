@@ -13,7 +13,7 @@
  * @param y2 The y-coordinate of the second point.
  * @return The Euclidean distance between the two points.
  */
-inline double distance_euclidean(const double *x1, const double *y1, const double *x2, const double *y2);
+double distance_euclidean(const double *x1, const double *y1, const double *x2, const double *y2);
 
 /**
  * Calculates the squared Euclidean distance between two points in 2D space.
@@ -24,7 +24,7 @@ inline double distance_euclidean(const double *x1, const double *y1, const doubl
  * @param y2 The y-coordinate of the second point.
  * @return The squared Euclidean distance between the two points.
  */
-inline double distance_euclidean_square(const double *x1, const double *y1, const double *x2, const double *y2);
+double distance_euclidean_square(const double *x1, const double *y1, const double *x2, const double *y2);
 
 /**
  * Generates a distance matrix for a set of nodes based on their x-y coordinates.
@@ -35,7 +35,7 @@ inline double distance_euclidean_square(const double *x1, const double *y1, cons
  * @param y An array of length nnodes containing the y-coordinates of the nodes.
  * @param round A flag indicating whether to round the distances to the nearest integer.
  */
-void generate_distance_matrix(double *matrix, const int nnodes, const double *x, const double *y, int round);
+double *generate_distance_matrix(double *matrix, const int nnodes, const double *x, const double *y, int round);
 
 /**
  * Swaps two elements in an integer array.
@@ -44,7 +44,7 @@ void generate_distance_matrix(double *matrix, const int nnodes, const double *x,
  * @param i The index of the first element to swap.
  * @param j The index of the second element to swap.
  */
-inline void swap(int *arr, int i, int j);
+void swap(int *arr, int i, int j);
 
 /**
  * Generates a path for a set of nodes.
@@ -53,6 +53,6 @@ inline void swap(int *arr, int i, int j);
  * @param starting_node The index of the node to start the path at.
  * @param num_nodes The number of nodes in the graph.
  */
-inline void generate_path(int * path, int starting_node, int num_nodes);
+int *generate_path(int * path, int starting_node, int num_nodes);
 
 #endif
