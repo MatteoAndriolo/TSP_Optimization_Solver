@@ -82,24 +82,13 @@ int assert_path(const int *path, const double *distance_matrix, int nnodes, doub
     return 1;
 }
 
-void generate_random_starting_nodes(int *starting_nodes, int N, int seed)
+void generate_random_starting_nodes(int *starting_nodes, int num_nodes, int num_instances, int seed)
 {
-
-    int *generated_nodes = calloc(N, sizeof(int)); // allocate memory for the boolean array
-    srand(seed); // seed the random number generator with the current time
-
-    // generate N different random starting nodes
-    for (int i = 0; i < N; i++)
+    srand(seed);
+    for (int i = 0; i < num_instances; i++)
     {
-        int node;
-        do
-        {
-            node = rand() % N;           // generate a random node
-        } while (generated_nodes[node]); // check if it's already been generated
-
-        generated_nodes[node] = 1; // mark the node as generated
-        starting_nodes[i] = node;     // add the unique node to the array
+        int node = rand() % num_nodes;
+        DEBUG_COMMENT("generate_random_starting_nodes", "node=%d", node);
+        starting_nodes[i] = node;
     }
-
-    free(generated_nodes); // free the allocated memory for the boolean array
 }

@@ -88,9 +88,10 @@ void set_starting_node(int *path, int starting_node, int num_nodes);
  * Generates a set of random starting nodes.
  *
  * @param starting_nodes A pointer to an array that will store the starting nodes.
- * @param N The number of starting nodes to generate.
+ * @param num_instances The number of starting nodes to generate.
  * @param seed The seed for the random number generator.
+ * @param num_nodes The number of nodes in the graph.
  */
-void  generate_random_starting_nodes(int * starting_nodes,int N, int seed);
+void generate_random_starting_nodes(int *starting_nodes, int num_nodes, int num_instances, int seed);
 
 #endif
