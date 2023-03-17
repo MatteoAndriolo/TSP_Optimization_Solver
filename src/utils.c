@@ -33,9 +33,9 @@ inline double distance_euclidean_square(double x1, double y1, double x2, double 
 void generate_distance_matrix(double **matrix, const int nnodes, const double *x, const double *y, int r)
 {
     DEBUG_COMMENT("greedy::generate_distance_matrix", "Generating distance matrix");
-    for (int i = 0; i <= nnodes; i++)
+    for (int i = 0; i < nnodes; i++)
     {
-        for (int j = 0; j <= nnodes; j++)
+        for (int j = 0; j < nnodes; j++)
         {
             (*matrix)[i * nnodes + j] = round(distance_euclidean(x[i], y[i], x[j], y[j]));
         }
