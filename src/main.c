@@ -57,7 +57,7 @@ int main(int argc, char **argv)
 	 case 2:	
 	 	INFO_COMMENT("main", "Selected model extra_mileage");
 		//TODO implement starting points
-	 	extra_mileage(&inst);
+	 	extra_mileage(&inst, number_of_instances);
 	 	break;
 	// case 3:
 	// 	INFO_COMMENT("main", "Selected model modified_extra_mileage");
