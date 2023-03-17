@@ -47,7 +47,7 @@ void generate_distance_matrix(double **matrix, const int nnodes, const double *x
     DEBUG_COMMENT("greedy::generate_distance_*matrix", "Finised generating distance *matrixrix");
 }
 
-void check_path(int *path, int starting_node, int num_nodes)
+void set_starting_node(int *path, int starting_node, int num_nodes)
 {
     for (int i = 0; i < num_nodes; i++)
     {

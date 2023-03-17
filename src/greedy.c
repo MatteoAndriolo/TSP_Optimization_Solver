@@ -54,13 +54,12 @@ void model_nearest_neighboor(Instance *inst, int instances)
     // -----------  CALLING INSTANCES ------------------------------------------------
     for (int y = 0; y < instances; y++)
     {
-        check_path(nodes, starting_nodes[y], inst->nnodes);
+        set_starting_node(nodes, starting_nodes[y], inst->nnodes);
         // -----------  MAIN CYCLE ------------------------------------------------
         DEBUG_COMMENT("greedy::model_nearest_neighboor", "Starting main cycle");
         double tour_length;
 
-        for (int i = 0; i < inst->nnodes; i++)
-        {
+      
             // initialize array [0,1,2,3,4...,n] - stores final path
 
             // set starting point at j (e.g. j=4 -> [4,1,2,3,0,5,...,n])
@@ -79,7 +78,6 @@ void model_nearest_neighboor(Instance *inst, int instances)
             OUTPUT_COMMENT("greedy::nearest_neighboor", "Optimal Tour lenght = %f", tour_length);
             log_output(inst->model_type, i, inst->zbest, inst->timelimit, inst->randomseed, inst->nnodes, inst->input_file);
             log_path(nodes, inst->nnodes);
-        }
 
         INFO_COMMENT("greedy::model_nearest_neighboor", "Optimal tour lenght found --> %f", tour_length);
 

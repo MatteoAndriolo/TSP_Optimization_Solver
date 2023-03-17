@@ -82,7 +82,7 @@ swap the starting node with the first node in the path
 * @param starting_node The index of the node to start the path at.
 * @param num_nodes The number of nodes in the graph.
 */
-void check_path(int *path, int starting_node, int num_nodes);
+void set_starting_node(int *path, int starting_node, int num_nodes);
 
 /**
  * Generates a set of random starting nodes.
