@@ -47,15 +47,14 @@ void generate_distance_matrix(double **matrix, const int nnodes, const double *x
     DEBUG_COMMENT("greedy::generate_distance_*matrix", "Finised generating distance *matrixrix");
 }
 
-void generate_path(int *path, int starting_node, int num_nodes)
+void set_starting_node(int *path, int starting_node, int num_nodes)
 {
-    for (int i = 0; i < num_nodes - starting_node; i++)
+    for (int i = 0; i < num_nodes; i++)
     {
-        path[i] = i + starting_node;
-    }
-    for (int i = num_nodes - starting_node; i < num_nodes; i++)
-    {
-        path[i] = i - (num_nodes - starting_node);
+        if (path[i] == starting_node)
+        {
+            swap(path, i, 0);
+        }
     }
 }
 
@@ -81,4 +80,26 @@ int assert_path(const int *path, const double *distance_matrix, int nnodes, doub
         return 0;
     }
     return 1;
+}
+
+void generate_random_starting_nodes(int *starting_nodes, int N, int seed)
+{
+
+    int *generated_nodes = calloc(N, sizeof(int)); // allocate memory for the boolean array
+    srand(seed); // seed the random number generator with the current time
+
+    // generate N different random starting nodes
+    for (int i = 0; i < N; i++)
+    {
+        int node;
+        do
+        {
+            node = rand() % N;           // generate a random node
+        } while (generated_nodes[node]); // check if it's already been generated
+
+        generated_nodes[node] = 1; // mark the node as generated
+        starting_nodes[i] = node;     // add the unique node to the array
+    }
+
+    free(generated_nodes); // free the allocated memory for the boolean array
 }

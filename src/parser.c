@@ -196,7 +196,7 @@ void parse_command_line(int argc, char **argv, struct arguments *args)
     /* Default values. */
     // args->inst.input_file = NULL;
     args->inst.model_type = 0;
-    args->inst.randomseed = 0;
+    args->inst.randomseed = 23;
     args->inst.num_threads = 0;
     args->inst.timelimit = INFTY;
     args->inst.cutoff = INFTY;
