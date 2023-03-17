@@ -76,4 +76,21 @@ void generate_path(int *path, int starting_node, int num_nodes);
  */
 int assert_path(const int *path, const double *distance_matrix, int nnodes, double tour_length);
 
+/**
+swap the starting node with the first node in the path
+* @param path The path to check.
+* @param starting_node The index of the node to start the path at.
+* @param num_nodes The number of nodes in the graph.
+*/
+void check_path(int *path, int starting_node, int num_nodes);
+
+/**
+ * Generates a set of random starting nodes.
+ *
+ * @param starting_nodes A pointer to an array that will store the starting nodes.
+ * @param N The number of starting nodes to generate.
+ * @param seed The seed for the random number generator.
+ */
+void  generate_random_starting_nodes(int * starting_nodes,int N, int seed);
+
 #endif

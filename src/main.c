@@ -10,6 +10,7 @@
 
 int main(int argc, char **argv)
 {
+	int number_of_instances = 5;
 	logger_init("example.log");
 	Instance inst;
 
@@ -45,12 +46,13 @@ int main(int argc, char **argv)
 	//plot(&inst);
 	log_output_inst(&inst);
 	printf("%d",inst.nnodes);
+
 	// Manage model selection -------------------------------------------------
 	switch (inst.model_type)
 	{
 	case 1:
 		INFO_COMMENT("main", "Selected model nearest_neighboor"); 
-		model_nearest_neighboor(&inst); 
+		model_nearest_neighboor(&inst, number_of_instances); 
 		break;
 	 case 2:	
 	 	INFO_COMMENT("main", "Selected model extra_mileage");

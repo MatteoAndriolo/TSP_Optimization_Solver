@@ -7,8 +7,9 @@
  * Implements the nearest neighbor heuristic to solve the TSP for the given instance.
  * 
  * @param inst a pointer to the instance to be solved
+ * @param instances the number of instances to be solved
  */
-void model_nearest_neighboor(Instance *inst);
+void model_nearest_neighboor(Instance *inst, int instances);
 
 /**
  * Implements the nearest neighbor heuristic to solve the TSP for the given instance.
