@@ -11,14 +11,18 @@ OBJ_FILES = $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(SRC_FILES))
 
 TARGET = $(BIN_DIR)/main
 
+dir_guard=@mkdir -p $(@D)
+
 .PHONY: all clean production   # all and clean are not file, just targets.
 
 all: clean $(TARGET)
 
 $(TARGET): $(OBJ_FILES)
+	$(dir_guard)
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
+	$(dir_guard)
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:
