@@ -1,6 +1,8 @@
 
 CC = gcc
 CFLAGS = -Wall -Werror -pedantic -I./include
+CFLAGS += -g
+#CFLAGS += -O3
 LDFLAGS = -lm
 SRC_DIR = ./src
 OBJ_DIR = ./obj

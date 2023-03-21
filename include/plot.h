@@ -2,6 +2,12 @@
 #define PLOT_H
 #include "vrp.h"
 
-void plot(Instance *inst);
+/**
+ * @brief Plot the solution
+ * 
+ * @param inst
+ * @return void
+*/
+void plot(const Instance *inst);
 
 #endif

@@ -10,7 +10,7 @@
 
 int main(int argc, char **argv)
 {
-	int number_of_instances = 5;
+	int number_of_instances = 2;
 	logger_init("example.log");
 	Instance inst;
 
@@ -41,12 +41,6 @@ int main(int argc, char **argv)
 	read_input(&inst);
 	DEBUG_COMMENT("main::read_input","Input read, nnodes= %d", inst.nnodes);
 	
-	// Plot -------------------------------------------------------------------
-	//INFO_COMMENT("main::plot", "Plotting with gnuplot"); 
-	//plot(&inst);
-	log_output_inst(&inst);
-	printf("%d",inst.nnodes);
-
 	// Manage model selection -------------------------------------------------
 	switch (inst.model_type)
 	{
@@ -78,6 +72,9 @@ int main(int argc, char **argv)
 		show_models(stdout, 0);
 		break;
 	}
+
+	OUTPUT_COMMENT("main", "End of the program");
+	plot(&inst);
 
 	return 0;
 }

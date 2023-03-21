@@ -74,7 +74,7 @@ void generate_path(int *path, int starting_node, int num_nodes);
  * @param nnodes The number of nodes in the graph.
  * @param tour_length The length of the tour.
  */
-int assert_path(const int *path, const double *distance_matrix, int nnodes, double tour_length);
+int assert_path(const int *path, const double *distance_matrix, const int nnodes,const double tour_length);
 
 /**
 swap the starting node with the first node in the path
