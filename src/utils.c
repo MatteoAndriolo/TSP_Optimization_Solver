@@ -54,8 +54,10 @@ void set_starting_node(int *path, int starting_node, int num_nodes)
         if (path[i] == starting_node)
         {
             swap(path, i, 0);
+            return;
         }
     }
+    ERROR_COMMENT("set_starting_node", "Starting node not found");
 }
 
 int assert_path(const int *path, const double *distance_matrix, const int nnodes,const double tour_length)
@@ -66,7 +68,7 @@ int assert_path(const int *path, const double *distance_matrix, const int nnodes
 
     // tour length correct
     double check_tour_length = 0; // distance_matrix[path[0] * nnodes + path[nnodes - 1]];
-    for (int i = 0; i < nnodes - 1; i++)
+    for (int i = 0; i < nnodes-1 ; i++)
     {
         check_tour_length += distance_matrix[path[i] * nnodes + path[i + 1]];
     }

@@ -10,7 +10,7 @@
 
 int main(int argc, char **argv)
 {
-	int number_of_instances = 2;
+	int number_of_instances = 5;
 	logger_init("example.log");
 	Instance inst;
 

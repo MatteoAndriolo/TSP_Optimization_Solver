@@ -18,7 +18,7 @@ void plot(const Instance *inst)
     fprintf(gnuplotPipe, "set title 'My Plot'\n");
     fprintf(gnuplotPipe, "set xlabel 'X Axis'\n");
     fprintf(gnuplotPipe, "set ylabel 'Y Axis'\n");
-    fprintf(gnuplotPipe, "plot '-' with line, '-' with point\n");
+    fprintf(gnuplotPipe, "plot '-' with line, '-' with points\n");
 
     // Implicit draw the line
     int node;
@@ -28,9 +28,14 @@ void plot(const Instance *inst)
         fprintf(gnuplotPipe, "%d %d\n", (int)inst->x[node], (int)inst->y[node]);
     }
     fprintf(gnuplotPipe, "%d %d\n", (int)inst->x[inst->path_best[0]], (int)inst->y[inst->path_best[0]]);
-
-
     fprintf(gnuplotPipe, "e\n");
+    for (int i = 0; i < inst->nnodes; i++)
+    {
+        node=inst->path_best[i];
+        fprintf(gnuplotPipe, "%d %d\n", (int)inst->x[node], (int)inst->y[node]);
+    }
+
+
     DEBUG_COMMENT("plot::plot","close gnuplot pipe");
     fclose(gnuplotPipe);
     DEBUG_COMMENT("plot::plot", "write on the terminal the command to launch gnuplot");
