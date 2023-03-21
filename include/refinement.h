@@ -13,6 +13,6 @@
  *
  * @return void
  */
-void two_opt(double *matrix, int size_node, int *path);
+void two_opt(double *matrix, int size_node, int *path, double *tour_lenght);
 
 #endif

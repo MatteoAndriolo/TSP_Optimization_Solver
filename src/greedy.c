@@ -81,10 +81,11 @@ void model_nearest_neighboor(Instance *inst, int instances)
             inst->zbest = tour_length;
             // memcpy(inst->path_best, nodes, sizeof(double) * inst->nnodes); //FIXME trapass border
         }
+        
+        two_opt(distance_matrix,inst->nnodes,nodes, &tour_length);
         OUTPUT_COMMENT("greedy::nearest_neighboor", "Optimal Tour lenght = %f", tour_length);
         log_output(inst->model_type, y, inst->zbest, inst->timelimit, inst->randomseed, inst->nnodes, inst->input_file);
         log_path(nodes, inst->nnodes);
-        ;
         INFO_COMMENT("greedy::model_nearest_neighboor", "Optimal tour lenght found --> %f", tour_length);
     }
     // TODO Free memory
@@ -215,12 +216,13 @@ void extra_mileage(Instance *inst, int instances)
             }
             DEBUG_COMMENT("greedy::Extra_mileage", "path: %s", nodes_str);
         }
-
+       
         // Put the saved value from position j into position i
         if (assert_path(path, distance_matrix, inst->nnodes, tour_length))
             OUTPUT_COMMENT("greedy::extra_mileage", "found best tour lenght %lf", tour_length);
         log_output(inst->model_type, path[0], tour_length, inst->timelimit, inst->randomseed, inst->nnodes, inst->input_file);
         inst->path_best = path;
+        two_opt(distance_matrix,inst->nnodes,path, &tour_length);
         plot(inst);
     }
     // free memory

@@ -2,6 +2,7 @@
 #define GREEDY_H
 #include "vrp.h"
 #include "plot.h"
+#include "refinement.h"
 
 /**
  * Implements the nearest neighbor heuristic to solve the TSP for the given instance.
