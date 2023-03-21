@@ -8,8 +8,10 @@ void read_input(Instance *inst) // simplified CVRP parser, not all SECTIONs dete
     
     FILE *fin = fopen(inst->input_file, "r");
 
-    if (fin == NULL)
+    if (fin == NULL){
         ERROR_COMMENT("parser::read_input","File not found/not exists");
+        exit(1);
+    }
     
     DEBUG_COMMENT("parser::read_input","inizialize the variables");
     inst->nnodes = -1;
@@ -35,7 +37,7 @@ void read_input(Instance *inst) // simplified CVRP parser, not all SECTIONs dete
             DEBUG_COMMENT("parser::read_input","Number of nodes in the field DIMENSION: %d", number_nodes);
 
             inst->nnodes = number_nodes-1;
-            inst->x = (double *)calloc(number_nodes, sizeof(double));//TODO ? MALLOC IS BETTER 
+            inst->x = (double *)calloc(number_nodes, sizeof(double));
             inst->y = (double *)calloc(number_nodes, sizeof(double));
 
             DEBUG_COMMENT("parser::read_input","Memory for x and y allocated");
@@ -48,7 +50,7 @@ void read_input(Instance *inst) // simplified CVRP parser, not all SECTIONs dete
             with calloc of size of nom_nodes, store inside pair the 2 coordinates
             */
 
-            if (sscanf(line, "%d %lf %lf", &node_number, &node_x, &node_y) == 3)//TODO: can use %*d to just read and don't use it 
+            if (sscanf(line, "%d %lf %lf", &node_number, &node_x, &node_y) == 3)
             {
                 int nn = node_number - 1;
                 inst->x[nn] = node_x;
@@ -194,7 +196,7 @@ struct argp argp_parser = {options, parse_option, 0, doc};
 void parse_command_line(int argc, char **argv, struct arguments *args)
 {
     /* Default values. */
-    // args->inst.input_file = NULL;
+    args->inst.input_file[0] = '\0';
     args->inst.model_type = 0;
     args->inst.randomseed = 23;
     args->inst.num_threads = 0;
@@ -237,9 +239,9 @@ void print_arguments(FILE *fp, const Instance *inst)
     fprintf(fp, "-l\ttime limit\t%f\t\n", inst->timelimit);
     fprintf(fp, "-L\tmemory limit\t%i\t\n", inst->available_memory);
     fprintf(fp, "-m\tmodel type\t%i\t\n", inst->model_type);
-    fprintf(fp, "-n\tnode file\t%s\t\n", inst->node_file);
-    fprintf(fp, "-N\tmax nodes\t%i\t\n", inst->max_nodes);
-    fprintf(fp, "-o\toutput log file\t%i\t\n", inst->max_nodes);
+    //fprintf(fp, "-n\tnode file\t%s\t\n", inst->node_file);
+    //fprintf(fp, "-N\tmax nodes\t%i\t\n", inst->max_nodes);
+    //fprintf(fp, "-o\toutput log file\t%i\t\n", inst->output_log_file);
     fprintf(fp, "-s\tseed\t\t%i\t\n", inst->randomseed);
     fprintf(fp, "-t\tnum threads\t%i\t\n", inst->num_threads);
     //fprintf(fp, "-v\tverbosity\t%i\t\n", inst->verbosity);
