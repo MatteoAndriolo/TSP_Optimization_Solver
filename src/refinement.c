@@ -10,7 +10,7 @@ void two_opt(double *distance_matrix, int nnode, int *path, double *tour_lenght)
     /*- count è un contatore che ha come logica quella di fare  check se non ci sono stati un tot di improvement in 2 optù
       - ho aggiunto nella condizione if il fatto che se improvement è >0 non deve fare nulla e aumenta il count 
       - se alla fine della fiera non trova abbastanza improvement taglia il while e finisce 2opt*/
-    while (count < ((int)nnode * 0.4))
+    while (count < ((int)nnode * 0.9))
     {
         count = 0;
         for (int i = 0; i < nnode; i++)
@@ -37,12 +37,6 @@ void two_opt(double *distance_matrix, int nnode, int *path, double *tour_lenght)
                           + distance_matrix[path[i + 1] * nnode + path[index_min + 1]]      // ADD LINK BETWEEN i+1 and min_index + 1
                           - distance_matrix[path[index_min] * nnode + path[index_min + 1]]; // ELIMINATE index_min and the position after min_index
             // ADD THE BASELINE WITH THE MIN FOUND SUCCESSOR
-            *tour_lenght += improvement;
-            CRITICAL_COMMENT("refinement:two_opt", "Improvement: %f", improvement);
-            CRITICAL_COMMENT("refinement:two_opt", "add i + min_index: %f", min_cost);
-            CRITICAL_COMMENT("refinement:two_opt", "delated min_index and min_index + 1: %f", distance_matrix[path[index_min] * nnode + path[index_min + 1]]);
-            CRITICAL_COMMENT("refinement:two_opt", "delated i and i + 1 : %f", distance_matrix[path[i] * nnode + path[i + 1]]);
-            CRITICAL_COMMENT("refinement:two_opt", "add i + 1 and min_index + 1: %f", distance_matrix[path[i + 1] * nnode + path[index_min + 1]]);
             if (index_min != i + 1 && improvement < 0) // found new optimal edge (i, index_min)
             {
                 int ti = i + 1;
@@ -52,6 +46,8 @@ void two_opt(double *distance_matrix, int nnode, int *path, double *tour_lenght)
                     path[z + ti] = path[index_min - z];
                     path[index_min - z] = temp;
                 }
+             CRITICAL_COMMENT("refinement:two_opt", "Improvement: %f", improvement);
+            *tour_lenght += improvement;
             }else count++;
         }
     }
