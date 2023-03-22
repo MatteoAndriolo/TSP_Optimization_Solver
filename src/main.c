@@ -58,19 +58,18 @@ int main(int argc, char **argv)
 
 		int *path = malloc(sizeof(int) * args.nnodes);
 		generate_path(path, starting_points[c_inst], args.nnodes);
-
+		char title[25]="\0";
+		snprintf(title, 25, "sn%d_", starting_points[c_inst]);
 		for (int j = 0; j < n_passagges; j++)
 		{
 			INFO_COMMENT("main::main", "Generating instance");
 			if (strcmp(passagges[j], "nn") == 0)
 			{
 				nearest_neighboor(distance_matrix, path, args.nnodes, &instances[c_inst].tour_lenght);
-				continue;
 			}
 			if (strcmp(passagges[j], "em")==0)
 			{
 				extra_mileage(distance_matrix, path, args.nnodes, &instances[c_inst].tour_lenght);
-				continue;
 			}
 			/*
 			if(passagges[j] =="nng")
@@ -82,9 +81,11 @@ int main(int argc, char **argv)
 			if (strcmp(passagges[j], "2opt") == 0)
 			{
 				two_opt(distance_matrix, args.nnodes, path, &instances[c_inst].tour_lenght);
-				continue;
 			}
+			strcpy(title+strlen(title), passagges[j]);	
+			plot(path, args.x,args.y, args.nnodes, title );
 		}
+		free(path);
 	}
 	// case 3:
 	// 	INFO_COMMENT("main", "Selected model modified_extra_mileage");
