@@ -94,3 +94,13 @@ void generate_random_starting_nodes(int *starting_nodes, int num_nodes, int num_
         starting_nodes[i] = node;
     }
 }
+
+void generate_path(int *path, int starting_node, int num_nodes)
+{
+    for (int i = 0; i < num_nodes; i++)
+    {
+        path[i] = i;
+    }
+    path[starting_node]=0;
+    path[0]=starting_node;
+}

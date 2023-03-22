@@ -107,9 +107,6 @@ void parse_model_name(char *model_type, char ***passagges, int *n_passagges)
         sscanf(model_type + ind, "%s", p[i]);
         ind += strlen(p[i]) + 1;
     }
-	for(int i=0;i<*n_passagges;i++){
-		printf("%s\n",p[i]);
-	}
     *passagges=(char**)p;
 }
 
@@ -119,7 +116,7 @@ void print_arguments(const Args *args)
     printf("-input %s\n", args->input_file);
     printf("-m %s\n", args->model_type);
     printf("--seed %d\n", args->randomseed);
-    printf("--num_argsances %d\n", args->num_instances);
+    printf("--num_instances %d\n", args->num_instances);
     printf("----------------------------------------------------------------------------------------------\n\n");
 }
 
@@ -127,13 +124,13 @@ void parse_command_line(int argc, char **argv, Args *args)
 {
     // defaults
     // strcpy(args->model_type, "\0");
+    args->num_instances = 1;
     args->integer_costs = 0;
     args->randomseed = 1234;
     args->timelimit = 3600.0;
     strcpy(args->input_file, "\0");
     strcpy(args->log_file, "\0");
 
-    args->num_instances = 0;
     int help = 0;
     if (argc < 1)
         help = 1;
@@ -159,7 +156,6 @@ void parse_command_line(int argc, char **argv, Args *args)
         if ((strcmp(argv[i], "-file") == 0) | (strcmp(argv[i], "-input") == 0) | (strcmp(argv[i], "-f") == 0))
         {
             strcpy(args->input_file, argv[++i]);
-            printf("input file: %s\n", args->input_file);
             fflush(stdout);
             continue;
         } // input file
@@ -173,18 +169,17 @@ void parse_command_line(int argc, char **argv, Args *args)
         {
             args->num_instances = atoi(argv[++i]);
         }
-        // if ( strcmp(argv[i],"-memory") == 0 ) { inst->available_memory = atoi(argv[++i]); continue; }	// available memory (in MB)
-        // if ( strcmp(argv[i],"-node_file") == 0 ) { strcpy(inst->node_file,argv[++i]); conggtinue; }		// cplex's node file
-        // if ( strcmp(argv[i],"-max_nodes") == 0 ) { inst->max_nodes = atoi(argv[++i]); continue; } 		// max n. of nodes
-        // if ( strcmp(argv[i],"-cutoff") == 0 ) { inst->cutoff = atof(argv[++i]); continue; }				// master cutoff
         if ((strcmp(argv[i], "-help") == 0) | (strcmp(argv[i], "--help") == 0))
         {
             help = 1;
             continue;
         } // help
-    }
 
-    print_arguments(args);
+        // if ( strcmp(argv[i],"-memory") == 0 ) { inst->available_memory = atoi(argv[++i]); continue; }	// available memory (in MB)
+        // if ( strcmp(argv[i],"-node_file") == 0 ) { strcpy(inst->node_file,argv[++i]); conggtinue; }		// cplex's node file
+        // if ( strcmp(argv[i],"-max_nodes") == 0 ) { inst->max_nodes = atoi(argv[++i]); continue; } 		// max n. of nodes
+        // if ( strcmp(argv[i],"-cutoff") == 0 ) { inst->cutoff = atof(argv[++i]); continue; }				// master cutoff
+    }
 
     if (help)
         exit(1);

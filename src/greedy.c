@@ -6,7 +6,7 @@
 #include <math.h>
 #include "refinement.h"
 
-void nearest_neighboor(const double *distance_matrix, int *path, int nnodes, int starting_node, double *tour_length)
+void nearest_neighboor(const double *distance_matrix, int *path, int nnodes, double *tour_length)
 {
     int current_node;
     int best_remaining = -1;
@@ -31,208 +31,108 @@ void nearest_neighboor(const double *distance_matrix, int *path, int nnodes, int
     }
     // complete the tour
     (*tour_length) += distance_matrix[path[0] * nnodes + path[nnodes - 1]];
+
+    int path_is_ok = assert_path(path, distance_matrix, nnodes, *tour_length);
+    if (!path_is_ok)
+    {
+        ERROR_COMMENT("greedy::model_nearest_neighboor", "path is not ok");
+        *tour_length = -1;
+    }
 }
 
-void model_nearest_neighboor(Instance *inst, int instances)
+void extra_mileage(const double *distance_matrix, int *path, int nnodes, double *tour_length)
 {
-    //----------------- DISTANCE MATRIX ----------------------------------------------------
-    INFO_COMMENT("greedy::model_nearest_neighboor", "Starts model nearest neighboor");
-    double *distance_matrix = (double *)malloc(pow(inst->nnodes, 2) * sizeof(double));
-    generate_distance_matrix(&distance_matrix, inst->nnodes, inst->x, inst->y, inst->integer_costs);
-    log_distancematrix(distance_matrix, inst->nnodes);
-    //-------------- STARTING NODES -------------------------------------------------------
-    DEBUG_COMMENT("greedy::model_nearest_neighboor", "distance matrix generated");
-    int *starting_nodes = (int *)malloc(sizeof(int) * instances);
-    generate_random_starting_nodes(starting_nodes, inst->nnodes, instances, inst->randomseed);
-    DEBUG_COMMENT("greedy::model_nearest_neighboor", "starting nodes generated");
-    //-------------- INIZIALIZE THE ARRAY ---------------------------------------------
-    int *nodes = malloc(inst->nnodes * sizeof(int));
-    for (int j = 0; j < inst->nnodes; j++)
+    //--------------- FIND DIAMETER -------------------------------------------
+    double max_distance = 0;
+    int max_index = -1;
+
+    for (int i = 1; i < nnodes; i++)
     {
-        nodes[j] = j;
-    }
-    // -----------  CALLING INSTANCES ------------------------------------------------
-    for (int y = 0; y < instances; y++)
-    {
-        set_starting_node(nodes, starting_nodes[y], inst->nnodes);
-        //------------------DEBUG--------------------------
-        char nodes_str[1024] = "";
-        for (int o = 0; o < inst->nnodes; o++)
+        if (distance_matrix[path[0] * nnodes + i] > max_distance &&
+            distance_matrix[path[0] * nnodes + i] != INFINITY)
         {
-            char node_val[16] = "";
-            sprintf(node_val, " |%d| ", nodes[o]);
-            strcat(nodes_str, node_val);
+            max_distance = distance_matrix[path[0] * nnodes + i];
+            max_index = i;
         }
-        DEBUG_COMMENT("greedy::Extra_mileage", "Nodes: %s", nodes_str);
-        //------------------DEBUG--------------------------
-
-        // -----------  MAIN CYCLE ------------------------------------------------
-        DEBUG_COMMENT("greedy::model_nearest_neighboor", "Starting main cycle");
-        double tour_length;
-
-        INFO_COMMENT("greedy::model_nearest_neighboor", "Starting from %d", y);
-        tour_length = 0;
-        nearest_neighboor(distance_matrix, nodes, inst->nnodes, y, &tour_length);
-
-        DEBUG_COMMENT("greedy::model_nearest_neighboor", "Best tour length starting from %d is %f", y, tour_length);
-        int path_is_ok = assert_path(nodes, distance_matrix, inst->nnodes, tour_length);
-        if (path_is_ok && tour_length < inst->zbest)
-        {
-            inst->zbest = tour_length;
-            // memcpy(inst->path_best, nodes, sizeof(double) * inst->nnodes); //FIXME trapass border
-        }
-
-        two_opt(distance_matrix, inst->nnodes, nodes, &tour_length);
-        OUTPUT_COMMENT("greedy::nearest_neighboor", "Optimal Tour lenght = %f", tour_length);
-        log_output(inst->model_type, y, inst->zbest, inst->timelimit, inst->randomseed, inst->nnodes, inst->input_file);
-        log_path(nodes, inst->nnodes);
-        INFO_COMMENT("greedy::model_nearest_neighboor", "Optimal tour lenght found --> %f", tour_length);
     }
-    // TODO Free memory
-    inst->path_best = nodes;
-    free(distance_matrix);
-    free(starting_nodes);
-}
+    DEBUG_COMMENT("greedy::Extra_mileage", "max distance = %lf, at index = %d", max_distance, max_index);
+    swap(path, 1, max_index);
 
-void extra_mileage(Instance *inst, int instances)
-{
-    // GENERATE DISTANCE MATRIX ----------------------------------------------------
-    DEBUG_COMMENT("greedy::Extra_mileage", "start extra mileage");
-    double *distance_matrix = (double *)malloc(pow(inst->nnodes, 2) * sizeof(double));
-    generate_distance_matrix(&distance_matrix, inst->nnodes, inst->x, inst->y, inst->integer_costs);
-    DEBUG_COMMENT("greedy::Extra_mileage", "distance matrix generated");
-    log_distancematrix(distance_matrix, inst->nnodes);
+    //--------------- START SEARCH -------------------------------------------
+    *tour_length = 2 * max_distance;
+    DEBUG_COMMENT("greedy::Extra_mileage", "initial tour length = %lf", tour_length);
+    int node_3[3];
+    double min = INFINITY;
 
-    // STARTING NODES --------------------------------------------------------------
-    DEBUG_COMMENT("greedy::model_nearest_neighboor", "distance matrix generated");
-    int *starting_nodes = (int *)calloc(instances, sizeof(int));
-    generate_random_starting_nodes(starting_nodes, inst->nnodes, instances, inst->randomseed);
-    DEBUG_COMMENT("greedy::model_nearest_neighboor", "starting nodes generated");
-
-    // INIZIALIZE THE ARRAY --------------------------------------------------------
-    int *path = malloc(inst->nnodes * sizeof(int));
-    for (int j = 0; j < inst->nnodes; j++)
+    for (int i = 2; i < nnodes; i++) // starting with two path "visited"
     {
-        path[j] = j;
-    }
+        min = INFINITY;
+        DEBUG_COMMENT("greedy::Extra_mileage", "start iteration %d", i);
+        double new_triangular_sum;
+        int is_close_edge = 0;
+        // Check from all the path to the following one
 
-    // CALLING INSTANCES ------------------------------------------------------------
-    for (int y = 0; y < instances; y++)
-    {
-        set_starting_node(path, starting_nodes[y], inst->nnodes);
-        DEBUG_COMMENT("greedy::Extra_mileage", "starting node setted %d", starting_nodes[y]);
-
-        //--------------- FIND DIAMETER -------------------------------------------
-        double max_distance = 0;
-        int max_index = -1;
-
-        for (int i = 1; i < inst->nnodes; i++)
+        for (int j = 0; j < i; j++)
         {
-            if (distance_matrix[path[0] * inst->nnodes + i] > max_distance &&
-                distance_matrix[path[0] * inst->nnodes + i] != INFINITY)
+            for (int k = i; k < nnodes; k++)
             {
-                max_distance = distance_matrix[path[0] * inst->nnodes + i];
-                max_index = i;
-            }
-        }
-        DEBUG_COMMENT("greedy::Extra_mileage", "max distance = %lf, at index = %d", max_distance, max_index);
-        swap(path, 1, max_index);
-
-        /*----- START SEARCH -----*/
-        double tour_length = 2 * max_distance;
-        DEBUG_COMMENT("greedy::Extra_mileage", "initial tour length = %lf", tour_length);
-        int node_3[3];
-        double min = INFINITY;
-
-        for (int i = 2; i < inst->nnodes; i++) // starting with two path "visited"
-        {
-            min = INFINITY;
-            DEBUG_COMMENT("greedy::Extra_mileage", "start iteration %d", i);
-            double new_triangular_sum;
-            int is_close_edge = 0;
-            // Check from all the path to the following one
-
-            for (int j = 0; j < i; j++)
-            {
-                for (int k = i; k < inst->nnodes; k++)
-                {
-                    new_triangular_sum = distance_matrix[path[j] * inst->nnodes + path[k]] + distance_matrix[path[j + 1] * inst->nnodes + path[k]];
-                    if (new_triangular_sum < min)
-                    {
-                        min = new_triangular_sum;
-                        node_3[0] = j;
-                        node_3[1] = j + 1;
-                        node_3[2] = k;
-                    }
-                }
-            }
-
-            for (int k = i; k < inst->nnodes; k++)
-            {
-                new_triangular_sum = distance_matrix[path[0] * inst->nnodes + path[k]] + distance_matrix[path[i - 1] * inst->nnodes + path[k]];
+                new_triangular_sum = distance_matrix[path[j] * nnodes + path[k]] + distance_matrix[path[j + 1] * nnodes + path[k]];
                 if (new_triangular_sum < min)
                 {
                     min = new_triangular_sum;
-                    node_3[0] = 0;
-                    node_3[1] = i - 1;
+                    node_3[0] = j;
+                    node_3[1] = j + 1;
                     node_3[2] = k;
-                    is_close_edge = 1;
                 }
             }
-
-            // FOUND BEST NODE
-            DEBUG_COMMENT("greedy::Extra_mileage", "best value-->%f, best_triangle indices -->{%d,%d,%d}", min, path[node_3[0]], path[node_3[1]], path[node_3[2]]);
-            double new_cost = min - distance_matrix[path[node_3[0]] * inst->nnodes + path[node_3[1]]];
-            tour_length += new_cost;
-            DEBUG_COMMENT("greedy::Extra_mileage", "new cost-->%lf=%lf+%lf-%lf",
-                          new_cost, distance_matrix[path[node_3[0]] * inst->nnodes + path[node_3[2]]], distance_matrix[path[node_3[1]] * inst->nnodes + path[node_3[2]]], distance_matrix[path[node_3[0]] * inst->nnodes + path[node_3[1]]]);
-            DEBUG_COMMENT("greedy::Extra_mileage", "tour length-->%lf", tour_length);
-            // SWAP - ADJUST PATH ----------------------------------------------------
-            // Save the value at position j in a temporary variable
-            if (is_close_edge)
-            {
-                int tmp = path[node_3[2]]; // save node in index best
-                for (int k = node_3[2]; k > node_3[1]; k--)
-                {
-                    path[k] = path[k - 1];
-                }
-                path[node_3[1] + 1] = tmp;
-            }
-            else
-            {
-                int tmp = path[node_3[2]];
-                for (int k = node_3[2]; k >= node_3[1]; k--)
-                {
-                    path[k] = path[k - 1]; // Shift all elements to the right from j to i+1
-                }
-                path[node_3[1]] = tmp;
-            }
-            DEBUG_COMMENT("greedy::Extra_mileage", "path shifted");
-
-            // PRINT PATH ------------------------------------------------------------
-            char nodes_str[1024] = "";
-            for (int o = 0; o < inst->nnodes; o++)
-            {
-                char node_val[16] = "";
-                sprintf(node_val, " |%d| ", path[o]);
-                strcat(nodes_str, node_val);
-            }
-            DEBUG_COMMENT("greedy::Extra_mileage", "path: %s", nodes_str);
         }
 
-        // Put the saved value from position j into position i
-        if (assert_path(path, distance_matrix, inst->nnodes, tour_length))
-            OUTPUT_COMMENT("greedy::extra_mileage", "found best tour lenght %lf", tour_length);
-        log_output(inst->model_type, path[0], tour_length, inst->timelimit, inst->randomseed, inst->nnodes, inst->input_file);
-        inst->path_best = path;
-        plot(inst);
-        two_opt(distance_matrix, inst->nnodes, path, &tour_length);
-        inst->path_best = path;
-        plot(inst);
+        for (int k = i; k < nnodes; k++)
+        {
+            new_triangular_sum = distance_matrix[path[0] * nnodes + path[k]] + distance_matrix[path[i - 1] * nnodes + path[k]];
+            if (new_triangular_sum < min)
+            {
+                min = new_triangular_sum;
+                node_3[0] = 0;
+                node_3[1] = i - 1;
+                node_3[2] = k;
+                is_close_edge = 1;
+            }
+        }
+
+        // FOUND BEST NODE
+        DEBUG_COMMENT("greedy::Extra_mileage", "best value-->%f, best_triangle indices -->{%d,%d,%d}", min, path[node_3[0]], path[node_3[1]], path[node_3[2]]);
+        double new_cost = min - distance_matrix[path[node_3[0]] * nnodes + path[node_3[1]]];
+        *tour_length += new_cost;
+        DEBUG_COMMENT("greedy::Extra_mileage", "new cost-->%lf=%lf+%lf-%lf",
+                      new_cost, distance_matrix[path[node_3[0]] * nnodes + path[node_3[2]]], distance_matrix[path[node_3[1]] * nnodes + path[node_3[2]]], distance_matrix[path[node_3[0]] * nnodes + path[node_3[1]]]);
+        DEBUG_COMMENT("greedy::Extra_mileage", "tour length-->%lf", tour_length);
+        // SWAP - ADJUST PATH ----------------------------------------------------
+        // Save the value at position j in a temporary variable
+        if (is_close_edge)
+        {
+            int tmp = path[node_3[2]]; // save node in index best
+            for (int k = node_3[2]; k > node_3[1]; k--)
+            {
+                path[k] = path[k - 1];
+            }
+            path[node_3[1] + 1] = tmp;
+        }
+        else
+        {
+            int tmp = path[node_3[2]];
+            for (int k = node_3[2]; k >= node_3[1]; k--)
+            {
+                path[k] = path[k - 1]; // Shift all elements to the right from j to i+1
+            }
+            path[node_3[1]] = tmp;
+        }
+        DEBUG_COMMENT("greedy::Extra_mileage", "path shifted");
     }
-    // free memory
-    free(distance_matrix);
-    free(starting_nodes);
+
+    // Put the saved value from position j into position i
+    if (assert_path(path, distance_matrix, nnodes, *tour_length))
+        OUTPUT_COMMENT("greedy::extra_mileage", "found best tour lenght %lf", tour_length);
 }
 
 // void updated_extra_mileage(Instance *inst)

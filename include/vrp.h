@@ -28,11 +28,12 @@ typedef struct
 	int integer_costs;
 
 	double zbest;	  // best sol. available
+	double tour_lenght;
 	int *path_best;
 	
 	int node_start;
-	int xstart;
-	int ystart;
+	//int xstart;
+	//int ystart;
 
 	//int qstart;
 	//int bigqstart;

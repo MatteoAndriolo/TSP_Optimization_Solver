@@ -16,23 +16,6 @@ int main(int argc, char **argv)
 	INFO_COMMENT("main::parse_command_line", "Parsing arguments");
 	Args args;
 	parse_command_line(argc, argv, &args);
-	// Instance inst[args.num_instances];
-
-	//	if (args.help)
-	//	{
-	//		usage(stdout, 0);
-	//		INFO_COMMENT("main::args.help", "Help message displayed");
-	//	}
-
-	//	if (args.help_models)
-	//	{	// 	matrix = generate_distance_matrix(matrix, inst.nnodes, path, path, 2);
-
-	//		show_models(stdout, 0);
-	//		INFO_COMMENT("main::args.show_models", "Show models message displayed");
-	//	}
-
-	INFO_COMMENT("main::main", "Printing arguments");
-	//print_arguments(&args);
 
 	// Read TLP library -------------------------------------------------------
 	INFO_COMMENT("main::main", "Reading input");
@@ -48,57 +31,75 @@ int main(int argc, char **argv)
 	// Parsing model ----------------------------------------------------------
 	int n_passagges;
 	char **passagges;
-	parse_model_name(args.model_type,  &passagges,  &n_passagges);
-	for(int i=0;i<n_passagges;i++){
-		printf("%s\n",passagges[i]);
-	}
-
+	parse_model_name(args.model_type, &passagges, &n_passagges);
 
 	// Generate instance ------------------------------------------------------
 	INFO_COMMENT("main::main", "Generating instance");
-	//Instance inst[args.num_instances];
+	// Instance inst[args.num_instances];
 
 	// Generate starting points -----------------------------------------------
 	INFO_COMMENT("main::main", "Generating starting points");
 	int *starting_points = (int *)malloc(sizeof(int) * args.num_instances);
 	generate_random_starting_nodes(starting_points, args.nnodes, args.num_instances, args.randomseed);
-	/*
-	// Manage model selection -------------------------------------------------
-	for (int i = 0; i < n_passagges + 1; i++)
-	{
 
-		switch (args.model_type)
+	// Manage model selection -------------------------------------------------
+	Instance instances[args.num_instances];
+	for (int c_inst = 0; c_inst < args.num_instances; c_inst++)
+	{
+		instances[c_inst].nnodes = args.nnodes;
+		instances[c_inst].x = args.x;
+		instances[c_inst].y = args.y;
+		instances[c_inst].node_start = starting_points[c_inst];
+		instances[c_inst].integer_costs = args.integer_costs;
+		instances[c_inst].randomseed = args.randomseed;
+		instances[c_inst].timelimit = args.timelimit;
+		instances[c_inst].tour_lenght = 0;
+		strcpy(instances[c_inst].input_file, args.input_file);
+
+		int *path = malloc(sizeof(int) * args.nnodes);
+		generate_path(path, starting_points[c_inst], args.nnodes);
+
+		for (int j = 0; j < n_passagges; j++)
 		{
-		case 1:
-			INFO_COMMENT("main", "Selected model nearest_neighboor");
-			model_nearest_neighboor(&inst, number_of_instances);
-			break;
-		case 2:
-			INFO_COMMENT("main", "Selected model extra_mileage");
-			// TODO implement starting points
-			extra_mileage(&inst, number_of_instances);
-			break;
-		// case 3:
-		// 	INFO_COMMENT("main", "Selected model modified_extra_mileage");
-		// 	updated_extra_mileage(&inst);
-		// 	break;
-		// case 4:
-		// 	INFO_COMMENT("main", "generate all istance for eache algortihm");
-		// 	double *matrix = (double *) malloc(sizeof(double) * inst.nnodes * inst.nnodes);
-		// 	int *path = (int *) malloc(sizeof(int) * inst.nnodes);
-		// 	//TODO: change the starting node
-		// 	//TODO: fix rounding error
-		// 	generate_path(path, 4, inst.nnodes);
-		// 	matrix = generate_distance_matrix(matrix, inst.nnodes, path, path, 2);
-		//	break;
-		default:
-			ERROR_COMMENT("main", "Model not found");
-			show_models(stdout, 0);
-			break;
+			INFO_COMMENT("main::main", "Generating instance");
+			if (strcmp(passagges[j], "nn") == 0)
+			{
+				nearest_neighboor(distance_matrix, path, args.nnodes, &instances[c_inst].tour_lenght);
+				continue;
+			}
+			if (strcmp(passagges[j], "em")==0)
+			{
+				extra_mileage(distance_matrix, path, args.nnodes, &instances[c_inst].tour_lenght);
+				continue;
+			}
+			/*
+			if(passagges[j] =="nng")
+			{
+				nearest_neighboor_grasp(distance_matrix,path, args.nnodes, instances[c_inst].zbest);
+				continue;
+			}
+			*/
+			if (strcmp(passagges[j], "2opt") == 0)
+			{
+				two_opt(distance_matrix, args.nnodes, path, &instances[c_inst].tour_lenght);
+				continue;
+			}
 		}
 	}
+	// case 3:
+	// 	INFO_COMMENT("main", "Selected model modified_extra_mileage");
+	// 	updated_extra_mileage(&inst);
+	// 	break;
+	// case 4:
+	// 	INFO_COMMENT("main", "generate all istance for eache algortihm");
+	// 	double *matrix = (double *) malloc(sizeof(double) * inst.nnodes * inst.nnodes);
+	// 	int *path = (int *) malloc(sizeof(int) * inst.nnodes);
+	// 	//TODO: change the starting node
+	// 	//TODO: fix rounding error
+	// 	generate_path(path, 4, inst.nnodes);
+	// 	matrix = generate_distance_matrix(matrix, inst.nnodes, path, path, 2);
+	//	break;
 
 	OUTPUT_COMMENT("main", "End of the program");
 	return 0;
-	*/
 }
