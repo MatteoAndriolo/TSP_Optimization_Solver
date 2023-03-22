@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "logger.h"
+#include "utils.h"
 
 /**
  * Applies the 2-opt algorithm to a given distance matrix and node list (in place).
