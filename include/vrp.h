@@ -23,42 +23,48 @@ typedef struct
 	double *x;
 	double *y;
 
-	// parameters
-	// int verbosity;							// verbosity (1: incumbement, 5:debug)
+	// MODEL 
 	int model_type;
-	int randomseed;
-	int num_threads;
-	double timelimit;	   // overall time limit, in sec.s
-	char input_file[1000]; // input file
-	char node_file[1000];  // cplex node file
-	char log_file[1000];   // output log file
-	int available_memory;
-	int max_nodes; // max n. of branching nodes in the final run (-1 unlimited)
-	double cutoff; // cutoff (upper bound) for master
 	int integer_costs;
 
-	// grasp
-	int best_n;
-
-	// global data
-	double tstart;	  // starting time
 	double zbest;	  // best sol. available
-	double tbest;	  // time for the best sol. available
-	double best_lb;	  // best lower bound available
-	double *load_min; // minimum load when leaving a node
-	double *load_max; // maximum load when leaving a node
-
-	// model;     Optimal?
 	int *path_best;
+	
 	int node_start;
 	int xstart;
 	int ystart;
-	int qstart;
-	int bigqstart;
-	int sstart;
-	int bigsstart;
-	int fstart;
-	int zstart;
+
+	//int qstart;
+	//int bigqstart;
+	//int sstart;
+	//int bigsstart;i
+	//int fstart;
+	//int zstart;
+
+	// execution parameters
+	int randomseed;
+	double timelimit;	   // overall time limit, in sec.s
+	char input_file[1000]; // input file
+	char log_file[1000];   // output log file
+	//int num_threads;
+	// int verbosity;							// verbosity (1: incumbement, 5:debug)
+	//char node_file[1000];  // cplex node file
+
+
+	// parameters
+	//int available_memory;
+	//int max_nodes; // max n. of branching nodes in the final run (-1 unlimited)
+	//double cutoff; // cutoff (upper bound) for master
+
+	// grasp
+
+	// global data
+	double tstart;	  // starting time
+	// double tbest;	  // time for the best sol. available
+	// double best_lb;	  // best lower bound available
+	// double *load_min; // minimum load when leaving a node
+	// double *load_max; // maximum load when leaving a node
+
 } Instance;
 
 // inline
