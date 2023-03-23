@@ -18,6 +18,7 @@ dir_guard=@mkdir -p $(@D)
 .PHONY: all clean production   # all and clean are not file, just targets.
 
 all: clean $(TARGET)
+	mkdir plot
 
 $(TARGET): $(OBJ_FILES)
 	$(dir_guard)

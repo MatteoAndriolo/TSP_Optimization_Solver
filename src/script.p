@@ -98,3 +98,7 @@ e
 7265 1268
 7392 2244
 7545 2801
+e
+set terminal svg size 800,600 font 'Arial,12'
+set output 'plot/sn21_nng.svg'
+replot

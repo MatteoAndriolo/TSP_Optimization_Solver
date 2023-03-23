@@ -24,16 +24,15 @@ void swap(int *arr, int i, int j);
 
 void swap_and_shift(int *arr, int i, int j, int n);
 
-
 /**
  * Insert new_entry into the ranking array if it is better than the worst entry.
  * The ranking array is sorted in ascending order.
- * 
+ *
  * @param ranking The ranking array.
  * @param n_ranks The number of entries in the ranking array.
  * @param new_entry The new entry to insert into the ranking array.
-*/
-void replace_if_better(int* r_index, double* r_value, int n_ranks,int new_index, double new_value);
+ */
+void replace_if_better(int *r_index, double *r_value, int n_ranks, int new_index, double new_value);
 
 /**
  * Calculates the Euclidean distance between two points in 2D space.
@@ -86,7 +85,7 @@ void generate_path(int *path, int starting_node, int num_nodes);
  * @param nnodes The number of nodes in the graph.
  * @param tour_length The length of the tour.
  */
-int assert_path(const int *path, const double *distance_matrix, const int nnodes,const double tour_length);
+int assert_path(const int *path, const double *distance_matrix, const int nnodes, const double tour_length);
 
 /**
 swap the starting node with the first node in the path

@@ -97,23 +97,13 @@ int main(int argc, char **argv)
 				two_opt(distance_matrix, args.nnodes, path, &instances[c_inst].tour_lenght);
 			}
 			strcpy(title+strlen(title), passagges[j]);	
-			plot(path, args.x,args.y, args.nnodes, title );
+			//TODO fix title in all the different 
+			// like in grasp specify also the probabilities
+			// put first name of model then the rest
+			plot(path, args.x,args.y, args.nnodes, title ); 
 		}
 		free(path);
 	}
-	// case 3:
-	// 	INFO_COMMENT("main", "Selected model modified_extra_mileage");
-	// 	updated_extra_mileage(&inst);
-	// 	break;
-	// case 4:
-	// 	INFO_COMMENT("main", "generate all istance for eache algortihm");
-	// 	double *matrix = (double *) malloc(sizeof(double) * inst.nnodes * inst.nnodes);
-	// 	int *path = (int *) malloc(sizeof(int) * inst.nnodes);
-	// 	//TODO: change the starting node
-	// 	//TODO: fix rounding error
-	// 	generate_path(path, 4, inst.nnodes);
-	// 	matrix = generate_distance_matrix(matrix, inst.nnodes, path, path, 2);
-	//	break;
 
 	OUTPUT_COMMENT("main", "End of the program");
 	return 0;

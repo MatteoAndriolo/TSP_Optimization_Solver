@@ -17,13 +17,17 @@ void swap_and_shift(int *arr, int i, int j, int n)
     arr[i] = temp; // Put the saved value from position j into position i
 }
 
-void replace_if_better(int* r_index, double* r_value, int n_ranks,int new_index, double new_value){
+void replace_if_better(int *r_index, double *r_value, int n_ranks, int new_index, double new_value)
+{
     int i = 0;
-    while (i < n_ranks && new_value > r_value[i]) i++;
-    if (i < n_ranks) {
-        for (int j = n_ranks-1; j > i; j--) {
-            r_value[j] = r_value[j-1];
-            r_index[j] = r_index[j-1];
+    while (i < n_ranks && new_value > r_value[i])
+        i++;
+    if (i < n_ranks)
+    {
+        for (int j = n_ranks - 1; j > i; j--)
+        {
+            r_value[j] = r_value[j - 1];
+            r_index[j] = r_index[j - 1];
         }
         r_value[i] = new_value;
         r_index[i] = new_index;
@@ -73,15 +77,16 @@ void set_starting_node(int *path, int starting_node, int num_nodes)
     ERROR_COMMENT("set_starting_node", "Starting node not found");
 }
 
-int assert_path(const int *path, const double *distance_matrix, const int nnodes,const double tour_length)
+int assert_path(const int *path, const double *distance_matrix, const int nnodes, const double tour_length)
 {
     // all nodes used
     int check_nnodes = (nnodes * (nnodes - 1)) / 2;
-    for (int i = 0; i < nnodes; check_nnodes -= path[i++]);
+    for (int i = 0; i < nnodes; check_nnodes -= path[i++])
+        ;
 
     // tour length correct
     double check_tour_length = 0; // distance_matrix[path[0] * nnodes + path[nnodes - 1]];
-    for (int i = 0; i < nnodes-1 ; i++)
+    for (int i = 0; i < nnodes - 1; i++)
     {
         check_tour_length += distance_matrix[path[i] * nnodes + path[i + 1]];
     }
@@ -114,6 +119,6 @@ void generate_path(int *path, int starting_node, int num_nodes)
     {
         path[i] = i;
     }
-    path[starting_node]=0;
-    path[0]=starting_node;
+    path[starting_node] = 0;
+    path[0] = starting_node;
 }
