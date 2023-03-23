@@ -26,6 +26,7 @@ int main(int argc, char **argv)
 	INFO_COMMENT("main::main", "Generating distance matrix");
 	double *distance_matrix = (double *)malloc(sizeof(double) * args.nnodes * args.nnodes);
 	generate_distance_matrix(&distance_matrix, args.nnodes, args.x, args.y, args.integer_costs);
+	log_distancematrix(distance_matrix, args.nnodes);
 	DEBUG_COMMENT("main::main", "Distance matrix generated");
 
 	// Parsing model ----------------------------------------------------------
@@ -43,6 +44,7 @@ int main(int argc, char **argv)
 	generate_random_starting_nodes(starting_points, args.nnodes, args.num_instances, args.randomseed);
 
 	// Manage model selection -------------------------------------------------
+	print_arguments(&args);
 	Instance instances[args.num_instances];
 	for (int c_inst = 0; c_inst < args.num_instances; c_inst++)
 	{
@@ -69,6 +71,7 @@ int main(int argc, char **argv)
 			}
 			if (strcmp(passagges[j], "nng") == 0)
 			{				
+				log_path(path, args.nnodes);
 				int n_prob;
 				double *prob;
 				parse_grasp_probabilities(args.grasp, &prob, &n_prob);
@@ -76,7 +79,7 @@ int main(int argc, char **argv)
 				{
 					printf("%lf\n",prob[i]);
 				}
-				nearest_neighboor_grasp(distance_matrix, path, args.nnodes, &prob, &n_prob, &instances[c_inst].tour_lenght);
+				nearest_neighboor_grasp(distance_matrix, path, args.nnodes, &(instances[c_inst].tour_lenght), prob, n_prob);
 			}
 			if (strcmp(passagges[j], "em")==0)
 			{

@@ -40,6 +40,58 @@ void nearest_neighboor(const double *distance_matrix, int *path, int nnodes, dou
     }
 }
 
+void nearest_neighboor_grasp(const double *distance_matrix, int *path, const int nnodes, double *tour_length, const double *probabilities, const int n_prob)
+{
+    DEBUG_COMMENT("greedy::nng", "start nearest neighboor");
+
+    int rankings_index[n_prob];
+    double rankings_value[n_prob];
+
+    // Nearest Neighboor -------------------------------------------
+    int current_node;
+    for (int j = 1; j < nnodes; j++)
+    {
+        // initialize rankings
+        for (int i = 0; i < n_prob; i++)
+        {
+            rankings_index[i] = -1;       // first component is the index of the element plus 1
+            rankings_value[i] = INFINITY; // second component is a random value between 0 and 1
+        }
+        // find the best #n_prob neighboors
+        current_node = path[j - 1];
+        double min_distance = INFINITY;
+        double dist = -1;
+        for (int k = j; k < nnodes; k++)
+        {
+            dist = distance_matrix[current_node * nnodes + path[k]];
+            if (dist < rankings_value[n_prob - 1])
+                replace_if_better(rankings_index, rankings_value, n_prob, k, dist);
+        }
+
+        // pick one of the bests
+        int index = -1;
+        double r = rand()/RAND_MAX; // generate a random number between 1-100
+        DEBUG_COMMENT("greedy::nng", "probabilities %lf %lf %lf| r: %lf ", probabilities[0], probabilities[1], probabilities[2], r);
+        for (int i = 0; i < n_prob; i++)
+        {
+            if (r <= probabilities[i])
+            {
+                index = i;
+                break;
+            }
+        }
+        DEBUG_COMMENT("greedy::nng", "%lf %lf %lf %lf -> %lf", r, rankings_value[0], rankings_value[1], rankings_value[2], rankings_value[index]);
+        min_distance = rankings_value[index];
+        swap(path, j, rankings_index[index]);
+
+        (*tour_length) += min_distance;
+        DEBUG_COMMENT("greedy::nng", "tour length, starting from %d, with %d nodes = %lf", path[0], j, *tour_length);
+    }
+    // complete the tour
+    (*tour_length) += distance_matrix[path[0] * nnodes + path[nnodes - 1]];
+    log_path(path, nnodes);
+}
+
 void extra_mileage(const double *distance_matrix, int *path, int nnodes, double *tour_length)
 {
     //--------------- FIND DIAMETER -------------------------------------------

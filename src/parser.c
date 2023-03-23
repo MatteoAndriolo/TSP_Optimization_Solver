@@ -216,6 +216,8 @@ void parse_grasp_probabilities(char *grasp, double **probabilities, int *n_proba
     }
     for(int i=0;i<(*n_probabilities);i++)
         p[i]/=sum;
+    for(int i=1;i<(*n_probabilities);i++)
+        p[i]=p[i-1]+p[i];
 
     *probabilities=p;
 }

@@ -23,6 +23,18 @@ void swap(int *arr, int i, int j);
  */
 
 void swap_and_shift(int *arr, int i, int j, int n);
+
+
+/**
+ * Insert new_entry into the ranking array if it is better than the worst entry.
+ * The ranking array is sorted in ascending order.
+ * 
+ * @param ranking The ranking array.
+ * @param n_ranks The number of entries in the ranking array.
+ * @param new_entry The new entry to insert into the ranking array.
+*/
+void replace_if_better(int* r_index, double* r_value, int n_ranks,int new_index, double new_value);
+
 /**
  * Calculates the Euclidean distance between two points in 2D space.
  *

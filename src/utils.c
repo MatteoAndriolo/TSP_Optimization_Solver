@@ -17,6 +17,19 @@ void swap_and_shift(int *arr, int i, int j, int n)
     arr[i] = temp; // Put the saved value from position j into position i
 }
 
+void replace_if_better(int* r_index, double* r_value, int n_ranks,int new_index, double new_value){
+    int i = 0;
+    while (i < n_ranks && new_value > r_value[i]) i++;
+    if (i < n_ranks) {
+        for (int j = n_ranks-1; j > i; j--) {
+            r_value[j] = r_value[j-1];
+            r_index[j] = r_index[j-1];
+        }
+        r_value[i] = new_value;
+        r_index[i] = new_index;
+    }
+}
+
 inline double distance_euclidean(double x1, double y1, double x2, double y2)
 {
     double dx = x1 - x2;
