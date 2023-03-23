@@ -26,6 +26,7 @@ int main(int argc, char **argv)
 	INFO_COMMENT("main::main", "Generating distance matrix");
 	double *distance_matrix = (double *)malloc(sizeof(double) * args.nnodes * args.nnodes);
 	generate_distance_matrix(&distance_matrix, args.nnodes, args.x, args.y, args.integer_costs);
+	log_distancematrix(distance_matrix, args.nnodes);
 	DEBUG_COMMENT("main::main", "Distance matrix generated");
 
 	// Parsing model ----------------------------------------------------------
@@ -43,6 +44,7 @@ int main(int argc, char **argv)
 	generate_random_starting_nodes(starting_points, args.nnodes, args.num_instances, args.randomseed);
 
 	// Manage model selection -------------------------------------------------
+	print_arguments(&args);
 	Instance instances[args.num_instances];
 	for (int c_inst = 0; c_inst < args.num_instances; c_inst++)
 	{
@@ -69,14 +71,15 @@ int main(int argc, char **argv)
 			}
 			if (strcmp(passagges[j], "nng") == 0)
 			{				
+				log_path(path, args.nnodes);
 				int n_prob;
 				double *prob;
-				parse_grasp_probabilities(*args.grasp, &prob, &n_prob);
+				parse_grasp_probabilities(args.grasp, &prob, &n_prob);
 				for(int i=0;i<n_prob;i++)
 				{
-					printf("%lf",prob[i]);
+					printf("%lf\n",prob[i]);
 				}
-				//nearest_neighboor_grasp(distance_matrix, path, args.nnodes, &instances[c_inst].tour_lenght);
+				nearest_neighboor_grasp(distance_matrix, path, args.nnodes, &(instances[c_inst].tour_lenght), prob, n_prob);
 			}
 			if (strcmp(passagges[j], "em")==0)
 			{
@@ -94,23 +97,13 @@ int main(int argc, char **argv)
 				two_opt(distance_matrix, args.nnodes, path, &instances[c_inst].tour_lenght);
 			}
 			strcpy(title+strlen(title), passagges[j]);	
-			plot(path, args.x,args.y, args.nnodes, title );
+			//TODO fix title in all the different 
+			// like in grasp specify also the probabilities
+			// put first name of model then the rest
+			plot(path, args.x,args.y, args.nnodes, title ); 
 		}
 		free(path);
 	}
-	// case 3:
-	// 	INFO_COMMENT("main", "Selected model modified_extra_mileage");
-	// 	updated_extra_mileage(&inst);
-	// 	break;
-	// case 4:
-	// 	INFO_COMMENT("main", "generate all istance for eache algortihm");
-	// 	double *matrix = (double *) malloc(sizeof(double) * inst.nnodes * inst.nnodes);
-	// 	int *path = (int *) malloc(sizeof(int) * inst.nnodes);
-	// 	//TODO: change the starting node
-	// 	//TODO: fix rounding error
-	// 	generate_path(path, 4, inst.nnodes);
-	// 	matrix = generate_distance_matrix(matrix, inst.nnodes, path, path, 2);
-	//	break;
 
 	OUTPUT_COMMENT("main", "End of the program");
 	return 0;

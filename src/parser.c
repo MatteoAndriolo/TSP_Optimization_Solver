@@ -87,29 +87,6 @@ void read_input(Args *args) // simplified CVRP parser, not all SECTIONs detected
     fclose(fin);
 }
 
-void parse_model_name(char *model_type, char ***passagges, int *n_passagges)
-{
-    (*n_passagges)=0;
-    int length = strlen(model_type);
-    for (int i = 0; i < length; i++)
-        if (model_type[i] == '.')
-        {
-            (*n_passagges)++;
-            model_type[i] = '\0';
-        }
-    (*n_passagges)++;
-    char** p=malloc((*n_passagges)*sizeof(char*));
-
-    int ind = 0;
-    for (int i = 0; i < *n_passagges ; i++)
-    {
-        p[i] = malloc(10 * sizeof(char));
-        sscanf(model_type + ind, "%s", p[i]);
-        ind += strlen(p[i]) + 1;
-    }
-    *passagges=(char**)p;
-}
-
 void print_arguments(const Args *args)
 {
     printf("\n\navailable parameters (vers. 16-may-2015) --------------------------------------------------\n");
@@ -117,12 +94,32 @@ void print_arguments(const Args *args)
     printf("-m %s\n", args->model_type);
     printf("--seed %d\n", args->randomseed);
     printf("--num_instances %d\n", args->num_instances);
-    if (strcmp(*(args->grasp),"1")!=0)
-    {
+    if (strcmp(args->grasp, "1") != 0)
         printf("--grasp %s\n", args->grasp);
-    }
-    
     printf("----------------------------------------------------------------------------------------------\n\n");
+}
+
+void parse_model_name(char *model_type, char ***passagges, int *n_passagges)
+{
+    (*n_passagges) = 0;
+    int length = strlen(model_type);
+    for (int i = 0; i < length; i++)
+        if (model_type[i] == delimiter)
+        {
+            (*n_passagges)++;
+            model_type[i] = '\0';
+        }
+    (*n_passagges)++;
+    char **p = malloc((*n_passagges) * sizeof(char *));
+
+    int ind = 0;
+    for (int i = 0; i < *n_passagges; i++)
+    {
+        p[i] = malloc(10 * sizeof(char));
+        sscanf(model_type + ind, "%s", p[i]);
+        ind += strlen(p[i]) + 1;
+    }
+    *passagges = (char **)p;
 }
 
 void parse_command_line(int argc, char **argv, Args *args)
@@ -165,7 +162,7 @@ void parse_command_line(int argc, char **argv, Args *args)
             fflush(stdout);
             continue;
         } // input file
-        if((strcmp(argv[i], "--grasp") == 0) | (strcmp(argv[i], "-g") == 0))
+        if ((strcmp(argv[i], "--grasp") == 0) | (strcmp(argv[i], "-g") == 0))
         {
             strcpy(args->grasp, argv[++i]);
             continue;
@@ -195,31 +192,32 @@ void parse_command_line(int argc, char **argv, Args *args)
         exit(1);
 }
 
-
-void parse_grasp_probabilities(char *grasp, double **probabilities, int *n_probabilities){
-    (*n_probabilities)=0;
+void parse_grasp_probabilities(char *grasp, double **probabilities, int *n_probabilities)
+{
+    (*n_probabilities) = 0;
     int length = strlen(grasp);
     for (int i = 0; i < length; i++)
-        if (grasp[i] == '.')
+        if (grasp[i] == delimiter)
         {
             (*n_probabilities)++;
             grasp[i] = '\0';
         }
     (*n_probabilities)++;
-    double* p=malloc((*n_probabilities)*sizeof(double));
+    double *p = malloc((*n_probabilities) * sizeof(double));
 
     int ind = 0;
-    int sum=0;
-    for (int i = 0; i < *n_probabilities ; i++)
+    int sum = 0;
+    for (int i = 0; i < *n_probabilities; i++)
     {
-        char t[10];
-        sscanf(grasp + ind, "%lf", t);
+        sscanf(grasp + ind, "%lf", &(p[i]));
         ind += strlen(grasp + ind) + 1;
-        p[i]=strtod(t, t+strlen(t));
-        sum+=p[i];
+        // p[i]=strtod(t, t+strlen(t));
+        sum += p[i];
     }
-    for(int i=0;i<(*n_probabilities);i++)
-        p[i]/=sum;
+    for (int i = 0; i < (*n_probabilities); i++)
+        p[i] /= sum;
+    for (int i = 1; i < (*n_probabilities); i++)
+        p[i] = p[i - 1] + p[i];
 
-    *probabilities=*p;
+    *probabilities = p;
 }
