@@ -6,6 +6,7 @@ We will also produce a thesis containing information about:
 
 # Compilation
 `make`
+
 `make production` : without debug
 
 # Execution
