@@ -71,12 +71,12 @@ int main(int argc, char **argv)
 			{				
 				int n_prob;
 				double *prob;
-				parse_grasp_probabilities(*args.grasp, &prob, &n_prob);
+				parse_grasp_probabilities(args.grasp, &prob, &n_prob);
 				for(int i=0;i<n_prob;i++)
 				{
-					printf("%lf",prob[i]);
+					printf("%lf\n",prob[i]);
 				}
-				//nearest_neighboor_grasp(distance_matrix, path, args.nnodes, &instances[c_inst].tour_lenght);
+				nearest_neighboor_grasp(distance_matrix, path, args.nnodes, &prob, &n_prob, &instances[c_inst].tour_lenght);
 			}
 			if (strcmp(passagges[j], "em")==0)
 			{

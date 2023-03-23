@@ -92,7 +92,7 @@ void parse_model_name(char *model_type, char ***passagges, int *n_passagges)
     (*n_passagges)=0;
     int length = strlen(model_type);
     for (int i = 0; i < length; i++)
-        if (model_type[i] == '.')
+        if (model_type[i] == delimiter)
         {
             (*n_passagges)++;
             model_type[i] = '\0';
@@ -117,11 +117,8 @@ void print_arguments(const Args *args)
     printf("-m %s\n", args->model_type);
     printf("--seed %d\n", args->randomseed);
     printf("--num_instances %d\n", args->num_instances);
-    if (strcmp(*(args->grasp),"1")!=0)
-    {
+    if (strcmp(args->grasp,"1")!=0)
         printf("--grasp %s\n", args->grasp);
-    }
-    
     printf("----------------------------------------------------------------------------------------------\n\n");
 }
 
@@ -200,7 +197,7 @@ void parse_grasp_probabilities(char *grasp, double **probabilities, int *n_proba
     (*n_probabilities)=0;
     int length = strlen(grasp);
     for (int i = 0; i < length; i++)
-        if (grasp[i] == '.')
+        if (grasp[i] == delimiter)
         {
             (*n_probabilities)++;
             grasp[i] = '\0';
@@ -212,14 +209,13 @@ void parse_grasp_probabilities(char *grasp, double **probabilities, int *n_proba
     int sum=0;
     for (int i = 0; i < *n_probabilities ; i++)
     {
-        char t[10];
-        sscanf(grasp + ind, "%lf", t);
+        sscanf(grasp + ind, "%lf", &(p[i]));
         ind += strlen(grasp + ind) + 1;
-        p[i]=strtod(t, t+strlen(t));
+        //p[i]=strtod(t, t+strlen(t));
         sum+=p[i];
     }
     for(int i=0;i<(*n_probabilities);i++)
         p[i]/=sum;
 
-    *probabilities=*p;
+    *probabilities=p;
 }

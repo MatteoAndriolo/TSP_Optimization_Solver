@@ -18,8 +18,10 @@ typedef struct args
     int nnodes;
     double *x, *y;
     char log_file[256];
-    char *grasp[20];
+    char grasp[20];
 } Args;
+
+static const char delimiter='.';
 
 /**
  * Prints a usage message to the given file stream and exits with the given status.
