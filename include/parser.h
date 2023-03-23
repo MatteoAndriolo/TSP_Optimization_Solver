@@ -7,13 +7,6 @@
 #include "logger.h"
 
 // Parse arguments
-typedef struct arguments
-{
-    Instance inst;
-    int help;
-    int help_models;
-} Arguments;
-
 typedef struct args
 {
     int num_instances;
@@ -25,6 +18,7 @@ typedef struct args
     int nnodes;
     double *x, *y;
     char log_file[256];
+    char *grasp[20];
 } Args;
 
 /**
@@ -76,5 +70,7 @@ void read_input(Args *args);
  * @param n_passagges the number of passagges
  */
 void parse_model_name(char *model_type, char ***passagges, int *n_passagges);
+
+void parse_grasp_probabilities(char *grasp, double **probabilities, int *n_probabilities);
 
 #endif

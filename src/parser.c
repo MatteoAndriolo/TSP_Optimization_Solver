@@ -117,6 +117,11 @@ void print_arguments(const Args *args)
     printf("-m %s\n", args->model_type);
     printf("--seed %d\n", args->randomseed);
     printf("--num_instances %d\n", args->num_instances);
+    if (strcmp(*(args->grasp),"1")!=0)
+    {
+        printf("--grasp %s\n", args->grasp);
+    }
+    
     printf("----------------------------------------------------------------------------------------------\n\n");
 }
 
@@ -130,6 +135,7 @@ void parse_command_line(int argc, char **argv, Args *args)
     args->timelimit = 3600.0;
     strcpy(args->input_file, "\0");
     strcpy(args->log_file, "\0");
+    strcpy(args->grasp, "1");
 
     int help = 0;
     if (argc < 1)
@@ -159,7 +165,11 @@ void parse_command_line(int argc, char **argv, Args *args)
             fflush(stdout);
             continue;
         } // input file
-          // time limit
+        if((strcmp(argv[i], "--grasp") == 0) | (strcmp(argv[i], "-g") == 0))
+        {
+            strcpy(args->grasp, argv[++i]);
+            continue;
+        }
         if ((strcmp(argv[i], "--maxtime") == 0) | (strcmp(argv[i], "--time") == 0))
         {
             args->timelimit = atof(argv[++i]);
@@ -183,4 +193,33 @@ void parse_command_line(int argc, char **argv, Args *args)
 
     if (help)
         exit(1);
+}
+
+
+void parse_grasp_probabilities(char *grasp, double **probabilities, int *n_probabilities){
+    (*n_probabilities)=0;
+    int length = strlen(grasp);
+    for (int i = 0; i < length; i++)
+        if (grasp[i] == '.')
+        {
+            (*n_probabilities)++;
+            grasp[i] = '\0';
+        }
+    (*n_probabilities)++;
+    double* p=malloc((*n_probabilities)*sizeof(double));
+
+    int ind = 0;
+    int sum=0;
+    for (int i = 0; i < *n_probabilities ; i++)
+    {
+        char t[10];
+        sscanf(grasp + ind, "%lf", t);
+        ind += strlen(grasp + ind) + 1;
+        p[i]=strtod(t, t+strlen(t));
+        sum+=p[i];
+    }
+    for(int i=0;i<(*n_probabilities);i++)
+        p[i]/=sum;
+
+    *probabilities=*p;
 }

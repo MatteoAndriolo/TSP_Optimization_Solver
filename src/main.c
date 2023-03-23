@@ -67,6 +67,17 @@ int main(int argc, char **argv)
 			{
 				nearest_neighboor(distance_matrix, path, args.nnodes, &instances[c_inst].tour_lenght);
 			}
+			if (strcmp(passagges[j], "nng") == 0)
+			{				
+				int n_prob;
+				double *prob;
+				parse_grasp_probabilities(*args.grasp, &prob, &n_prob);
+				for(int i=0;i<n_prob;i++)
+				{
+					printf("%lf",prob[i]);
+				}
+				//nearest_neighboor_grasp(distance_matrix, path, args.nnodes, &instances[c_inst].tour_lenght);
+			}
 			if (strcmp(passagges[j], "em")==0)
 			{
 				extra_mileage(distance_matrix, path, args.nnodes, &instances[c_inst].tour_lenght);
