@@ -1,34 +1,38 @@
 #include "refinement.h"
 
-void two_opt(double *matrix, int size_node, double *node)
+void two_opt(double *distance_matrix, int nnodes, int *path, double *tour_length)
 {
-    // 3 4 6 7 9 10 1
-    for (int i = 0; i < size_node; i++)
+    int foundImprovement = 1;
+    log_path(path, nnodes);
+    double cost_old_edge, cost_new_edge, cost_new_edge2, cost_old_edge2;
+    while (foundImprovement)
     {
-        // 1 2 3 4 5 --> cost 1_2
-        double cost_edge_1 = matrix[i * size_node + i + 1];
-        double min = cost_edge_1;
-        int index = i + 1;
-        // FIND the minmium cost distance
-        for (int j = i + 1; j < size_node; j++)
+        foundImprovement = 0;
+        for (int i = 0; i < nnodes - 1; i++)
         {
-            // 1 2 3 4 5 --> cost 2_3 and further
-            double cost_edge_2 = matrix[j * size_node + j + 1];
-            if (cost_edge_2 < min)
+            for (int j = i + 1; j < nnodes; j++)
             {
-                min = cost_edge_2;
-                index = j;
+                cost_old_edge = distance_matrix[path[i] * nnodes + path[i + 1]];
+                cost_new_edge = distance_matrix[path[i] * nnodes + path[j]];
+                cost_old_edge2 = distance_matrix[path[j] * nnodes + path[j + 1]];
+                cost_new_edge2 = distance_matrix[path[i + 1] * nnodes + path[j + 1]];
+                double delta = -(cost_old_edge + cost_old_edge2) + (cost_new_edge + cost_new_edge2);
+
+                if (delta < 0)
+                {
+                    foundImprovement = 1;
+                    int ti = i + 1;
+                    for (int z = 0; z < (int)(j - i + 1) / 2; z++) // reverse order cells (i+1,index_min)
+                    {
+                        double temp = path[z + ti];
+                        path[z + ti] = path[j - z];
+                        path[j - z] = temp;
+                    }
+                    *tour_length += delta;
+                }
             }
         }
-
-        if (index != i + 1)
-        {
-            for (int z = 0; z < (int)(index - i + 1) / 2; z++){
-                double temp = node[z + i + 1];
-                node[z + i + 1] = node[index - z];
-                node[index - z] = temp;
-            }  
-        }
-        // I and index && index_2 z
-        // minmimum found at position index 4 so I want now to swap
+        log_path(path, nnodes);
+        DEBUG_COMMENT("refinement:2opt", "attual tour length %lf", *tour_length);
     }
+}

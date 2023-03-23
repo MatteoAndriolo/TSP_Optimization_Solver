@@ -4,53 +4,65 @@
 #include <argp.h>
 #include <stdio.h>
 #include "vrp.h"
+#include "logger.h"
 
 // Parse arguments
-struct arguments {
-    Instance inst;
-    int help;
-    int help_models;
-};
+typedef struct args
+{
+    int num_instances;
+    char model_type[256];
+    int integer_costs;
+    int randomseed;
+    double timelimit;
+    char input_file[256];
+    int nnodes;
+    double *x, *y;
+    char log_file[256];
+    char grasp[20];
+} Args;
+
+static const char delimiter = '.';
 
 /**
- * Prints a usage message to the given file stream and exits with the given status.
- * 
- * @param fp the file stream to print the usage message to
- * @param status the exit status
+ * Reads the nodes file for the given instance, initializes the instance with the read data, and calculates the distance matrix.
+ *
+ * @param inst a pointer to the instance to initialize
  */
-void usage(FILE *fp, int status);
-
-/**
- * Shows the available models and exits with the given status.
- * 
- * @param fp the file stream to print the models to
- * @param status the exit status
- */
-void show_models(FILE *fp, int status);
+void read_input(Args *args);
 
 /**
  * Prints the arguments of the given instance to the given file stream.
- * 
+ *
  * @param fp the file stream to print the arguments to
  * @param inst a pointer to the instance to print the arguments of
  */
-void print_arguments(FILE *fp, const Instance* inst);
+void print_arguments(const Args *args);
 
 /**
  * Parses the command line arguments and stores the results in the given arguments struct.
- * 
+ *
  * @param argc the number of command line arguments
  * @param argv an array of command line argument strings
  * @param args a pointer to the arguments struct to store the results in
  */
-void parse_command_line(int argc, char **argv, struct arguments *args);
+void parse_command_line(int argc, char **argv, Args *args);
+
+/***
+ * Generate sequence of passagges from model name
+ *
+ * @param model_type the model name
+ * @param passagges the sequence of passagges
+ * @param n_passagges the number of passagges
+ */
+void parse_model_name(char *model_type, char ***passagges, int *n_passagges);
 
 /**
- * Reads the nodes file for the given instance, initializes the instance with the read data, and calculates the distance matrix.
- * 
- * @param inst a pointer to the instance to initialize
+ * Parse grasp probabilities
+ *
+ * @param grasp the grasp string
+ * @param probabilities the probabilities
+ * @param n_probabilities the number of probabilities
  */
-void read_input(Instance *inst);
-
+void parse_grasp_probabilities(char *grasp, double **probabilities, int *n_probabilities);
 
 #endif

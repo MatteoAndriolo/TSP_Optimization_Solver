@@ -1,18 +1,20 @@
 #include "parser.h"
-#include "logger.h"
 
-void read_input(Instance *inst) // simplified CVRP parser, not all SECTIONs detected
+void read_input(Args *args) // simplified CVRP parser, not all SECTIONs detected
 {
 
-    DEBUG_COMMENT("parser::read_input","Opening the TSP file in reading mode");
-    
-    FILE *fin = fopen(inst->input_file, "r");
+    DEBUG_COMMENT("parser::read_input", "Opening the TSP file in reading mode");
+
+    FILE *fin = fopen(args->input_file, "r");
 
     if (fin == NULL)
-        ERROR_COMMENT("parser::read_input","File not found/not exists");
-    
-    DEBUG_COMMENT("parser::read_input","inizialize the variables");
-    inst->nnodes = -1;
+    {
+        ERROR_COMMENT("parser::read_input", "File not found/not exists");
+        exit(1);
+    }
+
+    DEBUG_COMMENT("parser::read_input", "inizialize the variables");
+    args->nnodes = -1;
     char line[1024];
     int number_nodes = 0;
     int reading_nodes = 0;
@@ -29,16 +31,15 @@ void read_input(Instance *inst) // simplified CVRP parser, not all SECTIONs dete
             line[len - 1] = '\0';
         }
 
-        if (sscanf(line, "DIMENSION : %d", &number_nodes) == 1)//add optional blank or non blank 
+        if (sscanf(line, "DIMENSION : %d", &number_nodes) == 1) // add optional blank or non blank
         {
-            
-            DEBUG_COMMENT("parser::read_input","Number of nodes in the field DIMENSION: %d", number_nodes);
 
-            inst->nnodes = number_nodes-1;
-            inst->x = (double *)calloc(number_nodes, sizeof(double));//TODO ? MALLOC IS BETTER 
-            inst->y = (double *)calloc(number_nodes, sizeof(double));
+            DEBUG_COMMENT("parser::read_input", "Number of nodes in the field DIMENSION: %d", number_nodes);
+            args->nnodes = number_nodes - 1;
+            args->x = (double *)malloc(number_nodes * sizeof(double));
+            args->y = (double *)malloc(number_nodes * sizeof(double));
 
-            DEBUG_COMMENT("parser::read_input","Memory for x and y allocated");
+            DEBUG_COMMENT("parser::read_input", "Memory for x and y allocated");
         }
 
         if (reading_nodes)
@@ -48,17 +49,17 @@ void read_input(Instance *inst) // simplified CVRP parser, not all SECTIONs dete
             with calloc of size of nom_nodes, store inside pair the 2 coordinates
             */
 
-            if (sscanf(line, "%d %lf %lf", &node_number, &node_x, &node_y) == 3)//TODO: can use %*d to just read and don't use it 
+            if (sscanf(line, "%d %lf %lf", &node_number, &node_x, &node_y) == 3)
             {
                 int nn = node_number - 1;
-                inst->x[nn] = node_x;
-                inst->y[nn] = node_y;
-                DEBUG_COMMENT("parser::read_input","[NodesIndex: ( x , y ) ] [%d: (%lf, %lf)]", nn, inst->x[nn], inst->y[nn]);
+                args->x[nn] = node_x;
+                args->y[nn] = node_y;
+                DEBUG_COMMENT("parser::read_input", "[NodesIndex: ( x , y ) ] [%d: (%lf, %lf)]", nn, args->x[nn], args->y[nn]);
                 node_saved++;
             }
             else
             {
-                DEBUG_COMMENT("parser::read_input","Reached end of the file");
+                DEBUG_COMMENT("parser::read_input", "Reached end of the file");
                 break;
             }
         }
@@ -66,151 +67,157 @@ void read_input(Instance *inst) // simplified CVRP parser, not all SECTIONs dete
         {
             if (strcmp(line, "NODE_COORD_SECTION") == 0)
             {
-                DEBUG_COMMENT("parser::read_input","Reading in the file the NODE_COORD_SECTION and start reading the node");
+                DEBUG_COMMENT("parser::read_input", "Reading in the file the NODE_COORD_SECTION and start reading the node");
                 reading_nodes = 1;
             }
-            else if (sscanf(line, "DIMENSION : %d", &number_nodes) == 1){
-                ERROR_COMMENT("parser::read_input","The file does not contain any node");
+            else if (sscanf(line, "DIMENSION : %d", &number_nodes) == 1)
+            {
+                ERROR_COMMENT("parser::read_input", "The file does not contain any node");
             }
         }
     }
 
-    if(number_nodes != node_saved){
-        WARNING_COMMENT("parser::read_input","field DIMENTION != real number of nodes in the file");
+    if (number_nodes != node_saved)
+    {
+        WARNING_COMMENT("parser::read_input", "field DIMENTION != real number of nodes in the file");
     }
 
-    INFO_COMMENT("parser::read_input","Reading is finished, close the file");
+    INFO_COMMENT("parser::read_input", "Reading is finished, close the file");
 
     fclose(fin);
 }
 
-char doc[] = "A program to parse command-line arguments.";
-/* Available options. */
-struct argp_option options[] = {
-    {"file", 'f', "FILE", 0, "Input file"},
-    {"input", 'f', "FILE", 0, "Input file"},
-    {"model", 'm', "TYPE", 0, "Model type"},
-    {"model", 'M', 0, 0, "Show list models"},
-    {"seed", 's', "SEED", 0, "Random seed"},
-    {"threads", 't', "NUM", 0, "Number of threads"},
-    {"time_limit", 'l', "LIMIT", 0, "Time limit"},
-    {"memory", 'L', "SIZE", 0, "Available memory"},
-    {"node_file", 'n', "FILE", 0, "Cplex's node file"},
-    {"max_nodes", 'N', "NUM", 0, "Max number of nodes"},
-    {"cutoff", 'c', "VALUE", 0, "Master cutoff"},
-    {"verbosity", 'v', "NUM", 0, "Set verbosity 1-100"},
-    {"int", 'i', 0, 0, "Integer costs"},
-    {"help", 'h', 0, 0, "Show help"},
-    };
-
-/* Parse a single option. */
-error_t parse_option(int key, char *arg, struct argp_state *state)
+void print_arguments(const Args *args)
 {
-    struct arguments *args = state->input;
+    printf("\n\navailable parameters (vers. 16-may-2015) --------------------------------------------------\n");
+    printf("-input %s\n", args->input_file);
+    printf("-m %s\n", args->model_type);
+    printf("--seed %d\n", args->randomseed);
+    printf("--num_instances %d\n", args->num_instances);
+    if (strcmp(args->grasp, "1") != 0)
+        printf("--grasp %s\n", args->grasp);
+    printf("----------------------------------------------------------------------------------------------\n\n");
+}
 
-    switch (key)
+void parse_model_name(char *model_type, char ***passagges, int *n_passagges)
+{
+    (*n_passagges) = 0;
+    int length = strlen(model_type);
+    for (int i = 0; i < length; i++)
+        if (model_type[i] == delimiter)
+        {
+            (*n_passagges)++;
+            model_type[i] = '\0';
+        }
+    (*n_passagges)++;
+    char **p = malloc((*n_passagges) * sizeof(char *));
+
+    int ind = 0;
+    for (int i = 0; i < *n_passagges; i++)
     {
-    case 'f':
-        strcpy(args->inst.input_file, arg);
-        break;
-    case 'l':
-        args->inst.timelimit = atof(arg);
-        break;
-    case 'm':
-        args->inst.model_type = atoi(arg);
-        break;
-    case 'M':
-        args->help_models= 1;
-        break;
-    case 's':
-        args->inst.randomseed = abs(atoi(arg));
-        break;
-    case 't':
-        args->inst.num_threads = atoi(arg);
-        break;
-    case 'L':
-        args->inst.available_memory = atoi(arg);
-        break;
-    case 'n':
-        strcpy(args->inst.node_file, arg);
-        break;
-    case 'N':
-        args->inst.max_nodes = atoi(arg);
-        break;
-    case 'p':
-        strcpy(args->inst.log_file, arg);
-        break;
-    case 'c':
-        args->inst.cutoff = atof(arg);
-        break;
-    case 'i':
-        args->inst.integer_costs = 1;
-        break;
-    case 'v':
-        args->inst.verbosity = atoi(arg);
-        break;
-    case 'h':
-        args->help = 1;
-        break;
-    default:
-        return ARGP_ERR_UNKNOWN;
+        p[i] = malloc(10 * sizeof(char));
+        sscanf(model_type + ind, "%s", p[i]);
+        ind += strlen(p[i]) + 1;
+    }
+    *passagges = (char **)p;
+}
+
+void parse_command_line(int argc, char **argv, Args *args)
+{
+    // defaults
+    // strcpy(args->model_type, "\0");
+    args->num_instances = 1;
+    args->integer_costs = 0;
+    args->randomseed = 1234;
+    args->timelimit = 3600.0;
+    strcpy(args->input_file, "\0");
+    strcpy(args->log_file, "\0");
+    strcpy(args->grasp, "1");
+
+    int help = 0;
+    if (argc < 1)
+        help = 1;
+    for (int i = 1; i < argc; i++)
+    {
+        // model type
+        if ((strcmp(argv[i], "--model") == 0) | (strcmp(argv[i], "-m") == 0))
+        {
+            strcpy(args->model_type, argv[++i]);
+            continue;
+        } // model type
+        if (strcmp(argv[i], "--int") == 0)
+        {
+            args->integer_costs = 1;
+            continue;
+        } // inteher costs
+        if (strcmp(argv[i], "--seed") == 0)
+        {
+            args->randomseed = abs(atoi(argv[++i]));
+            continue;
+        } // random seed
+          // input file
+        if ((strcmp(argv[i], "-file") == 0) | (strcmp(argv[i], "-input") == 0) | (strcmp(argv[i], "-f") == 0))
+        {
+            strcpy(args->input_file, argv[++i]);
+            fflush(stdout);
+            continue;
+        } // input file
+        if ((strcmp(argv[i], "--grasp") == 0) | (strcmp(argv[i], "-g") == 0))
+        {
+            strcpy(args->grasp, argv[++i]);
+            continue;
+        }
+        if ((strcmp(argv[i], "--maxtime") == 0) | (strcmp(argv[i], "--time") == 0))
+        {
+            args->timelimit = atof(argv[++i]);
+            continue;
+        } // total time limit
+        if ((strcmp(argv[i], "-n") == 0) | (strcmp(argv[i], "--numinstnces") == 0))
+        {
+            args->num_instances = atoi(argv[++i]);
+        }
+        if ((strcmp(argv[i], "-help") == 0) | (strcmp(argv[i], "--help") == 0))
+        {
+            help = 1;
+            continue;
+        } // help
+
+        // if ( strcmp(argv[i],"-memory") == 0 ) { inst->available_memory = atoi(argv[++i]); continue; }	// available memory (in MB)
+        // if ( strcmp(argv[i],"-node_file") == 0 ) { strcpy(inst->node_file,argv[++i]); conggtinue; }		// cplex's node file
+        // if ( strcmp(argv[i],"-max_nodes") == 0 ) { inst->max_nodes = atoi(argv[++i]); continue; } 		// max n. of nodes
+        // if ( strcmp(argv[i],"-cutoff") == 0 ) { inst->cutoff = atof(argv[++i]); continue; }				// master cutoff
     }
 
-    return 0;
+    if (help)
+        exit(1);
 }
 
-/* Define the argp parser. */
-struct argp argp_parser = {options, parse_option, 0, doc};
-
-/* Parse command-line arguments. */
-void parse_command_line(int argc, char **argv, struct arguments *args)
+void parse_grasp_probabilities(char *grasp, double **probabilities, int *n_probabilities)
 {
-    /* Default values. */
-    // args->inst.input_file = NULL;
-    args->inst.model_type = 0;
-    args->inst.randomseed = 0;
-    args->inst.num_threads = 0;
-    args->inst.timelimit = INFTY;
-    args->inst.cutoff = INFTY;
-    args->inst.integer_costs = 0;
-    args->inst.available_memory = 0;
-    args->inst.max_nodes = 0;
-    args->inst.verbosity = 1;
-    // args->inst.node_file = 0;
-    args->help = 0;
-    args->help_models = 0;
+    (*n_probabilities) = 0;
+    int length = strlen(grasp);
+    for (int i = 0; i < length; i++)
+        if (grasp[i] == delimiter)
+        {
+            (*n_probabilities)++;
+            grasp[i] = '\0';
+        }
+    (*n_probabilities)++;
+    double *p = malloc((*n_probabilities) * sizeof(double));
 
-    /* Parse arguments. */
-    argp_parse(&argp_parser, argc, argv, 0, 0, args);
-}
+    int ind = 0;
+    int sum = 0;
+    for (int i = 0; i < *n_probabilities; i++)
+    {
+        sscanf(grasp + ind, "%lf", &(p[i]));
+        ind += strlen(grasp + ind) + 1;
+        // p[i]=strtod(t, t+strlen(t));
+        sum += p[i];
+    }
+    for (int i = 0; i < (*n_probabilities); i++)
+        p[i] /= sum;
+    for (int i = 1; i < (*n_probabilities); i++)
+        p[i] = p[i - 1] + p[i];
 
-void usage(FILE *fp, int status)
-{
-    argp_help(&argp_parser, fp, ARGP_HELP_LONG | ARGP_HELP_DOC, "TODO programm name");
-    exit(status);
-}
-void show_models(FILE *fp, int status)
-{
-    fprintf(fp, "Available models:");
-    fprintf(fp, "--------------- Greedy Heuristics ---------------\n");
-    fprintf(fp, "1)\tNearest Neighboor\n");
-    fprintf(fp, "2)\tExtra Mileage\n");
-    fprintf(fp, "1)\tModified Extra Mileage\n");
-    exit(status);
-}
-
-void print_arguments(FILE *fp, const Instance *inst)
-{
-    fprintf(fp, "-c\tcutoff value\t%f\t\n", inst->cutoff);
-    fprintf(fp, "-f\tinput file\t%s\t\n", inst->input_file);
-    fprintf(fp, "-i\tinteger cost\t%i\t\n", inst->integer_costs);
-    fprintf(fp, "-l\ttime limit\t%f\t\n", inst->timelimit);
-    fprintf(fp, "-L\tmemory limit\t%i\t\n", inst->available_memory);
-    fprintf(fp, "-m\tmodel type\t%i\t\n", inst->model_type);
-    fprintf(fp, "-n\tnode file\t%s\t\n", inst->node_file);
-    fprintf(fp, "-N\tmax nodes\t%i\t\n", inst->max_nodes);
-    fprintf(fp, "-o\toutput log file\t%i\t\n", inst->max_nodes);
-    fprintf(fp, "-s\tseed\t\t%i\t\n", inst->randomseed);
-    fprintf(fp, "-t\tnum threads\t%i\t\n", inst->num_threads);
-    fprintf(fp, "-v\tverbosity\t%i\t\n", inst->verbosity);
+    *probabilities = p;
 }
