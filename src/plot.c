@@ -1,7 +1,7 @@
 #include "plot.h"
 #include "logger.h"
 
-void plot(const int *path, const double *x, const double *y, const int nnodes, const char *title)
+void plot(const int *path, const double *x, const double *y, const int nnodes, const char *title, const int starting_node )
 {
     DEBUG_COMMENT("plot::plot", "open gnuplot pipe");
     FILE *gnuplotPipe = fopen("src/script.p", "w");
@@ -18,22 +18,29 @@ void plot(const int *path, const double *x, const double *y, const int nnodes, c
     fprintf(gnuplotPipe, "set title '%s'\n", title);
     fprintf(gnuplotPipe, "set xlabel 'X Axis'\n");
     fprintf(gnuplotPipe, "set ylabel 'Y Axis'\n");
-    fprintf(gnuplotPipe, "plot '-' with line, '-' with points\n");
+    fprintf(gnuplotPipe, "plot '-' with line, '-' with points, '-' with points pointtype 7 pointsize 1 lc 'red'\n");
 
-    // Implicit draw the line
     int node;
+    int index_starting_node = -1;
+    // Draw the line
     for (int i = 0; i < nnodes; i++)
     {
         node = path[i];
+        if(node == starting_node)
+            index_starting_node = i;
         fprintf(gnuplotPipe, "%d %d\n", (int)x[node], (int)y[node]);
     }
     fprintf(gnuplotPipe, "%d %d\n", (int)x[path[0]], (int)y[path[0]]);
     fprintf(gnuplotPipe, "e\n");
+    // Draw the points
     for (int i = 0; i < nnodes; i++)
     {
         node = path[i];
         fprintf(gnuplotPipe, "%d %d\n", (int)x[node], (int)y[node]);
     }
+    fprintf(gnuplotPipe, "e\n");
+    // Draw the starting node
+    fprintf(gnuplotPipe, "%d %d\n", (int)x[index_starting_node], (int)y[index_starting_node]);
     fprintf(gnuplotPipe, "e\n");
 
     // PNG
@@ -51,5 +58,5 @@ void plot(const int *path, const double *x, const double *y, const int nnodes, c
     DEBUG_COMMENT("plot::plot", "close gnuplot pipe");
     fclose(gnuplotPipe);
     DEBUG_COMMENT("plot::plot", "write on the terminal the command to launch gnuplot");
-    printf("\n%i\n", system("gnuplot -p src/script.p"));
+    system("gnuplot -p src/script.p");
 }

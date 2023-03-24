@@ -31,5 +31,5 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 clean:
 	rm -rf $(OBJ_DIR)/*.o $(TARGET) script.p example.log
 
-production: CFLAGS+= -DPRODUCTION
+production: CFLAGS+= -DPRODUCTION -O3
 production: all

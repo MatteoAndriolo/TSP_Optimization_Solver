@@ -165,6 +165,16 @@ void parse_command_line(int argc, char **argv, Args *args)
         if ((strcmp(argv[i], "--grasp") == 0) | (strcmp(argv[i], "-g") == 0))
         {
             strcpy(args->grasp, argv[++i]);
+            parse_grasp_probabilities(args->grasp, &args->probabilities, &args->n_probabilities);
+            for (int i = 1; i < args->n_probabilities; i++)
+            {
+                if (i == 0)
+                    sprintf(args->str_probabilities, "%.1f_", args->probabilities[0]);
+                else if (i == args->n_probabilities - 1)
+                    sprintf(args->str_probabilities + strlen(args->str_probabilities), "%.1f", args->probabilities[i]);
+                else
+                    sprintf(args->str_probabilities + strlen(args->str_probabilities), "%.1f_", args->probabilities[i] - args->probabilities[i - 1]);
+            }
             continue;
         }
         if ((strcmp(argv[i], "--maxtime") == 0) | (strcmp(argv[i], "--time") == 0))

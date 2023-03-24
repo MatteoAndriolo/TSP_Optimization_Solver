@@ -42,6 +42,10 @@ int main(int argc, char **argv)
 	INFO_COMMENT("main::main", "Generating starting points");
 	int *starting_points = (int *)malloc(sizeof(int) * args.num_instances);
 	generate_random_starting_nodes(starting_points, args.nnodes, args.num_instances, args.randomseed);
+	for(int i=0;i<args.num_instances;i++)
+	{
+		DEBUG_COMMENT("main::main", "Starting point %d: %d", i, starting_points[i]);
+	}
 
 	// Manage model selection -------------------------------------------------
 	print_arguments(&args);
@@ -60,7 +64,7 @@ int main(int argc, char **argv)
 
 		int *path = malloc(sizeof(int) * args.nnodes);
 		generate_path(path, starting_points[c_inst], args.nnodes);
-		char title[25]="\0";
+		char title[40]="\0";
 		snprintf(title, 25, "sn%d_", starting_points[c_inst]);
 		for (int j = 0; j < n_passagges; j++)
 		{
@@ -75,9 +79,9 @@ int main(int argc, char **argv)
 				int n_prob;
 				double *prob;
 				parse_grasp_probabilities(args.grasp, &prob, &n_prob);
-				for(int i=0;i<n_prob;i++)
-				{
-					printf("%lf\n",prob[i]);
+				sprintf(title+strlen(title),"_%.1f_", prob[0]);
+				for(int i=1; i<n_prob; i++){
+					sprintf(title+strlen(title),"_%.1f_", prob[i]-prob[i-1]);
 				}
 				nearest_neighboor_grasp(distance_matrix, path, args.nnodes, &(instances[c_inst].tour_lenght), prob, n_prob);
 			}
@@ -85,13 +89,6 @@ int main(int argc, char **argv)
 			{
 				extra_mileage(distance_matrix, path, args.nnodes, &instances[c_inst].tour_lenght);
 			}
-			/*
-			if(passagges[j] =="nng")
-			{
-				nearest_neighboor_grasp(distance_matrix,path, args.nnodes, instances[c_inst].zbest);
-				continue;
-			}
-			*/
 			if (strcmp(passagges[j], "2opt") == 0)
 			{
 				two_opt(distance_matrix, args.nnodes, path, &instances[c_inst].tour_lenght);
@@ -100,7 +97,8 @@ int main(int argc, char **argv)
 			//TODO fix title in all the different 
 			// like in grasp specify also the probabilities
 			// put first name of model then the rest
-			plot(path, args.x,args.y, args.nnodes, title ); 
+			plot(path, args.x,args.y, args.nnodes, title, instances[c_inst].node_start ); 
+			if(j==n_passagges-1) strcpy(title,"\0");
 		}
 		free(path);
 	}

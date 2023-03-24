@@ -19,6 +19,9 @@ typedef struct args
     double *x, *y;
     char log_file[256];
     char grasp[20];
+    int n_probabilities;
+    double *probabilities;
+    char str_probabilities[20];
 } Args;
 
 static const char delimiter = '.';

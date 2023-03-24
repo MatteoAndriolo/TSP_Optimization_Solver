@@ -113,7 +113,7 @@ void extra_mileage(const double *distance_matrix, int *path, int nnodes, double 
     //--------------- START SEARCH -------------------------------------------
     *tour_length = 2 * max_distance;
     DEBUG_COMMENT("greedy::Extra_mileage", "initial tour length = %lf", tour_length);
-    int node_3[3];
+    int node_3[3]={-1, -1, -1};
     double min = INFINITY;
 
     for (int i = 2; i < nnodes; i++) // starting with two path "visited"
