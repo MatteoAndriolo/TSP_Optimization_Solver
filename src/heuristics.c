@@ -26,9 +26,19 @@ void kick_function(const double *distance_matrix, int *path, int nnodes, double 
 {
     srand(time(NULL));
     // create array of k random numbers
-    int *start = (int *)malloc(k * 2 * sizeof(int));
-    for (int i = 0; i < k; i++)
-        start[i] = rand() % nnodes;
+    int *start = (int *)malloc(k * sizeof(int));
+    int current_number = 0;
+    srand(time(NULL));
+    int i = 0;
+    while (current_number <= k) {
+        int random_number = rand() % (nnodes + 1);
+        if (current_number <= random_number) {
+            int current_number = random_number;
+            start[i] = current_number;
+            i++;
+            DEBUG_COMMENT("heuristics:kick_function", "current_number: %d", current_number);
+        }
+    }
     INFO_COMMENT("heuristics:kick_function", "start array created");
     if(k % 2 == 1)
     {
