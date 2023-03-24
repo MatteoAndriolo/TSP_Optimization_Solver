@@ -1,6 +1,6 @@
 #include "refinement.h"
 
-void two_opt(double *distance_matrix, int nnodes, int *path, double *tour_length)
+void two_opt(const double *distance_matrix, int nnodes, int *path, double *tour_length)
 {
     int foundImprovement = 1;
     log_path(path, nnodes);

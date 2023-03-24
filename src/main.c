@@ -5,6 +5,7 @@
 #include "logger.h"
 #include "plot.h"
 #include "utils.h"
+#include "heuristics.h"
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -92,6 +93,10 @@ int main(int argc, char **argv)
 			if (strcmp(passagges[j], "2opt") == 0)
 			{
 				two_opt(distance_matrix, args.nnodes, path, &instances[c_inst].tour_lenght);
+			}
+			if (strcmp(passagges[j], "vpn")==0)
+			{
+				vnp_k(distance_matrix, path ,args.nnodes, &instances[c_inst].tour_lenght, 5, 300);
 			}
 			strcpy(title+strlen(title), passagges[j]);	
 			//TODO fix title in all the different 

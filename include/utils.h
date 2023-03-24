@@ -105,4 +105,9 @@ void set_starting_node(int *path, int starting_node, int num_nodes);
  */
 void generate_random_starting_nodes(int *starting_nodes, int num_nodes, int num_instances, int seed);
 
+/**
+ * 
+ * **/
+void swap_array_piece(int * arr, int start1, int end1, int start2, int end2);
+
 #endif
