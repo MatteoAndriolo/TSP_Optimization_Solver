@@ -96,7 +96,7 @@ int main(int argc, char **argv)
 			}
 			if (strcmp(passagges[j], "vpn")==0)
 			{
-				vnp_k(distance_matrix, path ,args.nnodes, &instances[c_inst].tour_lenght, 5, 300);
+				vnp_k(distance_matrix, path ,args.nnodes, &instances[c_inst].tour_lenght, 5, 4);
 			}
 			strcpy(title+strlen(title), passagges[j]);	
 			//TODO fix title in all the different 

@@ -106,8 +106,13 @@ void set_starting_node(int *path, int starting_node, int num_nodes);
 void generate_random_starting_nodes(int *starting_nodes, int num_nodes, int num_instances, int seed);
 
 /**
- * 
- * **/
+ * Generates a set of random starting nodes.
+ * @param arr The array to shuffle.
+ * @param start1 starting index 1.
+ * @param end1 ending index 1.
+ * @param start2 starting index 2.
+ * @param end2 ending index 2
+ */
 void swap_array_piece(int * arr, int start1, int end1, int start2, int end2);
 
 #endif

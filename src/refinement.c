@@ -34,7 +34,7 @@ void two_opt(const double *distance_matrix, int nnodes, int *path, double *tour_
                 }
             }
         }
-        log_path(path, nnodes);
-        DEBUG_COMMENT("refinement:2opt", "attual tour length %lf", *tour_length);
     }
+    log_path(path, nnodes);
+    DEBUG_COMMENT("refinement:2opt", "attual tour length %lf", *tour_length);
 }
