@@ -106,11 +106,23 @@ int assert_path(const int *path, const double *distance_matrix, const int nnodes
 void generate_random_starting_nodes(int *starting_nodes, int num_nodes, int num_instances, int seed)
 {
     srand(seed);
-    for (int i = 0; i < num_instances; i++)
-    {
-        int node = rand() % num_nodes;
-        DEBUG_COMMENT("generate_random_starting_nodes", "node=%d", node);
-        starting_nodes[i] = node;
+    for (int i = 0; i < num_instances; i++) {
+        int rand_num = rand() % num_nodes; 
+        
+        int is_duplicate = 0;
+        for (int j = 0; j < i; j++) {
+            if (rand_num == starting_nodes[j]) {
+                is_duplicate = 1;
+                break;
+            }
+        }
+        
+        if (is_duplicate) {
+            i--;
+            continue;
+        }
+        
+        starting_nodes[i] = rand_num;
     }
 }
 
