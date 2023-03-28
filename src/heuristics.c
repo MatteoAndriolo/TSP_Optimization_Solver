@@ -20,13 +20,17 @@ void vnp_k(const double *distance_matrix, int *path, int nnodes, double *tour_le
 void kick_function(const double *distance_matrix, int *path, int nnodes, double *tour_length, int k)
 {
     int *start = (int *)malloc(k * sizeof(int));
-    start[0] = rand() % (nnodes / k);
+    //create a random number between 0 and nnodes/k
+    start[0] = rand() % (nnodes / k) + 1;
+    //create block size between that could be at max the number of remaining nodes divided by k
+    int max_blok_size = (nnodes - start[0]) / k - 1 ;
     for (int i = 0; i < k; i++)
-        start[i] = start[i - 1] + 5 + rand() % ((nnodes - start[i - 1]) / k - 1);
+        start[i] = start[i - 1] + rand() % max_blok_size + rand() % ((nnodes - start[i - 1]) / k - 1);
 
-    if (k % 2 == 1)
+    // genera a random number between 0 and 1
+    if (rand() % 2 == 0)
     {
-        // if odd
+        //if 0 then swap the blocks form the start array
         // ABC -> BAC == (i j-1) (j k-1) (k i-1)
         // ABC -> BAC == (j k-1) (i j-1) (k i-1) to add (k-1 i) (j-1 k) to remove (j-1 j) (k-1 k) (i-1 i)
         for (int i = 0; i < k - 1; i = i + 2)
@@ -43,14 +47,17 @@ void kick_function(const double *distance_matrix, int *path, int nnodes, double 
                           - distance_matrix[path[K-1] * nnodes + path[K]]
                           - distance_matrix[path[I-1] * nnodes + path[I]];*/
         }
-    }
-    else
-    {
-        // if even
-        // ABCD -> CABD == (i j-1) (j k-1) (k l-1) (l i-1)
-        for (int i = 0; i < k - 1; i = i + 2)
-        {
-            swap_array_piece(path, start[i], start[i + 1] - 1, start[i + 2], start[i + 3] - 1);
+    }else{
+        swap_array_piece(path, start[k], nnodes - 1, start[k-1], start[k-1] + nnodes - start[k] - 1);
+        DEBUG_COMMENT("heuristics:kick_function", "swap_array_piece(%d, %d, %d, %d)", start[k], nnodes - 1, start[k - 1], start[k - 1] + nnodes - start[k] - 1);
+        swap_array_piece(path, start[0], start[1] - 1, start[k-1] + nnodes - start[k], start[k] - 1);
+        DEBUG_COMMENT("heuristics:kick_function", "swap_array_piece(%d, %d, %d, %d)", start[0], start[1] - 1, start[k - 1] + nnodes - start[k], start[k] - 1);
+        for (int i = k - 2; i >= 0; i = i - 2){
+            int I = start[i];
+            int J = start[i-1];
+            int K = start[i-2];
+            swap_array_piece(path, I-1, K, K-1, J-1);
+        DEBUG_COMMENT("heuristics:kick_function", "swap_array_piece(%d, %d, %d, %d)", start[i] - 1, start[i - 2], start[i - 1] - 1, start[i - 1]);
         }
     }
 
