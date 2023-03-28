@@ -22,7 +22,7 @@ void plot(const int *path, const double *x, const double *y, const int nnodes, c
 
     int node;
     int index_starting_node = -1;
-    // Draw the line
+    // Draw the line ---------------
     for (int i = 0; i < nnodes; i++)
     {
         node = path[i];
@@ -32,15 +32,17 @@ void plot(const int *path, const double *x, const double *y, const int nnodes, c
     }
     fprintf(gnuplotPipe, "%d %d\n", (int)x[path[0]], (int)y[path[0]]);
     fprintf(gnuplotPipe, "e\n");
-    // Draw the points
+    // Draw the points --------------
     for (int i = 0; i < nnodes; i++)
     {
         node = path[i];
         fprintf(gnuplotPipe, "%d %d\n", (int)x[node], (int)y[node]);
     }
     fprintf(gnuplotPipe, "e\n");
-    // Draw the starting node
-    fprintf(gnuplotPipe, "%d %d\n", (int)x[index_starting_node], (int)y[index_starting_node]);
+
+    // Draw the starting node -------
+    DEBUG_COMMENT("plot::plot", "Draw the starting node%d,%d coordinates %lf,%lf", starting_node, index_starting_node, x[path[index_starting_node]], y[path[index_starting_node]]);
+    fprintf(gnuplotPipe, "%d %d\n", (int)x[path[index_starting_node]], (int)y[path[index_starting_node]]);
     fprintf(gnuplotPipe, "e\n");
 
     // PNG
