@@ -34,7 +34,8 @@ typedef struct
 	int node_start;
 	// int xstart;
 	// int ystart;
-
+	int grasp_n_probabilities;
+	double *grasp_probabilities;
 	// int qstart;
 	// int bigqstart;
 	// int sstart;
