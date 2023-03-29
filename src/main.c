@@ -43,7 +43,7 @@ int main(int argc, char **argv)
 	INFO_COMMENT("main::main", "Generating starting points");
 	int *starting_points = (int *)malloc(sizeof(int) * args.num_instances);
 	generate_random_starting_nodes(starting_points, args.nnodes, args.num_instances, args.randomseed);
-	for(int i=0;i<args.num_instances;i++)
+	for (int i = 0; i < args.num_instances; i++)
 	{
 		DEBUG_COMMENT("main::main", "Starting point %d: %d", i, starting_points[i]);
 	}
@@ -61,50 +61,75 @@ int main(int argc, char **argv)
 		instances[c_inst].randomseed = args.randomseed;
 		instances[c_inst].timelimit = args.timelimit;
 		instances[c_inst].tour_lenght = 0;
+		instances[c_inst].grasp_n_probabilities = args.n_probabilities;
+		instances[c_inst].grasp_probabilities = args.grasp_probabilities;
 		strcpy(instances[c_inst].input_file, args.input_file);
 
 		int *path = malloc(sizeof(int) * args.nnodes);
 		generate_path(path, starting_points[c_inst], args.nnodes);
-		char title[40]="\0";
-		snprintf(title, 25, "sn%d_", starting_points[c_inst]);
+
+		char str_startingNode[20];
+		sprintf(str_startingNode, "%d-", starting_points[c_inst]);
+
+		char title[40] = "\0";
+
 		for (int j = 0; j < n_passagges; j++)
 		{
 			INFO_COMMENT("main::main", "Generating instance");
 			if (strcmp(passagges[j], "nn") == 0)
 			{
-				nearest_neighboor(distance_matrix, path, args.nnodes, &instances[c_inst].tour_lenght);
+				nearest_neighboor(distance_matrix, path, instances[c_inst].nnodes, &instances[c_inst].tour_lenght);
 			}
+			else if (strcmp(passagges[j], "nng") == 0)
+			{
+				log_path(path, instances[c_inst].nnodes);
+				//parse_grasp_probabilities(args.grasp, instances[c_inst].grasp_probabilities, &instances[c_inst].grasp_n_probabilities);
+				nearest_neighboor_grasp(distance_matrix, path, instances[c_inst].nnodes, &(instances[c_inst].tour_lenght), instances[c_inst].grasp_probabilities, instances[c_inst].grasp_n_probabilities);
+			}
+			else if (strcmp(passagges[j], "em") == 0)
+			{
+				extra_mileage(distance_matrix, path, instances[c_inst].nnodes, &(instances[c_inst].tour_lenght));
+			}
+			else if (strcmp(passagges[j], "2opt") == 0)
+			{
+				two_opt(distance_matrix, instances[c_inst].nnodes, path, &(instances[c_inst].tour_lenght));
+			}
+			else if (strcmp(passagges[j], "vpn") == 0)
+			{
+				vnp_k(distance_matrix, path, instances[c_inst].nnodes, &instances[c_inst].tour_lenght, 5, 4);
+			}
+			else{
+				ERROR_COMMENT("main::main", "Model not found");
+				return -1;
+			}
+
+			// TITLE NAME -----------------------------------------------------
+			// model
+			if (j == 0)
+				sprintf(title + strlen(title),"%s-", passagges[j]);
+			else
+				sprintf(title + strlen(title) - strlen(str_startingNode)-1,"%s-",  passagges[j]);
+
+			// grasp
 			if (strcmp(passagges[j], "nng") == 0)
-			{				
-				log_path(path, args.nnodes);
-				int n_prob;
-				double *prob;
-				parse_grasp_probabilities(args.grasp, &prob, &n_prob);
-				sprintf(title+strlen(title),"_%.1f_", prob[0]);
-				for(int i=1; i<n_prob; i++){
-					sprintf(title+strlen(title),"_%.1f_", prob[i]-prob[i-1]);
+			{
+				const double *prob = instances[c_inst].grasp_probabilities;
+
+				sprintf(title + strlen(title) - strlen(str_startingNode), "%.1f_", prob[0]);
+				for (int i = 1; i < instances[c_inst].grasp_n_probabilities; i++)
+				{
+					sprintf(title + strlen(title) - strlen(str_startingNode), "%.1f_", prob[i] - prob[i - 1]);
 				}
-				nearest_neighboor_grasp(distance_matrix, path, args.nnodes, &(instances[c_inst].tour_lenght), prob, n_prob);
 			}
-			if (strcmp(passagges[j], "em")==0)
-			{
-				extra_mileage(distance_matrix, path, args.nnodes, &(instances[c_inst].tour_lenght));
-			}
-			if (strcmp(passagges[j], "2opt") == 0)
-			{
-				two_opt(distance_matrix, args.nnodes, path, &(instances[c_inst].tour_lenght));
-			}
-			if (strcmp(passagges[j], "vpn")==0)
-			{
-				vnp_k(distance_matrix, path ,args.nnodes, &instances[c_inst].tour_lenght, 5, 4);
-			}
-			strcpy(title+strlen(title), passagges[j]);	
-			//TODO fix title in all the different 
-			// like in grasp specify also the probabilities
-			// put first name of model then the rest
-			plot(path, args.x,args.y, args.nnodes, title, instances[c_inst].node_start ); 
-			if(j==n_passagges-1) strcpy(title,"\0");
+			// starting node
+			snprintf(title + strlen(title), 25, "sn%d", starting_points[c_inst]);
+
+			// PLOT -----------------------------------------------------------
+			plot(path, args.x, args.y, args.nnodes, title, instances[c_inst].node_start, args.toplot);
+			if (j == n_passagges - 1)
+				sprintf(title + strlen(title), "%d-", instances[c_inst].node_start);
 		}
+		sprintf(title + strlen(title), str_startingNode);
 		free(path);
 	}
 
