@@ -22,3 +22,5 @@ We will also produce a thesis containing information about:
 
 `-g x.y.z` sequence of integers (any number). They will be normalized in range `(0,1)`
 * x is the probability for best, y for the second best, z for the thirs best, ...
+
+makeclean;make;bin/main -f data/att48.tsp -m em.vpn
