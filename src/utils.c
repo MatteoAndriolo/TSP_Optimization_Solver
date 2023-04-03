@@ -149,25 +149,14 @@ void swap_array_piece(int *arr, int start1, int end1, int start2, int end2)
     memcpy(&arr[start2], temp, sizeof(int) * (end1 - start1 + 1));         // Copy the temp array (first piece) to the second piece
 }
 
-double two_opt_move(const double *distance_matrix, int *path, const double tour_lenght, int n1, int n2, int nnodes, int saveMove)
+void two_opt_move(int *path, int n1, int n2, int nnodes)
 {
-    double cost_old_edge, cost_new_edge, cost_old_edge2, cost_new_edge2;
-    cost_old_edge = distance_matrix[path[n1] * nnodes + path[n1 + 1]];
-    cost_new_edge = distance_matrix[path[n1] * nnodes + path[n2]];
-    cost_old_edge2 = distance_matrix[path[n2] * nnodes + path[n2 + 1]];
-    cost_new_edge2 = distance_matrix[path[n1 + 1] * nnodes + path[n2 + 1]];
-    double delta = -(cost_old_edge + cost_old_edge2) + (cost_new_edge + cost_new_edge2);
-
-    if (saveMove)
+    int t=n1+1;
+    for (int z = 0; z < (int)(n2 - n1 + 1) / 2; z++) // reverse order cells (n1+1,index_min)
     {
-        int t=n1+1;
-        for (int z = 0; z < (int)(n2 - n1 + 1) / 2; z++) // reverse order cells (n1+1,index_min)
-        {
-            double temp = path[z + t];
-            path[z + t] = path[n2 - z];
-            path[n2 - z] = temp;
-        }
+        double temp = path[z + t];
+        path[z + t] = path[n2 - z];
+        path[n2 - z] = temp;
     }
 
-    return tour_lenght + delta;
 }

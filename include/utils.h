@@ -130,16 +130,11 @@ double get_tour_length(const int *path, const int nnodes, const double *distance
  * Calculates the length of a tour.
  * 
  * @param path The path to check.
- * @param distance_matrix The distance matrix for the graph.
- * @return The length of the tour.
- * @param nnodes The number of nodes in the graph.
- * @param tour_length The length of the tour.
  * @param i The index of the first node in the tour.
  * @param j The index of the second node in the tour.
  * @param nnodes The number of nodes in the graph.
- * @param save_path update the path or just calculate the length
  * @return The length of the tour.
 */
-double two_opt_move(const double *distance_matrix, int *path, const double tour_lenght, int i, int j, int nnodes, int save_path );
+void two_opt_move(int *path, int n1, int n2, int nnodes);
 
 #endif
