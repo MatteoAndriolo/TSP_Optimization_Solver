@@ -77,6 +77,16 @@ void set_starting_node(int *path, int starting_node, int num_nodes)
     ERROR_COMMENT("set_starting_node", "Starting node not found");
 }
 
+double get_tour_length(const int *path, const int nnodes, const double *distance_matrix)
+{
+    double tour_length = distance_matrix[path[0] * nnodes + path[nnodes - 1]];
+    for (int i = 0; i < nnodes - 1; i++)
+    {
+        tour_length += distance_matrix[path[i] * nnodes + path[i + 1]];
+    }
+    return tour_length;
+}
+
 int assert_path(const int *path, const double *distance_matrix, const int nnodes, const double tour_length)
 {
     // all nodes used
@@ -112,14 +122,13 @@ void generate_random_starting_nodes(int *starting_nodes, int num_nodes, int num_
         int i = 0;
         while (i < found && starting_nodes[i] != r)
             i++;
-    //generate num_instances random number without repetition in range (0, num_nodes)
+        // generate num_instances random number without repetition in range (0, num_nodes)
         if (i == found)
         {
             starting_nodes[found] = r;
             found++;
         }
     }
-
 }
 
 void generate_path(int *path, int starting_node, int num_nodes)
@@ -132,9 +141,33 @@ void generate_path(int *path, int starting_node, int num_nodes)
     path[0] = starting_node;
 }
 
-void swap_array_piece(int* arr, int start1, int end1, int start2, int end2) {
-    int temp[end1 - start1 + 1]; // Create a temporary array to hold the first piece
-    memcpy(temp, &arr[start1], sizeof(int) * (end1 - start1 + 1)); // Copy the first piece to the temp array
+void swap_array_piece(int *arr, int start1, int end1, int start2, int end2)
+{
+    int temp[end1 - start1 + 1];                                           // Create a temporary array to hold the first piece
+    memcpy(temp, &arr[start1], sizeof(int) * (end1 - start1 + 1));         // Copy the first piece to the temp array
     memcpy(&arr[start1], &arr[start2], sizeof(int) * (end1 - start1 + 1)); // Copy the second piece to the first piece
-    memcpy(&arr[start2], temp, sizeof(int) * (end1 - start1 + 1)); // Copy the temp array (first piece) to the second piece
+    memcpy(&arr[start2], temp, sizeof(int) * (end1 - start1 + 1));         // Copy the temp array (first piece) to the second piece
+}
+
+double two_opt_move(const double *distance_matrix, int *path, const double tour_lenght, int n1, int n2, int nnodes, int saveMove)
+{
+    double cost_old_edge, cost_new_edge, cost_old_edge2, cost_new_edge2;
+    cost_old_edge = distance_matrix[path[n1] * nnodes + path[n1 + 1]];
+    cost_new_edge = distance_matrix[path[n1] * nnodes + path[n2]];
+    cost_old_edge2 = distance_matrix[path[n2] * nnodes + path[n2 + 1]];
+    cost_new_edge2 = distance_matrix[path[n1 + 1] * nnodes + path[n2 + 1]];
+    double delta = -(cost_old_edge + cost_old_edge2) + (cost_new_edge + cost_new_edge2);
+
+    if (saveMove)
+    {
+        int t=n1+1;
+        for (int z = 0; z < (int)(n2 - n1 + 1) / 2; z++) // reverse order cells (n1+1,index_min)
+        {
+            double temp = path[z + t];
+            path[z + t] = path[n2 - z];
+            path[n2 - z] = temp;
+        }
+    }
+
+    return tour_lenght + delta;
 }

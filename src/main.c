@@ -98,6 +98,14 @@ int main(int argc, char **argv)
 			{
 				vnp_k(distance_matrix, path ,args.nnodes, &instances[c_inst].tour_lenght, 5, 4);
 			}
+			if (strcmp(passagges[j], "tabu")==0)
+			{
+				if(j==0){
+					FATAL_COMMENT("main::main", "Tabu search must be used with a starting point");
+				} 
+				tabu_search(distance_matrix, path, instances[c_inst].nnodes,&instances[c_inst].tour_lenght, args.nnodes/10 );
+			}
+
 			strcpy(title+strlen(title), passagges[j]);	
 			//TODO fix title in all the different 
 			// like in grasp specify also the probabilities

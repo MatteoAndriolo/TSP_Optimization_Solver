@@ -6,16 +6,16 @@ data_adress = "data/att48.tsp"
 num_instances = 20
 
 params_list = [
-    {
-        "-f": data_adress,
-        "-m": "nn",
-        "-n": num_instances,
-    },
-    {
-        "-f": data_adress,
-        "-m": "nn.2opt",
-        "-n": num_instances,
-    },
+    #{
+    #    "-f": data_adress,
+    #    "-m": "nn",
+    #    "-n": num_instances,
+    #},
+    #{
+    #    "-f": data_adress,
+    #    "-m": "nn.2opt",
+    #    "-n": num_instances,
+    #},
     {
         "-f": data_adress,
         "-m": "nng",

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include "heuristics.h"
+#include "greedy.h"
 
 void vnp_k(const double *distance_matrix, int *path, int nnodes, double *tour_length, int k, int duration)
 {
@@ -34,7 +35,7 @@ void kick_function(const double *distance_matrix, int *path, int nnodes, double 
             int I = start[i];
             int J = start[i + 1];
             int K = start[i + 2];
-            swap_array_piece(path, I, J-1, J, K-1);
+            swap_array_piece(path, I, J - 1, J, K - 1);
             DEBUG_COMMENT("heuristics:kick_function", "swap_array_piece(%d, %d, %d, %d)", start[i], start[i + 1] - 1, start[i + 1], start[i + 2] - 1);
             /**tour_length += distance_matrix[path[K-1] * nnodes + path[I]]
                           + distance_matrix[path[J-1] * nnodes + path[K]]
@@ -60,5 +61,77 @@ void kick_function(const double *distance_matrix, int *path, int nnodes, double 
         new_path_cost += distance_matrix[path[i] * nnodes + path[i + 1]];
     }
     new_path_cost += distance_matrix[path[nnodes - 1] * nnodes + path[0]];
-    *tour_length = new_path_cost;  
+    *tour_length = new_path_cost;
+}
+
+int tabuListContains(int n1, int tabuList[], int tabuListSize, int maxTabuSize)
+{
+    for (int i = 0; i < (tabuListSize < maxTabuSize ? tabuListSize : maxTabuSize); i++)
+    {
+        if (tabuList[i] == n1)
+        {
+            return 1; // Solution is in the tabu list
+        }
+    }
+    return 0; // Solution is not in the tabu list
+}
+
+int stoppingCondition(int currentIteration)
+{
+    return currentIteration > 2;
+}
+
+void tabu_search(const double *distance_matrix, int *path, int nnodes, double *tour_length, int maxTabuSize)
+{
+    // TODO in order to get neighbour iterate all 2opt moves, calculate tourlenght
+    //    -  if tourlenght < best tourlenght, then update patheven if tabu
+    //    -  pick the neighbout wit best fitness
+    int tabuList[maxTabuSize]; // save only first node involved in operation
+    int tabuListSize = 0;
+
+    int bestCandidate[nnodes];
+    memcpy(bestCandidate, path, nnodes * sizeof(int)); // Set initial solution as best candidate
+    double candidateTourLenght;
+
+    int neighborhoodSize = nnodes / 10;
+
+    int currentIteration = 0;
+    while (!stoppingCondition(currentIteration))
+    {
+        // in order to get neighbour of distance i have to change only one
+        int i = 0;
+        while (i < neighborhoodSize)
+        {
+            int n1, n2;
+            n1 = rand() % nnodes;
+            n2 = rand() % nnodes;
+            if (n1 == n2)
+            {
+                continue;
+            }
+
+            double new_candidate_tour_lenght = two_opt_move(distance_matrix, bestCandidate, nnodes, *tour_length, n1, n2, 0);
+
+            if (new_candidate_tour_lenght < *tour_length)
+            {
+                candidateTourLenght = two_opt_move(distance_matrix, bestCandidate, nnodes, *tour_length, n1, n2, 1); // save move
+                two_opt(distance_matrix, nnodes, bestCandidate, &candidateTourLenght);
+            }
+            else if (!tabuListContains(n1, tabuList, tabuListSize, maxTabuSize) && new_candidate_tour_lenght < candidateTourLenght)
+            {
+                candidateTourLenght = new_candidate_tour_lenght;
+                two_opt_move(distance_matrix, bestCandidate, nnodes, *tour_length, n1, n2, 1); // save move
+                tabuList[tabuListSize % maxTabuSize] = n1;
+                tabuListSize++;
+            }
+            i++;
+        }
+
+        if (candidateTourLenght < *tour_length)
+        {
+            *tour_length = candidateTourLenght;
+            memcpy(path, bestCandidate, nnodes * sizeof(int));
+        }
+        tabuListSize=0;
+    }
 }
