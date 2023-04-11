@@ -114,6 +114,7 @@ int main(int argc, char **argv)
 			if(j==n_passagges-1) strcpy(title,"\0");
 		}
 		free(path);
+		free(distance_matrix);
 	}
 
 	OUTPUT_COMMENT("main", "End of the program");

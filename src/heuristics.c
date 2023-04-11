@@ -149,12 +149,13 @@ void tabu_search(const double *distance_matrix, int *path, int nnodes, double *t
 
         if (!foundImprovement)
         {
-            // ADD TABU NODES
+            DEBUG_COMMENT("tabu_search", "tabu node added: %d", tabuNodes[0]);
             tabuList[tabuListSize % maxTabuSize] = tabuNodes[0];
             tabuListSize++;
             two_opt_move(path, tabuNodes[0], tabuNodes[1], nnodes);
             *tour_length += min_increase;
-            DEBUG_COMMENT("tabu_search", "tabu node added: %d", tabuNodes[0]);
+            DEBUG_COMMENT("tabu_search", "tabu list size: %d", tabuListSize);
         }
+        DEBUG_COMMENT("tabu_search", "minincrease %f ", min_increase);
     }
 }
