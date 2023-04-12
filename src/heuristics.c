@@ -94,7 +94,7 @@ void tabu_search(const double *distance_matrix, int *path, int nnodes, double *t
     //  then add one of the nodes in the tabu list
     //  ! move must be done in nodes not in the tabu list
     //  ! ! it can be accepted only if improves the incumbment (best solution found)
-    maxTabuSize = (int)(nnodes<10e3 ? nnodes/10 : nnodes/100);
+    maxTabuSize = (int)(nnodes < 10e3 ? nnodes / 10 : nnodes / 100);
     int tabuList[maxTabuSize]; // save only first node involved in operation
     int tabuListSize = 0;
 
@@ -112,11 +112,7 @@ void tabu_search(const double *distance_matrix, int *path, int nnodes, double *t
     int encumbment_path[nnodes];
     memcpy(encumbment_path, path, nnodes * sizeof(int));
     double encumbment_tour_length = *tour_length;
-    DEBUG_COMMENT("tabu_search", "nnodes %d", nnodes);
-    DEBUG_COMMENT("tabu_search", "tls %d", tabuListSize);
-    DEBUG_COMMENT("tabu_search", "mts %d", maxTabuSize);
-    DEBUG_COMMENT("tabu_search", "pts %d", tabuListSize % maxTabuSize);
-    //todo clean tabulist after many number of iterations
+    // todo clean tabulist after many number of iterations
     while (!stoppingCondition(currentIteration))
     {
         currentIteration++;
@@ -148,25 +144,8 @@ void tabu_search(const double *distance_matrix, int *path, int nnodes, double *t
                         //*tour_length += delta;
                         DEBUG_COMMENT("tabu_search", "found improvement: %lf", pendingTourLenght);
                     }
-
-                    // if (*tour_length + delta < encumbment_tour_length || (!tabuListContains(i, tabuList, tabuListSize, maxTabuSize) && !tabuListContains(j, tabuList, tabuListSize, maxTabuSize)))
-                    // {
-                    //     if (delta < 0)
-                    //     {
-                    //         foundImprovement = 1;
-                    //         two_opt_move(path, i, j, nnodes);
-                    //         *tour_length += delta;
-                    //         DEBUG_COMMENT("tabu_search", "found improvement: %f", *tour_length);
-                    //     }
-                    //     else if (delta < min_increase)
-                    //     {
-                    //         min_increase = delta;
-                    //         tabuNodes[0] = i;
-                    //         tabuNodes[1] = j;
-                    //     }
-                    // }
                 }
-                //else if (delta < min_increase && delta>0 && !tabuListContains(i, tabuList, tabuListSize, maxTabuSize) && !tabuListContains(j, tabuList, tabuListSize, maxTabuSize))
+                // else if (delta < min_increase && delta>0 && !tabuListContains(i, tabuList, tabuListSize, maxTabuSize) && !tabuListContains(j, tabuList, tabuListSize, maxTabuSize))
                 else if (delta < min_increase && !tabuListContains(i, tabuList, tabuListSize, maxTabuSize) && !tabuListContains(j, tabuList, tabuListSize, maxTabuSize))
                 {
                     min_increase = delta;
@@ -176,12 +155,49 @@ void tabu_search(const double *distance_matrix, int *path, int nnodes, double *t
                 }
             }
         }
-        DEBUG_COMMENT("tabu_search", foundImprovement ? "found improvement" : "no improvement"); 
+//        // case first node and last node
+//        DEBUG_COMMENT("tabu_search", "lokinh into special");
+//        int i = nnodes - 1;
+//        for (int j = 0; j <= nnodes - 2; j++)
+//        {
+//            cost_old_edge = distance_matrix[path[i] * nnodes + path[0]];
+//            cost_new_edge = distance_matrix[path[i] * nnodes + path[j]];
+//            cost_old_edge2 = distance_matrix[path[j] * nnodes + path[j + 1]];
+//            cost_new_edge2 = distance_matrix[path[0] * nnodes + path[j + 1]];
+//            double delta = (cost_new_edge + cost_new_edge2) - (cost_old_edge + cost_old_edge2);
+//
+//            // if two opt improve path
+//            if (*tour_length + delta < *tour_length)
+//            {
+//                // if better than encumbment or improve tour lenght and not in tabu list
+//                if (*tour_length + delta < encumbment_tour_length || (*tour_length + delta < pendingTourLenght && !tabuListContains(i, tabuList, tabuListSize, maxTabuSize) && !tabuListContains(j, tabuList, tabuListSize, maxTabuSize)))
+//                {
+//                    foundImprovement = 1;
+//                    improvementOperation[0] = i;
+//                    improvementOperation[1] = j;
+//                    pendingTourLenght = *tour_length + delta;
+//                    // two_opt_move(path, i, j, nnodes);
+//                    //*tour_length += delta;
+//                    DEBUG_COMMENT("tabu_search", "found encumbment improvement : %lf", pendingTourLenght);
+//                }
+//            }
+//            // else if (delta < min_increase && delta>0 && !tabuListContains(i, tabuList, tabuListSize, maxTabuSize) && !tabuListContains(j, tabuList, tabuListSize, maxTabuSize))
+//            else if (delta < min_increase && !tabuListContains(i, tabuList, tabuListSize, maxTabuSize) && !tabuListContains(j, tabuList, tabuListSize, maxTabuSize))
+//            {
+//                min_increase = delta;
+//                tabuNodes[0] = i;
+//                tabuNodes[1] = j;
+//                DEBUG_COMMENT("tabu_search", "found tabu:\t node %d\t increase %lf", tabuNodes[0], min_increase);
+//            }
+//        }
+//        // end special case
+
+        DEBUG_COMMENT("tabu_search", foundImprovement ? "found improvement" : "no improvement");
         if (foundImprovement)
         {
             two_opt_move(path, improvementOperation[0], improvementOperation[1], nnodes);
             *tour_length = pendingTourLenght;
-            DEBUG_COMMENT("tabu_search", "found improvement: %d %d tl= %lf", improvementOperation[0], improvementOperation[1], *tour_length);
+            DEBUG_COMMENT("tabu_search", "improvement operation: %d %d tl= %lf", improvementOperation[0], improvementOperation[1], *tour_length);
         }
         else
         {
@@ -191,12 +207,14 @@ void tabu_search(const double *distance_matrix, int *path, int nnodes, double *t
             *tour_length += min_increase;
             DEBUG_COMMENT("tabu_search", "new tabu move: node %d\t lenght %lf", tabuNodes[0], *tour_length);
 
-            for(int l=0; l<maxTabuSize; l++){
+            for (int l = 0; l < maxTabuSize; l++)
+            {
                 DEBUG_COMMENT("tabu_search", "tabu list: %d", tabuList[l]);
             }
         }
-        
-        if(*tour_length<=encumbment_tour_length){
+
+        if (*tour_length <= encumbment_tour_length)
+        {
             memcpy(encumbment_path, path, nnodes * sizeof(int));
             encumbment_tour_length = *tour_length;
             DEBUG_COMMENT("tabu_search", "new encumbment: %lf", encumbment_tour_length);
@@ -205,5 +223,5 @@ void tabu_search(const double *distance_matrix, int *path, int nnodes, double *t
     }
 
     path = encumbment_path;
-    *tour_length=encumbment_tour_length;
+    *tour_length = encumbment_tour_length;
 }
