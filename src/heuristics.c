@@ -14,14 +14,17 @@ void vnp_k(const double *distance_matrix, int *path, int nnodes, double *tour_le
     while (difftime(end_time, time(NULL)) > 0)
     {
         printf("Time left: %.0f seconds\n", difftime(end_time, time(NULL)));
+        DEBUG_COMMENT("heuristics.c:vnp_k", "best passed for the TOWOPT function = %f", best_path);
         two_opt(distance_matrix, nnodes, path, tour_length);
         if (best_path < *tour_length)
         {
             best_path = *tour_length;
             memcpy(best_node_tour, path, nnodes * sizeof(int));
         }
+        DEBUG_COMMENT("heuristics.c:vnp_k", "best passed for the KICK function = %f", best_path);
         kick_function(distance_matrix, path, nnodes, tour_length, k);
     }
+    free(best_node_tour);
 }
 
 void kick_function(const double *distance_matrix, int *path, int nnodes, double *tour_length, int k)
@@ -36,8 +39,14 @@ void kick_function(const double *distance_matrix, int *path, int nnodes, double 
         int start = (rand() % (upper - lower + 1)) + lower; // random number between 1 and nnodes - 5
         swap_array_piece(path, start, start + 1, start + 2, start + 3);
         DEBUG_COMMENT("heuristics.c:kick_function", "start=%d", start);
-        *tour_length += distance_matrix[path[start - 1] * nnodes + path[start + 2]] + distance_matrix[path[start + 3] * nnodes + path[start]] + distance_matrix[path[start + 1] * nnodes + path[start + 4]] -
-                        distance_matrix[path[start - 1] * nnodes + path[start]] - distance_matrix[path[start + 1] * nnodes + path[start + 2]] - distance_matrix[path[start + 3] * nnodes + path[start + 4]];
+        *tour_length +=   distance_matrix[path[start - 1] * nnodes + path[start + 2]]  
+                        + distance_matrix[path[start + 3] * nnodes + path[start]] 
+                        + distance_matrix[path[start + 1] * nnodes + path[start + 4]] 
+                        - distance_matrix[path[start - 1] * nnodes + path[start]]  
+                        - distance_matrix[path[start + 1] * nnodes + path[start + 2]]  
+                        - distance_matrix[path[start + 3] * nnodes + path[start + 4]];
+        DEBUG_COMMENT("heuristics.c:kick_function", "distances to sum {%f, %f, %f}", distance_matrix[path[start - 1] * nnodes + path[start + 2]], distance_matrix[path[start + 3] * nnodes + path[start]], distance_matrix[path[start + 1] * nnodes + path[start + 4]]);
+        DEBUG_COMMENT("heuristics.c:kick_function", "distances to subtract {%f, %f, %f}", distance_matrix[path[start - 1] * nnodes + path[start]], distance_matrix[path[start + 1] * nnodes + path[start + 2]], distance_matrix[path[start + 3] * nnodes + path[start + 4]]);
         DEBUG_COMMENT("heuristics.c:kick_function", "tour_length=%f", *tour_length);
         count += 3;
 

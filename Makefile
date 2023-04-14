@@ -1,9 +1,9 @@
 
 CC = gcc
-CFLAGS = -Wall -Werror -pedantic -I./include
+CFLAGS += -Wall -Werror -pedantic -I./include -I/opt/ibm/ILOG/CPLEX_Studio2211/cplex/include/ilcplex -I/opt/ibm/ILOG/CPLEX_Studio2211/concert/include
 CFLAGS += -g
 #CFLAGS += -O3
-LDFLAGS = -lm
+LDFLAGS = -lm -L/opt/ibm/ILOG/CPLEX_Studio2211/cplex/lib/x86-64_linux/static_pic -L/opt/ibm/ILOG/CPLEX_Studio2211/concert/lib/x86-64_linux/static_pic -lilocplex -lcplex -lconcert
 SRC_DIR = ./src
 OBJ_DIR = ./obj
 BIN_DIR = ./bin

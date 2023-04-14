@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <getopt.h>
+#include <cplex.h>
 
 // #include <cplex.h>
 #include <pthread.h>

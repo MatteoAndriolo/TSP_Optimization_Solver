@@ -6,6 +6,7 @@
 #include "plot.h"
 #include "utils.h"
 #include "heuristics.h"
+#include "tspcplex.h"
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -97,6 +98,10 @@ int main(int argc, char **argv)
 			if (strcmp(passagges[j], "vpn")==0)
 			{
 				vnp_k(distance_matrix, path ,args.nnodes, &instances[c_inst].tour_lenght, 5, 4);
+			}
+			if (strcmp(passagges[j], "cplex")==0)
+			{
+				TSPopt(&instances[c_inst], path);
 			}
 			strcpy(title+strlen(title), passagges[j]);	
 			//TODO fix title in all the different 
