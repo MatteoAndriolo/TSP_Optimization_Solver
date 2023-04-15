@@ -8,6 +8,7 @@
 #include "vrp.h"
 #include "utils.h"
 #include "logger.h"
+#include "constraint.h"
 
 /**
  * @brief TSPopt

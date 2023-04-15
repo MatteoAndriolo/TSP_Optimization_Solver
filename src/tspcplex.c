@@ -1,7 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
 #include "tspcplex.h"
-#include "utils.h"
 #define EPS 1e-5
 
 void build_model(Instance *inst, CPXENVptr env, CPXLPptr lp)
@@ -19,7 +16,6 @@ void build_model(Instance *inst, CPXENVptr env, CPXLPptr lp)
 	{
 		for ( int j = i+1; j < inst->nnodes; j++ )
 		{
-			//TODO: I have already the distance matrix calculate it in the main it is quite usless this step change the code 
 			sprintf(cname[0], "x(%d,%d)", i+1, j+1);		// (i+1,j+1) because CPLEX starts from 1 (not 0
 			double obj = dist(i,j,inst); // cost == distance   
 			double lb = 0.0;
@@ -29,30 +25,7 @@ void build_model(Instance *inst, CPXENVptr env, CPXLPptr lp)
 		}
 	} 
 
-// add the degree constraints 
-
-	int *index = (int *) calloc(inst->nnodes, sizeof(int));
-	double *value = (double *) calloc(inst->nnodes, sizeof(double));
-
-	for ( int h = 0; h < inst->nnodes; h++ )  		// add the degree constraint on node h
-	{
-		double rhs = 2.0;
-		char sense = 'E';                            // 'E' for equality constraint 
-		sprintf(cname[0], "degree(%d)", h+1);   
-		int nnz = 0;
-		for ( int i = 0; i < inst->nnodes; i++ )
-		{
-			if ( i == h ) continue;
-			index[nnz] = xpos(i,h, inst);
-			value[nnz] = 1.0;
-			nnz++;
-		}
-		int izero = 0;
-		if ( CPXaddrows(env, lp, 0, 1, nnz, &rhs, &sense, &izero, index, value, NULL, &cname[0]) ) print_error("CPXaddrows(): error 1");
-	} 
-
-	free(value);
-	free(index);
+	add_degree_constraint(inst,env, lp);		// add degree constraints (for each node
 
 	free(cname[0]);
 	free(cname);
@@ -76,28 +49,56 @@ void TSPopt(Instance *inst, int *path)
 	CPXsetintparam(env, CPX_PARAM_RANDOMSEED, 123456);	
 	CPXsetdblparam(env, CPX_PARAM_TILIM, 3600.0); 
 	// ...
-
-	error = CPXmipopt(env,lp);
+	/*error = CPXmipopt(env,lp);
 	if ( error ) 
 	{
 		printf("CPX error code %d\n", error);
 		print_error("CPXmipopt() error"); 
-	}
+	}*/
+
+	add_subtour_constraints(inst,env, lp);		// add subtour elimination constraints
 
 	// use the optimal solution found by CPLEX
-	
+	int *copy_path = (int *) calloc(inst->nnodes * 2, sizeof(int));
 	int ncols = CPXgetnumcols(env, lp);
 	double *xstar = (double *) calloc(ncols, sizeof(double));
-	if ( CPXgetx(env, lp, xstar, 0, ncols-1) ) print_error("CPXgetx() error");	
+	if ( CPXgetx(env, lp, xstar, 0, ncols-1) ) print_error("CPXgetx() error");
+	int count = 0;
 	for ( int i = 0; i < inst->nnodes; i++ )
 	{
 		for ( int j = i+1; j < inst->nnodes; j++ )
 		{
 			if ( xstar[xpos(i,j,inst)] > 0.5 ){
 				DEBUG_COMMENT("tspcplex.c:TSPopt", "x(%d,%d) = %f", i+1, j+1, xstar[xpos(i,j,inst)]);
+				copy_path[count] = i + 1;
+				copy_path[count + 1] = j + 1;
+				count += 2;
 			}
 		}
 	}
+	path[0] = copy_path[0];
+	path[1] = copy_path[1];
+	copy_path[0] = -1;
+	copy_path[1] = -1;
+	for ( int i = 2; i < inst->nnodes; i++ ) // for loop to write path 
+	{
+		for (int j = 0; j < inst->nnodes * 2; j++){
+			if (path[i-1] == copy_path[j] && j % 2 == 0){
+				path[i] = copy_path[j+1];
+				copy_path[j] = -1;
+				copy_path[j + 1] = -1;
+				break;
+			}else if (path[i-1] == copy_path[j] && j % 2 == 1){
+				path[i] = copy_path[j-1];
+				copy_path[j] = -1;
+				copy_path[j - 1] = -1;
+				break;
+			}
+		
+	}
+	DEBUG_COMMENT("tspcplex.c:TSPopt", "path[%d] = %d", i, path[i]);
+	}
+	
 
 	free(xstar);
 	
@@ -108,26 +109,6 @@ void TSPopt(Instance *inst, int *path)
 
 void build_sol(const double *xstar, Instance *inst, int * succ, int *comp, int* ncomp)
 {   
-	int *degree = (int *) calloc(inst->nnodes, sizeof(int));
-	
-	for ( int i = 0; i < inst->nnodes; i++ )
-	{
-		for ( int j = i+1; j < inst->nnodes; j++ )
-		{
-			int k = xpos(i,j,inst);
-			if ( fabs(xstar[k]) > EPS && fabs(xstar[k]-1.0) > EPS) print_error(" wrong xstar in build_sol()");
-			if ( xstar[k] > 0.5 ) 
-			{
-				++degree[i];
-				++degree[j];
-			}
-		}
-	}
-	for ( int i = 0; i < inst->nnodes; i++ )
-	{
-		if ( degree[i] != 2 ) print_error("wrong degree in build_sol()");
-	}	
-	free(degree);
 
 	*ncomp = 0;
 	for ( int i = 0; i < inst->nnodes; i++ )
@@ -160,8 +141,7 @@ void build_sol(const double *xstar, Instance *inst, int * succ, int *comp, int* 
 			}
 		}	
 		succ[i] = start;  // last arc to close the cycle
-		
-		// go to the next component...
+			// go to the next component...
 	}
 }
 
