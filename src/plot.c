@@ -1,7 +1,7 @@
 #include "plot.h"
 #include "logger.h"
 
-void plot(const int *path, const double *x, const double *y, const int nnodes, const char *title, const int starting_node, int toplot )
+void plot(const int *path, const double *x, const double *y, const int nnodes, const char *title, const int starting_node)
 {
     DEBUG_COMMENT("plot::plot", "open gnuplot pipe");
     FILE *gnuplotPipe = fopen("src/script.p", "w");
