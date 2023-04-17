@@ -161,7 +161,7 @@ void tabu_search(const double *distance_matrix, int *path, int nnodes, double *t
             *tour_length += min_increase;
             DEBUG_COMMENT("tabu_search", "new tabu move: node %d\t lenght %lf", tabuNodes[0], *tour_length);
 
-            for (int l = 0; l < maxTabuSize; l++)
+            for (int l = 0; l < (tabuListSize < maxTabuSize? tabuListSize : maxTabuSize); l++)
             {
                 DEBUG_COMMENT("tabu_search", "tabu list: %d", tabuList[l]);
             }
@@ -174,7 +174,7 @@ void tabu_search(const double *distance_matrix, int *path, int nnodes, double *t
             DEBUG_COMMENT("tabu_search", "new encumbment: %lf", encumbment_tour_length);
         }
         INFO_COMMENT("tabu_search", "end iteration: %d\t lenght %lf\t encumbment %lf", currentIteration, *tour_length, encumbment_tour_length);
-        log_path(path, nnodes);
+        //log_path(path, nnodes);
     }
     path = encumbment_path;
     *tour_length = encumbment_tour_length;

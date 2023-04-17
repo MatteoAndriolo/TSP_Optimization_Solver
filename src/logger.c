@@ -11,6 +11,11 @@ void logger_init(const char *log_filename)
     }
 }
 
+void logger_close()
+{
+    fclose(log_file);
+}
+
 void ffflush()
 {
     fflush(log_file);
