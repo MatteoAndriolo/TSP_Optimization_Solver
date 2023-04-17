@@ -20,8 +20,9 @@ typedef struct args
     char log_file[256];
     char grasp[20];
     int n_probabilities;
-    double *probabilities;
+    double *grasp_probabilities;
     char str_probabilities[20];
+    int toplot;
 } Args;
 
 static const char delimiter = '.';
@@ -66,6 +67,6 @@ void parse_model_name(char *model_type, char ***passagges, int *n_passagges);
  * @param probabilities the probabilities
  * @param n_probabilities the number of probabilities
  */
-void parse_grasp_probabilities(char *grasp, double **probabilities, int *n_probabilities);
+void parse_grasp_probabilities(char *grasp, double *probabilities, int *n_probabilities);
 
 #endif

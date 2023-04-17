@@ -1,7 +1,7 @@
 #include "plot.h"
 #include "logger.h"
 
-void plot(const int *path, const double *x, const double *y, const int nnodes, const char *title, const int starting_node )
+void plot(const int *path, const double *x, const double *y, const int nnodes, const char *title, const int starting_node, int toplot )
 {
     DEBUG_COMMENT("plot::plot", "open gnuplot pipe");
     FILE *gnuplotPipe = fopen("src/script.p", "w");
@@ -54,6 +54,7 @@ void plot(const int *path, const double *x, const double *y, const int nnodes, c
     // PDF
     // fprintf(gnuplotPipe, "set terminal pdf size 800,600 font 'Arial,12'\n");
     // fprintf(gnuplotPipe, "set output 'plot/%s.pdf'\n", title);
+//TODO remove gui plotting and let just save the plots if not required to show them
 
     fprintf(gnuplotPipe, "replot");
 

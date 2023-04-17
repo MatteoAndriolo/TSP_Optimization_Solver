@@ -43,7 +43,7 @@ int main(int argc, char **argv)
 	INFO_COMMENT("main::main", "Generating starting points");
 	int *starting_points = (int *)malloc(sizeof(int) * args.num_instances);
 	generate_random_starting_nodes(starting_points, args.nnodes, args.num_instances, args.randomseed);
-	for(int i=0;i<args.num_instances;i++)
+	for (int i = 0; i < args.num_instances; i++)
 	{
 		DEBUG_COMMENT("main::main", "Starting point %d: %d", i, starting_points[i]);
 	}
@@ -61,43 +61,44 @@ int main(int argc, char **argv)
 		instances[c_inst].randomseed = args.randomseed;
 		instances[c_inst].timelimit = args.timelimit;
 		instances[c_inst].tour_lenght = 0;
+		instances[c_inst].grasp_n_probabilities = args.n_probabilities;
+		instances[c_inst].grasp_probabilities = args.grasp_probabilities;
 		strcpy(instances[c_inst].input_file, args.input_file);
 
 		int *path = malloc(sizeof(int) * args.nnodes);
 		generate_path(path, starting_points[c_inst], args.nnodes);
-		char title[40]="\0";
-		snprintf(title, 25, "sn%d_", starting_points[c_inst]);
+
+		char str_startingNode[20];
+		sprintf(str_startingNode, "%d-", starting_points[c_inst]);
+
+		char title[40] = "\0";
+
 		for (int j = 0; j < n_passagges; j++)
 		{
 			INFO_COMMENT("main::main", "Generating instance");
 			if (strcmp(passagges[j], "nn") == 0)
 			{
-				nearest_neighboor(distance_matrix, path, args.nnodes, &instances[c_inst].tour_lenght);
+				nearest_neighboor(distance_matrix, path, instances[c_inst].nnodes, &instances[c_inst].tour_lenght);
 			}
-			if (strcmp(passagges[j], "nng") == 0)
-			{				
-				log_path(path, args.nnodes);
-				int n_prob;
-				double *prob;
-				parse_grasp_probabilities(args.grasp, &prob, &n_prob);
-				sprintf(title+strlen(title),"_%.1f_", prob[0]);
-				for(int i=1; i<n_prob; i++){
-					sprintf(title+strlen(title),"_%.1f_", prob[i]-prob[i-1]);
-				}
-				nearest_neighboor_grasp(distance_matrix, path, args.nnodes, &(instances[c_inst].tour_lenght), prob, n_prob);
-			}
-			if (strcmp(passagges[j], "em")==0)
+			else if (strcmp(passagges[j], "nng") == 0)
 			{
-				extra_mileage(distance_matrix, path, args.nnodes, &(instances[c_inst].tour_lenght));
+				log_path(path, instances[c_inst].nnodes);
+				//parse_grasp_probabilities(args.grasp, instances[c_inst].grasp_probabilities, &instances[c_inst].grasp_n_probabilities);
+				nearest_neighboor_grasp(distance_matrix, path, instances[c_inst].nnodes, &(instances[c_inst].tour_lenght), instances[c_inst].grasp_probabilities, instances[c_inst].grasp_n_probabilities);
 			}
-			if (strcmp(passagges[j], "2opt") == 0)
+			else if (strcmp(passagges[j], "em") == 0)
 			{
-				two_opt(distance_matrix, args.nnodes, path, &(instances[c_inst].tour_lenght));
+				extra_mileage(distance_matrix, path, instances[c_inst].nnodes, &(instances[c_inst].tour_lenght));
 			}
-			if (strcmp(passagges[j], "vpn")==0)
+			else if (strcmp(passagges[j], "2opt") == 0)
 			{
-				vnp_k(distance_matrix, path ,args.nnodes, &instances[c_inst].tour_lenght, 5, 4);
+				two_opt(distance_matrix, instances[c_inst].nnodes, path, &(instances[c_inst].tour_lenght));
 			}
+			else if (strcmp(passagges[j], "vpn") == 0)
+			{
+				vnp_k(distance_matrix, path, instances[c_inst].nnodes, &instances[c_inst].tour_lenght, 5, 4);
+			}
+
 			if (strcmp(passagges[j], "tabu")==0)
 			{
 				if(j==0){
@@ -112,7 +113,9 @@ int main(int argc, char **argv)
 			// put first name of model then the rest
 			plot(path, args.x,args.y, args.nnodes, title, instances[c_inst].node_start ); 
 			if(j==n_passagges-1) strcpy(title,"\0");
+
 		}
+		sprintf(title + strlen(title), str_startingNode);
 		free(path);
 	}
 	free(distance_matrix);
