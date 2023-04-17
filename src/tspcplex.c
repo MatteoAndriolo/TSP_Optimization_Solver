@@ -20,6 +20,7 @@ void build_model(Instance *inst, CPXENVptr env, CPXLPptr lp)
 			double obj = dist(i,j,inst); // cost == distance   
 			double lb = 0.0;
 			double ub = 1.0;
+			// eviroment , linear programming, cost of distance of x(i,j), lower bound, upper bound, binary, name of x(i,j)
 			if ( CPXnewcols(env, lp, 1, &obj, &lb, &ub, &binary, cname) ) print_error(" wrong CPXnewcols on x var.s");
     		if ( CPXgetnumcols(env,lp)-1 != xpos(i,j, inst) ) print_error(" wrong position for x var.s");
 		}

@@ -23,7 +23,9 @@ void add_degree_constraint(Instance *inst, CPXENVptr env, CPXLPptr lp)
             index[nnz] = xpos(i, h, inst);
             value[nnz] = 1.0;
             nnz++;
+            // DEBUG_COMMENT("constraint.c:add_degree_constraint", "index[%d] = %d", nnz, index[nnz]);
         }
+        log_path(index, inst->nnodes);
         int izero = 0;
         if (CPXaddrows(env, lp, 0, 1, nnz, &rhs, &sense, &izero, index, value, NULL, &cname[0]))
             print_error("CPXaddrows(): error 1");
@@ -49,6 +51,7 @@ void add_subtour_constraints(Instance *inst, CPXENVptr env, CPXLPptr lp)
             print_error("CPXmipopt() error");
         ncols = CPXgetnumcols(env, lp);
         CRITICAL_COMMENT("constraint.c:add_subtour_constraints", "1");
+        DEBUG_COMMENT("constraint.c:add_subtour_constraints", "num coulumn = %d", ncols);
         double *xstar = (double *)calloc(ncols, sizeof(double));
         error = CPXgetx(env, lp, xstar, 0, ncols - 1);
         if (error)
@@ -62,6 +65,7 @@ void add_subtour_constraints(Instance *inst, CPXENVptr env, CPXLPptr lp)
             succ[i] = -1; // initialize the successor vector
             comp[i] = -1; // intialize the component vector
         }
+
         for (int start = 0; start < inst->nnodes; start++)
         {
             if (comp[start] >= 0)
@@ -87,8 +91,11 @@ void add_subtour_constraints(Instance *inst, CPXENVptr env, CPXLPptr lp)
                 }
             }
             succ[i] = start; // last arc to close the cycle
+            log_path(succ, inst->nnodes);
+            log_path(comp, inst->nnodes);
             // add this connecte component as a subtour elimination constraint
-            char *cname = (char *)calloc(1, sizeof(char));
+            DEBUG_COMMENT("constraint.c:add_subtour_constraints", "succ[%d] = %d", i, start);
+            char **cname = (char **)calloc(1, sizeof(char *));
             cname[0] = (char *)calloc(256, sizeof(char));
             sprintf(cname[0], "subtour(%d)", ncomp);
             int *index = (int *)calloc(inst->nnodes, sizeof(int));
@@ -100,22 +107,34 @@ void add_subtour_constraints(Instance *inst, CPXENVptr env, CPXLPptr lp)
             {
                 if (i == start)
                     continue;
-                index[nnz] = xpos(i, succ[i], inst);
+                index[nnz] = xpos(i, succ[i], inst); // should specify the non zero elemntrs in the rows and the entry shpuld correspod to the index of the variable
                 value[nnz] = 1.0;
                 nnz++;
             }
+            //FOR LOOP THAT CH
+            int can_add_row = 1;
+            for (int i = 0; i < inst->nnodes; i++)
+            {
+                if (index[i] < 0)
+                    can_add_row = 0;
+            }
+            log_path(index, inst->nnodes);
             int izero = 0;
-            if (CPXaddrows(env, lp, 0, 1, nnz, &rhs, &sense, &izero, index, value, NULL, &cname[0]))
-                print_error("CPXaddrows(): error 1");
+            if (can_add_row == 1)
+            {
+                if (CPXaddrows(env, lp, 0, 1, nnz, &rhs, &sense, &izero, index, value, NULL, &cname[0]))
+                    print_error("CPXaddrows(): error 1");
+                CRITICAL_COMMENT("constraint.c:add_subtour_constraints", "ROW ADDED");
+            }
             free(cname[0]);
             free(cname);
             free(index);
             free(value);
-            DEBUG_COMMENT("constraint.c:add_subtour_constraints", "subtour constraint added for component %d", ncomp);
+            WARNING_COMMENT("constraint.c:add_subtour_constraints", "FREEING MEMORY, index, value, index1, cname[0], cname");
         }
         free(xstar);
         free(succ);
         free(comp);
-        INFO_COMMENT("constraint.c:add_subtour_constraints", "freeing memory");
+        WARNING_COMMENT("constraint.c:add_subtour_constraints", "FREEING MEMORY, xstar, succ, comp");
     }
 }
