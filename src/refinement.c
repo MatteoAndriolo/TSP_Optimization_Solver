@@ -1,13 +1,14 @@
 #include <stdio.h>
 #include "refinement.h"
 
-void two_opt(const double *distance_matrix, int nnodes, int *path, double *tour_length)
+void two_opt(const double *distance_matrix, int nnodes, int *path, double *tour_length, double iterations)
 {
     INFO_COMMENT("refinement:2opt", "starting 2opt");
     int foundImprovement = 1;
     log_path(path, nnodes);
     double cost_old_edge, cost_new_edge, cost_new_edge2, cost_old_edge2;
-    while (foundImprovement)
+    int c_iter=0;
+    while (c_iter<iterations || foundImprovement)
     {
         foundImprovement = 0;
         for (int i = 0; i < nnodes - 2; i++)
@@ -34,6 +35,7 @@ void two_opt(const double *distance_matrix, int nnodes, int *path, double *tour_
                 }
             }
         }
+        c_iter++;
     }
     log_path(path, nnodes);
     DEBUG_COMMENT("refinement:2opt", "attual tour length %lf", *tour_length);

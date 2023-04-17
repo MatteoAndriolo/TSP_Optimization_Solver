@@ -13,7 +13,7 @@ void vnp_k(const double *distance_matrix, int *path, int nnodes, double *tour_le
     while (difftime(end_time, time(NULL)) > 0)
     {
         printf("Time left: %.0f seconds\n", difftime(end_time, time(NULL)));
-        two_opt(distance_matrix, nnodes, path, tour_length);
+        two_opt(distance_matrix, nnodes, path, tour_length, INFINITY);
         kick_function(distance_matrix, path, nnodes, tour_length, k);
     }
 }
@@ -81,7 +81,7 @@ int tabuListContains(int n1, int tabuList[], int tabuListSize, int maxTabuSize)
 
 int stoppingCondition(int currentIteration)
 {
-    return currentIteration > 200; //TODO improve stopping condition
+    return currentIteration > 200; // TODO improve stopping condition
 }
 
 void tabu_search(const double *distance_matrix, int *path, int nnodes, double *tour_length, int maxTabuSize)
@@ -103,7 +103,7 @@ void tabu_search(const double *distance_matrix, int *path, int nnodes, double *t
     int encumbment_path[nnodes];
     memcpy(encumbment_path, path, nnodes * sizeof(int));
     double encumbment_tour_length = *tour_length;
-    //TODO clean tabulist after many number of iterations
+    // TODO clean tabulist after many number of iterations
     while (!stoppingCondition(currentIteration))
     {
         currentIteration++;
@@ -161,7 +161,7 @@ void tabu_search(const double *distance_matrix, int *path, int nnodes, double *t
             *tour_length += min_increase;
             DEBUG_COMMENT("tabu_search", "new tabu move: node %d\t lenght %lf", tabuNodes[0], *tour_length);
 
-            for (int l = 0; l < (tabuListSize < maxTabuSize? tabuListSize : maxTabuSize); l++)
+            for (int l = 0; l < (tabuListSize < maxTabuSize ? tabuListSize : maxTabuSize); l++)
             {
                 DEBUG_COMMENT("tabu_search", "tabu list: %d", tabuList[l]);
             }
@@ -174,8 +174,193 @@ void tabu_search(const double *distance_matrix, int *path, int nnodes, double *t
             DEBUG_COMMENT("tabu_search", "new encumbment: %lf", encumbment_tour_length);
         }
         INFO_COMMENT("tabu_search", "end iteration: %d\t lenght %lf\t encumbment %lf", currentIteration, *tour_length, encumbment_tour_length);
-        //log_path(path, nnodes);
+        // log_path(path, nnodes);
     }
     path = encumbment_path;
     *tour_length = encumbment_tour_length;
+}
+
+//---------------------------------------------------------------------------------------------
+// Genetic algorithm
+
+// at each iteration the best cost must be slightly better
+//
+typedef struct
+{
+    int *path;
+    double fitness;
+} Individual;
+
+double getFitness(const double *distance_matrix, int *path, int nnodes)
+{
+    double fitness = 0;
+    for (int i = 0; i < nnodes - 1; i++)
+    {
+        fitness += distance_matrix[path[i] * nnodes + path[i + 1]];
+    }
+    fitness += distance_matrix[path[nnodes - 1] * nnodes + path[0]];
+    return fitness;
+}
+
+void generate_random_path(int *path, int nnodes)
+{
+    for (int i = 0; i < nnodes; i++)
+    {
+        path[i] = i;
+    }
+    for (int i = 0; i < nnodes; i++)
+    {
+        int j = rand() % nnodes;
+        int tmp = path[i];
+        path[i] = path[j];
+        path[j] = tmp;
+    }
+}
+
+void genetic_algorithm(const double *distance_matrix, int *path, int nnodes, double *tour_length, int populationSize, int iterations)
+{
+    // Generate random population
+    Individual *population = malloc(populationSize * sizeof(Individual));
+    for (int i = 0; i < populationSize; i++)
+    {
+        population[i].path = malloc(nnodes * sizeof(int));
+        generate_random_path(population[i].path, nnodes);
+        population[i].fitness = getFitness(distance_matrix, population[i].path, nnodes);
+    }
+    for (int iter = 0; iter < iterations; iter++)
+    {
+        Individual *newGeneration = malloc(populationSize * sizeof(Individual));
+        // chose a champio
+        double bestFitness = INFINITY;
+        int indexChampion;
+        for (int i = 0; i < populationSize; i++)
+        {
+            if (population[i].fitness < bestFitness)
+            {
+                bestFitness = population[i].fitness;
+                indexChampion = i;
+            }
+        }
+        // generate new population
+        int probChoseCampion = 70;
+        for (int i = 0; i < populationSize; i++)
+        {
+            // select parents
+            int indexParent1 = rand() % 100 > probChoseCampion ? rand() % populationSize : indexChampion;
+            int indexParent2 = rand() % populationSize;
+            while (indexParent1 == indexParent2)
+            {
+                indexParent2 = rand() % populationSize;
+            }
+            // mate parents
+            int port1 = rand() % nnodes;
+            int port2 = nnodes - port1;
+            int *child = malloc(nnodes * sizeof(int));
+            double child_tourLength;
+            memcpy(child, population[indexParent1].path, port1 * sizeof(int));
+            memcpy(child + port1, population[indexParent2].path, port2 * sizeof(int));
+            // int *parent1 = population[indexParent1].path;
+            // int *parent2 = population[indexParent2].path;
+            // int indexChild = 0;
+            // int indexParent1 = 0;
+            // int indexParent2 = 0;
+            // while(indexChild < nnodes){
+            //     if(indexParent1 < nnodes/2){
+            //         child[indexChild] = parent1[indexParent1];
+            //         indexParent1++;
+            //     }else{
+            //         child[indexChild] = parent2[indexParent2];
+            //         indexParent2++;
+            //     }
+            //     indexChild++;
+            // }
+            // repair
+            // check for duplicates -> array check nodes already present
+            int *child2 = malloc(nnodes * sizeof(int));
+            for (int i = 0; i < nnodes; i++)
+            {
+                child2[i] = -1;
+            }
+
+            for (int i = 0; i < nnodes; i++)
+            {
+                if (child2[i] == -1)
+                    child2[child[i]] = i;
+                else
+                    child[i] = -1;
+            }
+            // accumulate unique
+            int i1 = 0;
+            int i2 = 0;
+            while (i2 < nnodes)
+            {
+                while (child[i1] != -1)
+                {
+                    i1++;
+                    i2++;
+                }
+                while (child[i2] == -1)
+                {
+                    i2++;
+                }
+                child[i1] = child[i2];
+                i1++;
+            }
+            // add remaining nodes at the end
+            int remainingNodes = nnodes - i1;
+            int *remaining=malloc(remainingNodes*sizeof(int));
+
+            for (int i = 0, j = 0; i < remainingNodes; i++)
+            {
+                while (child2[j] != -1)
+                {
+                    j++;
+                }
+                remaining[i] = child2[j];
+                j++;
+            }
+
+            for (int i = 0; i < remainingNodes; i++)
+            {
+                int j = rand() % nnodes;
+                int tmp = remaining[i];
+                remaining[i] = remaining[j];
+                remaining[j] = tmp;
+            }
+
+            memcpy(child + i1 - 1 , remaining, remainingNodes * sizeof(int));
+
+            // improvement
+            two_opt(distance_matrix, nnodes, child, &child_tourLength, remainingNodes);
+
+            //        //mutation
+            //        int index1 = rand()%nnodes;
+            //        int index2 = rand()%nnodes;
+            //        while(index1 == index2){
+            //            index2 = rand()%nnodes;
+            //        }
+            //        int tmp = child2[index1];
+            //        child2[index1] = child2[index2];
+            //        child2[index2] = tmp;
+            // add child to population
+            newGeneration[i].path = child2;
+            newGeneration[i].fitness = getFitness(distance_matrix, child2, nnodes);
+            if (population[i].fitness != child_tourLength)
+            {
+                ERROR_COMMENT("heuristics::genetic_algorithm", "fitness is not equal to tour length");
+            }
+            if (population[i].fitness < bestFitness)
+            {
+                bestFitness = population[i].fitness;
+                indexChampion = i;
+            }
+        }
+        free(population);
+        population = newGeneration;
+    }
+
+    for(int i=0; i<populationSize; i++){
+        free(population[i].path);
+    }
+    free(population);
 }

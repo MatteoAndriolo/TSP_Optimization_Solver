@@ -97,14 +97,19 @@ int main(int argc, char **argv)
 			else if (strcmp(passagges[j], "vpn") == 0)
 			{
 				vnp_k(distance_matrix, path, instances[c_inst].nnodes, &instances[c_inst].tour_lenght, 5, 4);
-			}
-
-			if (strcmp(passagges[j], "tabu")==0)
+			}else if (strcmp(passagges[j], "tabu")==0)
 			{
 				if(j==0){
 					FATAL_COMMENT("main::main", "Tabu search must be used with a starting point");
 				} 
 				tabu_search(distance_matrix, path, instances[c_inst].nnodes,&instances[c_inst].tour_lenght, args.nnodes/10 );
+			}else if (strcmp(passagges[j], "gen")==0)
+			{
+				genetic_algorithm(distance_matrix, path, instances[c_inst].nnodes,&instances[c_inst].tour_lenght, args.nnodes );
+			}
+			else
+			{
+				FATAL_COMMENT("main::main", "Model %s not recognized", passagges[j]);
 			}
 
 			strcpy(title+strlen(title), passagges[j]);	
