@@ -98,41 +98,29 @@ int main(int argc, char **argv)
 			{
 				vnp_k(distance_matrix, path, instances[c_inst].nnodes, &instances[c_inst].tour_lenght, 5, 4);
 			}
-			else{
-				ERROR_COMMENT("main::main", "Model not found");
-				return -1;
-			}
 
-			// TITLE NAME -----------------------------------------------------
-			// model
-			if (j == 0)
-				sprintf(title + strlen(title),"%s-", passagges[j]);
-			else
-				sprintf(title + strlen(title) - strlen(str_startingNode)-1,"%s-",  passagges[j]);
-
-			// grasp
-			if (strcmp(passagges[j], "nng") == 0)
+			if (strcmp(passagges[j], "tabu")==0)
 			{
-				const double *prob = instances[c_inst].grasp_probabilities;
-
-				sprintf(title + strlen(title) - strlen(str_startingNode), "%.1f_", prob[0]);
-				for (int i = 1; i < instances[c_inst].grasp_n_probabilities; i++)
-				{
-					sprintf(title + strlen(title) - strlen(str_startingNode), "%.1f_", prob[i] - prob[i - 1]);
-				}
+				if(j==0){
+					FATAL_COMMENT("main::main", "Tabu search must be used with a starting point");
+				} 
+				tabu_search(distance_matrix, path, instances[c_inst].nnodes,&instances[c_inst].tour_lenght, args.nnodes/10 );
 			}
-			// starting node
-			snprintf(title + strlen(title), 25, "sn%d", starting_points[c_inst]);
 
-			// PLOT -----------------------------------------------------------
-			plot(path, args.x, args.y, args.nnodes, title, instances[c_inst].node_start, args.toplot);
-			if (j == n_passagges - 1)
-				sprintf(title + strlen(title), "%d-", instances[c_inst].node_start);
+			strcpy(title+strlen(title), passagges[j]);	
+			//TODO fix title in all the different 
+			// like in grasp specify also the probabilities
+			// put first name of model then the rest
+			plot(path, args.x,args.y, args.nnodes, title, instances[c_inst].node_start ); 
+			if(j==n_passagges-1) strcpy(title,"\0");
+
 		}
 		sprintf(title + strlen(title), str_startingNode);
 		free(path);
 	}
+	free(distance_matrix);
 
 	OUTPUT_COMMENT("main", "End of the program");
+	logger_close();
 	return 0;
 }

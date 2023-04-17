@@ -8,13 +8,15 @@
 #define ERROR_COMMENT(position, ...) log_message(ERROR, position, __VA_ARGS__)
 #define CRITICAL_COMMENT(position, ...) log_message(CRITICAL, position, __VA_ARGS__)
 #define OUTPUT_COMMENT(position, ...) log_message(OUTPUT, position, __VA_ARGS__)
+#define FATAL_COMMENT(position, ...) log_message(FATAL, position, __VA_ARGS__); exit(1);
 #else
 #define DEBUG_COMMENT(position, ...)
 #define INFO_COMMENT(position, ...)
 #define WARNING_COMMENT(position, ...)
-#define ERROR_COMMENT(position, ...)
+#define ERROR_COMMENT(position, ...) log_message(ERROR, position, __VA_ARGS__)
 #define CRITICAL_COMMENT(position, ...)
 #define OUTPUT_COMMENT(position, ...) log_message(OUTPUT, position, __VA_ARGS__)
+#define FATAL_COMMENT(position, ...) log_message(FATAL, position, __VA_ARGS__); exit(1);
 #endif
 
 #include <stdio.h>
@@ -32,6 +34,7 @@ typedef enum
     DEBUG,
     INFO,
     OUTPUT,
+    FATAL,
 } LogLevel;
 
 /**
@@ -88,5 +91,11 @@ void log_output_inst(const Instance *inst);
  *
  */
 void log_output(int model_type, int node_start, double zbest, double timelimit, int randomseed, int nnodes, char *input_file);
+
+/**
+ * Closes the log file.
+*/
+void logger_close();
+
 
 #endif

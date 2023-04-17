@@ -115,4 +115,26 @@ void generate_random_starting_nodes(int *starting_nodes, int num_nodes, int num_
  */
 void swap_array_piece(int * arr, int start1, int end1, int start2, int end2);
 
+
+/**
+ * Calculates the length of a tour.
+ * 
+ * @param path The path to check.
+ * @param distance_matrix The distance matrix for the graph.
+ * @return The length of the tour.
+*/
+double get_tour_length(const int *path, const int nnodes, const double *distance_matrix);
+
+
+/**
+ * Calculates the length of a tour.
+ * 
+ * @param path The path to check.
+ * @param i The index of the first node in the tour.
+ * @param j The index of the second node in the tour.
+ * @param nnodes The number of nodes in the graph.
+ * @return The length of the tour.
+*/
+void two_opt_move(int *path, int n1, int n2, int nnodes);
+
 #endif
