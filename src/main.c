@@ -111,7 +111,7 @@ int main(int argc, char **argv)
 			//TODO fix title in all the different 
 			// like in grasp specify also the probabilities
 			// put first name of model then the rest
-			plot(path, args.x,args.y, args.nnodes, title, instances[c_inst].node_start ); 
+			plot(path, args.x,args.y, args.nnodes, title, instances[c_inst].node_start); 
 			if(j==n_passagges-1) strcpy(title,"\0");
 
 		}
