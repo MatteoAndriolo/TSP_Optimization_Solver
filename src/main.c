@@ -110,6 +110,7 @@ int main(int argc, char **argv)
 			else
 			{
 				FATAL_COMMENT("main::main", "Model %s not recognized", passagges[j]);
+				printf("Model %s not recognized", passagges[j]);
 			}
 
 			strcpy(title+strlen(title), passagges[j]);	

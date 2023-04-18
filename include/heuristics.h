@@ -50,5 +50,13 @@ void tabu_search(const double *distance_matrix, int *path, int nnodes, double *t
 void genetic_algorithm(const double *distance_matrix, int *path, int nnodes, double *tour_length, int populationSize, int iterations);
 
 
+/**
+ * Individual structure used for single specimen in the genetic algorithm
+*/
+typedef struct
+{
+    int *path;
+    double fitness;
+} Individual;
 
 #endif

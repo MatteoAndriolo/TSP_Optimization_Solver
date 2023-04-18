@@ -160,3 +160,22 @@ void two_opt_move(int *path, int n1, int n2, int nnodes)
     }
 
 }
+
+void generate_random_path(int *path, int nnodes)
+{
+    DEBUG_COMMENT("utils::generate_random_path", "Entering generate_random_path function");
+    int j,tmp;
+    path = malloc(nnodes * sizeof(int));
+    for (int i = 0; i < nnodes; i++)
+    {
+        path[i] = i;
+    }
+    for (int i = 0; i < nnodes; i++)
+    {
+        j = rand() % nnodes;
+        tmp = path[i];
+        path[i] = path[j];
+        path[j] = tmp;
+    }
+    DEBUG_COMMENT("utils::generate_random_path", "Generated random path");
+}

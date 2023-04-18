@@ -137,4 +137,15 @@ double get_tour_length(const int *path, const int nnodes, const double *distance
 */
 void two_opt_move(int *path, int n1, int n2, int nnodes);
 
+
+/**
+ * Generate a random path.
+ * 
+ * @param path pointer to path
+ * @param nnodes The number of nodes in the graph.
+ * 
+*/
+void generate_random_path(int *path, int nnodes);
+
+
 #endif
