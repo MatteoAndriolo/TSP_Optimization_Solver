@@ -3,6 +3,8 @@
 #include <time.h>
 #include "heuristics.h"
 #include "greedy.h"
+#include <string.h>
+#include <math.h>
 
 void vnp_k(const double *distance_matrix, int *path, int nnodes, double *tour_length, int k, int duration)
 {
@@ -181,10 +183,8 @@ void tabu_search(const double *distance_matrix, int *path, int nnodes, double *t
 }
 
 //---------------------------------------------------------------------------------------------
-// Genetic algorithm
+// Genetic Algorithm
 
-// at each iteration the best cost must be slightly better
-//
 typedef struct
 {
     int *path;
@@ -193,17 +193,21 @@ typedef struct
 
 double getFitness(const double *distance_matrix, int *path, int nnodes)
 {
+    DEBUG_COMMENT("heuristic::getFitness", "Entering getFitness function");
     double fitness = 0;
     for (int i = 0; i < nnodes - 1; i++)
     {
         fitness += distance_matrix[path[i] * nnodes + path[i + 1]];
     }
     fitness += distance_matrix[path[nnodes - 1] * nnodes + path[0]];
+    DEBUG_COMMENT("heuristic::getFitness", "Calculated fitness: %lf", fitness);
     return fitness;
 }
 
 void generate_random_path(int *path, int nnodes)
 {
+    DEBUG_COMMENT("heuristic::generate_random_path", "Entering generate_random_path function");
+
     for (int i = 0; i < nnodes; i++)
     {
         path[i] = i;
@@ -215,10 +219,14 @@ void generate_random_path(int *path, int nnodes)
         path[i] = path[j];
         path[j] = tmp;
     }
+    DEBUG_COMMENT("heuristic::generate_random_path", "Generated random path");
 }
 
 void genetic_algorithm(const double *distance_matrix, int *path, int nnodes, double *tour_length, int populationSize, int iterations)
 {
+    srand(time(NULL));
+    INFO_COMMENT("heuristic::genetic_algorithm", "Starting genetic algorithm with population size %d and %d iterations", populationSize, iterations);
+
     // Generate random population
     Individual *population = malloc(populationSize * sizeof(Individual));
     for (int i = 0; i < populationSize; i++)
@@ -227,12 +235,14 @@ void genetic_algorithm(const double *distance_matrix, int *path, int nnodes, dou
         generate_random_path(population[i].path, nnodes);
         population[i].fitness = getFitness(distance_matrix, population[i].path, nnodes);
     }
+
+    int indexChampion;
     for (int iter = 0; iter < iterations; iter++)
     {
+        DEBUG_COMMENT("heuristic::genetic_algorithm", "Iteration %d", iter);
         Individual *newGeneration = malloc(populationSize * sizeof(Individual));
-        // chose a champio
+        // choose a champion
         double bestFitness = INFINITY;
-        int indexChampion;
         for (int i = 0; i < populationSize; i++)
         {
             if (population[i].fitness < bestFitness)
@@ -241,6 +251,8 @@ void genetic_algorithm(const double *distance_matrix, int *path, int nnodes, dou
                 indexChampion = i;
             }
         }
+        INFO_COMMENT("heuristic::genetic_algorithm", "Champion of iteration %d has fitness %lf", iter, bestFitness);
+
         // generate new population
         int probChoseCampion = 70;
         for (int i = 0; i < populationSize; i++)
@@ -252,114 +264,115 @@ void genetic_algorithm(const double *distance_matrix, int *path, int nnodes, dou
             {
                 indexParent2 = rand() % populationSize;
             }
+            DEBUG_COMMENT("heuristic::genetic_algorithm", "Selected parents %d and %d", indexParent1, indexParent2);
+
             // mate parents
-            int port1 = rand() % nnodes;
-            int port2 = nnodes - port1;
             int *child = malloc(nnodes * sizeof(int));
-            double child_tourLength;
-            memcpy(child, population[indexParent1].path, port1 * sizeof(int));
-            memcpy(child + port1, population[indexParent2].path, port2 * sizeof(int));
-            // int *parent1 = population[indexParent1].path;
-            // int *parent2 = population[indexParent2].path;
-            // int indexChild = 0;
-            // int indexParent1 = 0;
-            // int indexParent2 = 0;
-            // while(indexChild < nnodes){
-            //     if(indexParent1 < nnodes/2){
-            //         child[indexChild] = parent1[indexParent1];
-            //         indexParent1++;
-            //     }else{
-            //         child[indexChild] = parent2[indexParent2];
-            //         indexParent2++;
-            //     }
-            //     indexChild++;
-            // }
+            int *isMissing = malloc(nnodes * sizeof(int));
+            for (int j = 0; j < nnodes; j++)
+            {
+                child[j] = -1;
+                isMissing[j] = 1;
+            }
+
+            int port1 = rand() % nnodes;
+            for (int j = 0; j < port1; j++)
+            {
+                child[j] = population[indexParent1].path[j];
+                isMissing[population[indexParent1].path[j]] = 0;
+            }
+
+            int count = port1;
+            for (int j = 0; j < nnodes; j++)
+            {
+                int toAdd = population[indexParent2].path[j];
+                int found = 0;
+                for (int k = 0; k < port1; k++)
+                {
+                    if (toAdd == child[k])
+                    {
+                        found = 1;
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    child[count++] = toAdd;
+                    isMissing[toAdd] = 0;
+                }
+            }
+
             // repair
-            // check for duplicates -> array check nodes already present
-            int *child2 = malloc(nnodes * sizeof(int));
+            // collect indices 1 in array isMissing and permutate them
+            //  Count the number of missing indices (1s in the isMissing array)
+            int count = 0;
             for (int i = 0; i < nnodes; i++)
             {
-                child2[i] = -1;
+                if (isMissing[i] == 1)
+                {
+                    count++;
+                }
             }
 
+            // Allocate memory for the missingIndices array
+            int *missingIndices = malloc(count * sizeof(int));
+            int missingCount = count;
+
+            // Store the indices of missing elements (1s) in the missingIndices array
+            int idx = 0;
             for (int i = 0; i < nnodes; i++)
             {
-                if (child2[i] == -1)
-                    child2[child[i]] = i;
-                else
-                    child[i] = -1;
-            }
-            // accumulate unique
-            int i1 = 0;
-            int i2 = 0;
-            while (i2 < nnodes)
-            {
-                while (child[i1] != -1)
+                if (isMissing[i] == 1)
                 {
-                    i1++;
-                    i2++;
+                    missingIndices[idx++] = i;
                 }
-                while (child[i2] == -1)
-                {
-                    i2++;
-                }
-                child[i1] = child[i2];
-                i1++;
-            }
-            // add remaining nodes at the end
-            int remainingNodes = nnodes - i1;
-            int *remaining=malloc(remainingNodes*sizeof(int));
-
-            for (int i = 0, j = 0; i < remainingNodes; i++)
-            {
-                while (child2[j] != -1)
-                {
-                    j++;
-                }
-                remaining[i] = child2[j];
-                j++;
             }
 
-            for (int i = 0; i < remainingNodes; i++)
+            // Permutate the missingIndices array
+            for (int i = 0; i < count; i++)
             {
-                int j = rand() % nnodes;
-                int tmp = remaining[i];
-                remaining[i] = remaining[j];
-                remaining[j] = tmp;
+                int j = rand() % count;
+                int tmp = (*missingIndices)[i];
+                missingIndices[i] = (*missingIndices)[j];
+                missingIndices[j] = tmp;
             }
 
-            memcpy(child + i1 - 1 , remaining, remainingNodes * sizeof(int));
+            for(int i=0;i<missingCount;i++){
+                child[port1+i] = missingIndices[i];
+            }
+
+            DEBUG_COMMENT("heuristic::genetic_algorithm", "Mated parents to create child");
 
             // improvement
-            two_opt(distance_matrix, nnodes, child, &child_tourLength, remainingNodes);
+            double child_tourLength= getFitness(distance_matrix, child, nnodes);
+            two_opt(distance_matrix, nnodes, child, &child_tourLength, missingCount );
+            DEBUG_COMMENT("heuristic::genetic_algorithm", "Applied two_opt improvement");
 
-            //        //mutation
-            //        int index1 = rand()%nnodes;
-            //        int index2 = rand()%nnodes;
-            //        while(index1 == index2){
-            //            index2 = rand()%nnodes;
-            //        }
-            //        int tmp = child2[index1];
-            //        child2[index1] = child2[index2];
-            //        child2[index2] = tmp;
-            // add child to population
-            newGeneration[i].path = child2;
-            newGeneration[i].fitness = getFitness(distance_matrix, child2, nnodes);
-            if (population[i].fitness != child_tourLength)
+            // Add child to population
+            newGeneration[i].path = child;
+            newGeneration[i].fitness = getFitness(distance_matrix, child, nnodes);
+
+            if (newGeneration[i].fitness < bestFitness) //FIXME fix logic -> differentiate best of old generation with new generation, what to return
             {
-                ERROR_COMMENT("heuristics::genetic_algorithm", "fitness is not equal to tour length");
-            }
-            if (population[i].fitness < bestFitness)
-            {
-                bestFitness = population[i].fitness;
+                bestFitness = newGeneration[i].fitness;
                 indexChampion = i;
             }
+        }
+        for (int i = 0; i < populationSize; i++)
+        {
+            free(population[i].path);
         }
         free(population);
         population = newGeneration;
     }
 
-    for(int i=0; i<populationSize; i++){
+    memcpy(path, population[indexChampion].path, nnodes * sizeof(int));
+    *tour_length = population[indexChampion].fitness;
+
+    INFO_COMMENT("heuristic::genetic_algorithm", "Genetic algorithm completed. Best tour length: %lf", *tour_length);
+
+    for (int i = 0; i < populationSize; i++)
+    {
         free(population[i].path);
     }
     free(population);
