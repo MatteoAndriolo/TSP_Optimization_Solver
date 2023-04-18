@@ -24,7 +24,8 @@ void build_model(Instance *inst, CPXENVptr env, CPXLPptr lp)
 			if ( CPXnewcols(env, lp, 1, &obj, &lb, &ub, &binary, cname) ) print_error(" wrong CPXnewcols on x var.s");
     		if ( CPXgetnumcols(env,lp)-1 != xpos(i,j, inst) ) print_error(" wrong position for x var.s");
 		}
-	} 
+	}
+	INFO_COMMENT("tspcplex.c:build_model", "number of columns in CPLEX %d", CPXgetnumcols(env,lp)); 
 
 	add_degree_constraint(inst,env, lp);		// add degree constraints (for each node
 
@@ -49,15 +50,17 @@ void TSPopt(Instance *inst, int *path)
 	CPXsetintparam(env, CPX_PARAM_SCRIND, CPX_OFF);
 	CPXsetintparam(env, CPX_PARAM_RANDOMSEED, 123456);	
 	CPXsetdblparam(env, CPX_PARAM_TILIM, 3600.0); 
+	
+	//add_subtour_constraints(inst,env, lp);	
 	// ...
-	/*error = CPXmipopt(env,lp);
+	error = CPXmipopt(env,lp);
 	if ( error ) 
 	{
 		printf("CPX error code %d\n", error);
 		print_error("CPXmipopt() error"); 
-	}*/
+	}
 
-	add_subtour_constraints(inst,env, lp);		// add subtour elimination constraints
+		// add subtour elimination constraints
 
 	// use the optimal solution found by CPLEX
 	int *copy_path = (int *) calloc(inst->nnodes * 2, sizeof(int));

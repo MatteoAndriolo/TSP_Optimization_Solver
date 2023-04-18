@@ -9,6 +9,7 @@ void add_degree_constraint(Instance *inst, CPXENVptr env, CPXLPptr lp)
 
     int *index = (int *)calloc(inst->nnodes, sizeof(int));
     double *value = (double *)calloc(inst->nnodes, sizeof(double));
+    DEBUG_COMMENT("constraint.c:add_degree_constraint", "NUMBER OF ROW IN CPLEX %d", CPXgetnumrows(env,lp));
 
     for (int h = 0; h < inst->nnodes; h++)
     {
@@ -30,7 +31,7 @@ void add_degree_constraint(Instance *inst, CPXENVptr env, CPXLPptr lp)
         if (CPXaddrows(env, lp, 0, 1, nnz, &rhs, &sense, &izero, index, value, NULL, &cname[0]))
             print_error("CPXaddrows(): error 1");
     }
-
+    DEBUG_COMMENT("constraint.c:add_degree_constraint", "NUMBER OF ROW IN CPLEX after adding degree constraints %d", CPXgetnumrows(env,lp));
     free(cname[0]);
     free(cname);
     free(index);
@@ -42,7 +43,9 @@ void add_subtour_constraints(Instance *inst, CPXENVptr env, CPXLPptr lp)
     int ncomp = 0;
     int error;
     int ncols;
-    while (ncomp != 1)
+    //take the time and if exceed the time limit then break the loop
+    time_t start_time = time(NULL);
+    while (ncomp != 1 && difftime(time(NULL), start_time) < 100)
     {
         INFO_COMMENT("constraint.c:add_subtour_constraints", "starting the while loop");
         error = CPXmipopt(env, lp);
@@ -60,10 +63,12 @@ void add_subtour_constraints(Instance *inst, CPXENVptr env, CPXLPptr lp)
         ncomp = 0;
         int *succ = (int *)malloc(sizeof(int) * inst->nnodes);
         int *comp = (int *)malloc(sizeof(int) * inst->nnodes);
+        int *already_touched = (int *)calloc(inst->nnodes, sizeof(int));
         for (int i = 0; i < inst->nnodes; i++)
         {
             succ[i] = -1; // initialize the successor vector
             comp[i] = -1; // intialize the component vector
+            already_touched[i] = 0;
         }
 
         for (int start = 0; start < inst->nnodes; start++)
@@ -100,7 +105,6 @@ void add_subtour_constraints(Instance *inst, CPXENVptr env, CPXLPptr lp)
             sprintf(cname[0], "subtour(%d)", ncomp);
             int *index = (int *)calloc(inst->nnodes, sizeof(int));
             double *value = (double *)calloc(inst->nnodes, sizeof(double));
-            double rhs = inst->nnodes - 1;
             char sense = 'L'; // 'L' for less than or equal to constraint
             int nnz = 0;
             for (int i = 0; i < inst->nnodes; i++)
@@ -108,30 +112,36 @@ void add_subtour_constraints(Instance *inst, CPXENVptr env, CPXLPptr lp)
                 if (i == start)
                     continue;
                 index[nnz] = xpos(i, succ[i], inst); // should specify the non zero elemntrs in the rows and the entry shpuld correspod to the index of the variable
-                value[nnz] = 1.0;
                 nnz++;
             }
-            //FOR LOOP THAT CH
-            int can_add_row = 1;
+
+            log_path(index, inst->nnodes);
+            int *array_to_insert = (int *)calloc(inst->nnodes, sizeof(int));
+
+            int count = 0;
             for (int i = 0; i < inst->nnodes; i++)
             {
-                if (index[i] < 0)
-                    can_add_row = 0;
+                if (index[i] > 0 && already_touched[i] == 0)
+                {
+                    array_to_insert[count] = index[i];
+                    value[count] = 1.0;
+                    already_touched[i] = 1;
+                    count++;
+                }
             }
-            log_path(index, inst->nnodes);
+            log_path(array_to_insert, count);
             int izero = 0;
-            if (can_add_row == 1)
-            {
-                if (CPXaddrows(env, lp, 0, 1, nnz, &rhs, &sense, &izero, index, value, NULL, &cname[0]))
-                    print_error("CPXaddrows(): error 1");
-                CRITICAL_COMMENT("constraint.c:add_subtour_constraints", "ROW ADDED");
-            }
+            double rsh = count - 1;
+            if (CPXaddrows(env, lp, 0, 1, count + 1, &rsh, &sense, &izero, array_to_insert, value, NULL, &cname[0]))
+                print_error("CPXaddrows(): error 1");
             free(cname[0]);
             free(cname);
             free(index);
             free(value);
+            free(array_to_insert);
             WARNING_COMMENT("constraint.c:add_subtour_constraints", "FREEING MEMORY, index, value, index1, cname[0], cname");
         }
+        free(already_touched);
         free(xstar);
         free(succ);
         free(comp);
