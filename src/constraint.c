@@ -26,7 +26,7 @@ void add_degree_constraint(Instance *inst, CPXENVptr env, CPXLPptr lp)
             nnz++;
             // DEBUG_COMMENT("constraint.c:add_degree_constraint", "index[%d] = %d", nnz, index[nnz]);
         }
-        log_path(index, inst->nnodes);
+        log_path(index, inst->nnodes-1);
         int izero = 0;
         if (CPXaddrows(env, lp, 0, 1, nnz, &rhs, &sense, &izero, index, value, NULL, &cname[0]))
             print_error("CPXaddrows(): error 1");

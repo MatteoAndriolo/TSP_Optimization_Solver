@@ -51,7 +51,7 @@ void TSPopt(Instance *inst, int *path)
 	CPXsetintparam(env, CPX_PARAM_RANDOMSEED, 123456);	
 	CPXsetdblparam(env, CPX_PARAM_TILIM, 3600.0); 
 	
-	//add_subtour_constraints(inst,env, lp);	
+	add_subtour_constraints(inst,env, lp);	
 	// ...
 	error = CPXmipopt(env,lp);
 	if ( error ) 
@@ -80,28 +80,46 @@ void TSPopt(Instance *inst, int *path)
 			}
 		}
 	}
-	path[0] = copy_path[0];
+	// print sequenza nodi
+	// cerchi nodo appena inserito. data la posizione si dispari prendi come successivo il precedente altrimenti il successivo come successivp
+	for(int i=0;i<inst->nnodes;i++) path[i]=0;
+	path[0] = copy_path[0]; 
 	path[1] = copy_path[1];
+	log_path(copy_path, inst->nnodes*2);
 	copy_path[0] = -1;
 	copy_path[1] = -1;
-	for ( int i = 2; i < inst->nnodes; i++ ) // for loop to write path 
+	printf("inizio");
+	for (int i = 2; i < inst->nnodes; i++) // for loop to write path
 	{
-		for (int j = 0; j < inst->nnodes * 2; j++){
-			if (path[i-1] == copy_path[j] && j % 2 == 0){
-				path[i] = copy_path[j+1];
-				copy_path[j] = -1;
-				copy_path[j + 1] = -1;
-				break;
-			}else if (path[i-1] == copy_path[j] && j % 2 == 1){
-				path[i] = copy_path[j-1];
-				copy_path[j] = -1;
-				copy_path[j - 1] = -1;
-				break;
+		for (int j = 0; j < inst->nnodes * 2; j++)
+		{
+			if (path[i - 1] == copy_path[j])
+			{
+				if ( j % 2 == 0)
+				{
+					path[i] = copy_path[j + 1];
+					copy_path[j] = -1;
+					copy_path[j + 1] = -1;
+					break;
+				}
+				else 
+				{
+					path[i] = copy_path[j - 1];
+					copy_path[j] = -1;
+					copy_path[j - 1] = -1;
+					break;
+				}
+				DEBUG_COMMENT("copyPath","node added is %d", path[i]);
+				printf("ciao");
 			}
-		
+
+		}
+		ffflush();
+
+		DEBUG_COMMENT("tspcplex.c:TSPopt", "path[%d] = %d", i, path[i]);
 	}
-	DEBUG_COMMENT("tspcplex.c:TSPopt", "path[%d] = %d", i, path[i]);
-	}
+	for(int j=0; j<inst->nnodes;j++) path[j]--;
+	log_path(path, inst->nnodes);
 	
 
 	free(xstar);
