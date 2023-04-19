@@ -18,12 +18,14 @@ void ffflush()
 
 void log_path(const int *path, int nnodes)
 {
-    fprintf(log_file, "[");
+    char c[20000];
+    sprintf(c, "[");
     for (int i = 0; i < nnodes; i++)
     {
-        fprintf(log_file, "%d,", path[i]);
+        sprintf(c+strlen(c), "%d,", path[i]);
     }
-    fprintf(log_file, "]\n");
+    sprintf(c+strlen(c), "]");
+    DEBUG_COMMENT("logger::log_path","%s", c);
 }
 
 void log_distancematrix(const double *distance_matrix, int nnodes)

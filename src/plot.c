@@ -26,6 +26,7 @@ void plot(const int *path, const double *x, const double *y, const int nnodes, c
     for (int i = 0; i < nnodes; i++)
     {
         node = path[i];
+        if(node==-1) continue;
         if(node == starting_node)
             index_starting_node = i;
         fprintf(gnuplotPipe, "%d %d\n", (int)x[node], (int)y[node]);
@@ -35,8 +36,7 @@ void plot(const int *path, const double *x, const double *y, const int nnodes, c
     // Draw the points
     for (int i = 0; i < nnodes; i++)
     {
-        node = path[i];
-        fprintf(gnuplotPipe, "%d %d\n", (int)x[node], (int)y[node]);
+        fprintf(gnuplotPipe, "%d %d\n", (int)x[i], (int)y[i]);
     }
     fprintf(gnuplotPipe, "e\n");
     // Draw the starting node
@@ -58,5 +58,6 @@ void plot(const int *path, const double *x, const double *y, const int nnodes, c
     DEBUG_COMMENT("plot::plot", "close gnuplot pipe");
     fclose(gnuplotPipe);
     DEBUG_COMMENT("plot::plot", "write on the terminal the command to launch gnuplot");
-    system("gnuplot -p src/script.p");
+    int i=system("gnuplot -p src/script.p");
+    printf("%d",i);
 }

@@ -120,8 +120,7 @@ void TSPopt(Instance *inst, int *path)
 	}
 	for(int j=0; j<inst->nnodes;j++) path[j]--;
 	log_path(path, inst->nnodes);
-	
-
+	for(int j=1; j<inst->nnodes;j++) if(path[j] <= 0) path[j] = -1;
 	free(xstar);
 	
 	// free and close cplex model   
