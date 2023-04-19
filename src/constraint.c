@@ -68,7 +68,7 @@ void add_subtour_constraints(Instance *inst, CPXENVptr env, CPXLPptr lp)
         {
             succ[i] = -1; // initialize the successor vector
             comp[i] = -1; // intialize the component vector
-            already_touched[i] = 0;
+            // already_touched[i] = 0;
         }
 
         for (int start = 0; start < inst->nnodes; start++)
@@ -76,7 +76,7 @@ void add_subtour_constraints(Instance *inst, CPXENVptr env, CPXLPptr lp)
             if (comp[start] >= 0)
                 continue; // node "start" was already visited, just skip it
 
-            // a new component is found
+            // a new component is foun
             (ncomp)++;
             int i = start;
             int done = 0;
@@ -132,7 +132,7 @@ void add_subtour_constraints(Instance *inst, CPXENVptr env, CPXLPptr lp)
             log_path(array_to_insert, count);
             int izero = 0;
             double rsh = count - 1;
-            if (CPXaddrows(env, lp, 0, 1, count + 1, &rsh, &sense, &izero, array_to_insert, value, NULL, &cname[0]))
+            if (CPXaddrows(env, lp, 0, 1, count, &rsh, &sense, &izero, array_to_insert, value, NULL, &cname[0]))
                 print_error("CPXaddrows(): error 1");
             free(cname[0]);
             free(cname);
