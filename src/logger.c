@@ -21,9 +21,21 @@ void log_path(const int *path, int nnodes)
     fprintf(log_file, "[");
     for (int i = 0; i < nnodes; i++)
     {
-        fprintf(log_file, "%d,", path[i]);
+        fprintf(log_file, "\t%d,", path[i]);
     }
     fprintf(log_file, "]\n");
+}
+
+char* getPath(const int *path, int nnodes)
+{
+    char *path_str = (char *)malloc(sizeof(char) * nnodes * 5);
+    sprintf(path_str, "[");
+    for (int i = 0; i < nnodes; i++)
+    {
+        sprintf(path_str+strlen(path_str), "\t%d,", path[i]);
+    }
+    sprintf(path_str+strlen(path_str), "]");
+    return path_str;
 }
 
 void log_distancematrix(const double *distance_matrix, int nnodes)

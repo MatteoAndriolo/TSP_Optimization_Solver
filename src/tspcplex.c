@@ -3,14 +3,14 @@
 
 void build_model(Instance *inst, CPXENVptr env, CPXLPptr lp)
 {    
-	INFO_COMMENT("tspcplex.c:build_model", "Building model");
+	INFO_COMMENT("tspcplex:build_model", "Building model");
 	//double zero = 0.0;  
 	char binary = 'B'; 
 
 	char **cname = (char **) calloc(1, sizeof(char *));		// (char **) required by cplex...
 	cname[0] = (char *) calloc(100, sizeof(char));
 
-// add binary var.s x(i,j) for i < j  
+	// add binary var.s x(i,j) for i < j  
 
 	for ( int i = 0; i < inst->nnodes; i++ )
 	{
@@ -21,11 +21,11 @@ void build_model(Instance *inst, CPXENVptr env, CPXLPptr lp)
 			double lb = 0.0;
 			double ub = 1.0;
 			// eviroment , linear programming, cost of distance of x(i,j), lower bound, upper bound, binary, name of x(i,j)
-			if ( CPXnewcols(env, lp, 1, &obj, &lb, &ub, &binary, cname) ) print_error(" wrong CPXnewcols on x var.s");
-    		if ( CPXgetnumcols(env,lp)-1 != xpos(i,j, inst) ) print_error(" wrong position for x var.s");
+			if ( CPXnewcols(env, lp, 1, &obj, &lb, &ub, &binary, cname) ) ERROR_COMMENT("tspcplex::build_model"," wrong CPXnewcols on x var.s");
+    		if ( CPXgetnumcols(env,lp)-1 != xpos(i,j, inst) ) ERROR_COMMENT("tspcplex::build_model"," wrong position for x var.s");
 		}
 	}
-	INFO_COMMENT("tspcplex.c:build_model", "number of columns in CPLEX %d", CPXgetnumcols(env,lp)); 
+	INFO_COMMENT("tspcplex:build_model", "number of columns in CPLEX %d", CPXgetnumcols(env,lp)); 
 
 	add_degree_constraint(inst,env, lp);		// add degree constraints (for each node
 

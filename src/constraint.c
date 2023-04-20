@@ -41,6 +41,7 @@ void add_degree_constraint(Instance *inst, CPXENVptr env, CPXLPptr lp)
 void add_subtour_constraints(Instance *inst, CPXENVptr env, CPXLPptr lp)
 {
     int ncomp = 0;
+    int n_STC = 0;
     int error;
     int ncols;
     //take the time and if exceed the time limit then break the loop
@@ -60,85 +61,74 @@ void add_subtour_constraints(Instance *inst, CPXENVptr env, CPXLPptr lp)
         if (error)
             print_error("CPXgetx() error");
         INFO_COMMENT("constraint.c:add_subtour_constraints", "created xstar");
-        ncomp = 0;
         int *succ = (int *)malloc(sizeof(int) * inst->nnodes);
         int *comp = (int *)malloc(sizeof(int) * inst->nnodes);
         int *already_touched = (int *)calloc(inst->nnodes, sizeof(int));
-        for (int i = 0; i < inst->nnodes; i++)
-        {
-            succ[i] = -1; // initialize the successor vector
-            comp[i] = -1; // intialize the component vector
-            already_touched[i] = 0;
-        }
 
-        for (int start = 0; start < inst->nnodes; start++)
-        {
-            if (comp[start] >= 0)
-                continue; // node "start" was already visited, just skip it
+        build_sol(xstar, inst, succ, comp, &ncomp);
+        //FIXME does not produce correct comp
+        DEBUG_COMMENT("constraint.c:add_subtour_constraint", "succ: %s",getPath(succ, inst->nnodes));
+        DEBUG_COMMENT("constraint.c:add_subtour_constraint", "comp: %s",getPath(succ, inst->nnodes));
 
-            // a new component is found
-            (ncomp)++;
-            int i = start;
-            int done = 0;
-            while (!done) // go and visit the current component
-            {
-                comp[i] = ncomp;
-                done = 1;
-                for (int j = 0; j < inst->nnodes; j++)
-                {
-                    if (i != j && xstar[xpos(i, j, inst)] > 0.5 && comp[j] == -1) // the edge [i,j] is selected in xstar and j was not visited before
-                    {
-                        succ[i] = j;
-                        i = j;
-                        done = 0;
-                        break;
-                    }
-                }
-            }
-            succ[i] = start; // last arc to close the cycle
-            log_path(succ, inst->nnodes);
-            log_path(comp, inst->nnodes);
-            // add this connecte component as a subtour elimination constraint
-            DEBUG_COMMENT("constraint.c:add_subtour_constraints", "succ[%d] = %d", i, start);
+        for (int cc = 1; cc <= ncomp; cc++)
+        {   
             char **cname = (char **)calloc(1, sizeof(char *));
             cname[0] = (char *)calloc(256, sizeof(char));
-            sprintf(cname[0], "subtour(%d)", ncomp);
+            sprintf(cname[0], "subtour(%d)", n_STC++);
             int *index = (int *)calloc(inst->nnodes, sizeof(int));
             double *value = (double *)calloc(inst->nnodes, sizeof(double));
             char sense = 'L'; // 'L' for less than or equal to constraint
             int nnz = 0;
-            for (int i = 0; i < inst->nnodes; i++)
-            {
-                if (i == start)
-                    continue;
-                index[nnz] = xpos(i, succ[i], inst); // should specify the non zero elemntrs in the rows and the entry shpuld correspod to the index of the variable
-                nnz++;
-            }
 
-            log_path(index, inst->nnodes);
-            int *array_to_insert = (int *)calloc(inst->nnodes, sizeof(int));
-
-            int count = 0;
-            for (int i = 0; i < inst->nnodes; i++)
+            int j = 0;
+            int a,b,k;
+            while (j < inst->nnodes)
             {
-                if (index[i] > 0 && already_touched[i] == 0)
+                while (comp[j] != cc)
                 {
-                    array_to_insert[count] = index[i];
-                    value[count] = 1.0;
-                    already_touched[i] = 1;
-                    count++;
+                    j++;
+                }
+                k=j;
+                while (k < inst->nnodes)
+                {
+                    if (comp[j] == cc)
+                    {
+                        a = j < succ[j] ? j : succ[j];  // FIXME need to put -1??
+                        b = j >= succ[j] ? j : succ[j]; // FIXME need to put -1??
+                        index[nnz] = xpos(a, b, inst);
+                        value[nnz] = 1.0;
+                        nnz++;
+                    }
+                    j++;
                 }
             }
-            log_path(array_to_insert, count);
+
+            // //log_path(index, inst->nnodes);
+            // int *array_to_insert = (int *)calloc(inst->nnodes, sizeof(int));
+
+            // int count = 0;
+            // for (int i = 0; i < inst->nnodes; i++)
+            // {
+            //     if (index[i] > 0 )
+            //     {
+            //         array_to_insert[count] = index[i];
+            //         value[count] = 1.0;
+            //         already_touched[i] = 1;
+            //         count++;
+            //     }
+            // }
+            // log_path(array_to_insert, count);
             int izero = 0;
-            double rsh = count - 1;
-            if (CPXaddrows(env, lp, 0, 1, count + 1, &rsh, &sense, &izero, array_to_insert, value, NULL, &cname[0]))
+            //double rsh = count - 1;
+            double rsh = nnz - 1;
+            //if (CPXaddrows(env, lp, 0, 1, count + 1, &rsh, &sense, &izero, array_to_insert, value, NULL, &cname[0]))
+            if (CPXaddrows(env, lp, 0, 1, rsh + 1, &rsh, &sense, &izero, index, value, NULL, &cname[0]))
                 print_error("CPXaddrows(): error 1");
             free(cname[0]);
             free(cname);
             free(index);
             free(value);
-            free(array_to_insert);
+            //free(array_to_insert);
             WARNING_COMMENT("constraint.c:add_subtour_constraints", "FREEING MEMORY, index, value, index1, cname[0], cname");
         }
         free(already_touched);
