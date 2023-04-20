@@ -240,3 +240,6 @@ vgcore.*
 src/*.p
 plot/*
 .vscode/
+bin/main
+
+
