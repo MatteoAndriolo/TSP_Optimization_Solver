@@ -98,4 +98,6 @@ void log_output_inst(const Instance *inst);
  */
 void log_output(int model_type, int node_start, double zbest, double timelimit, int randomseed, int nnodes, char *input_file);
 
+
+char* getPathDBL(const double *path, int nnodes);
 #endif

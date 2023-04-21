@@ -47,7 +47,7 @@ void TSPopt(Instance *inst, int *path)
 	INFO_COMMENT("tspcplex.c:TSPopt", "Model built FINISHED");
 	
 	// Cplex's parameter setting
-	CPXsetintparam(env, CPX_PARAM_SCRIND, CPX_OFF);
+	CPXsetintparam(env, CPX_PARAM_SCRIND, CPX_ON);
 	CPXsetintparam(env, CPX_PARAM_RANDOMSEED, 123456);	
 	CPXsetdblparam(env, CPX_PARAM_TILIM, 3600.0); 
 	
@@ -144,7 +144,7 @@ void build_sol(const double *xstar, Instance *inst, int * succ, int *comp, int* 
 		if ( comp[start] >= 0 ) continue;  // node "start" was already visited, just skip it
 
 		// a new component is found
-		(ncomp)++;
+		(*ncomp)++;
 		int i = start;
 		int done = 0;
 		while ( !done )  // go and visit the current component
@@ -164,6 +164,8 @@ void build_sol(const double *xstar, Instance *inst, int * succ, int *comp, int* 
 		}	
 		succ[i] = start;  // last arc to close the cycle
 			// go to the next component...
+        DEBUG_COMMENT("tspcplex.c:build_model", "succ: %s", getPath(succ, inst->nnodes));
+        DEBUG_COMMENT("tspcplex.c:build_model", "comp: %s", getPath(comp, inst->nnodes));
 	}
 }
 
