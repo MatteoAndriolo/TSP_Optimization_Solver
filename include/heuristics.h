@@ -51,6 +51,28 @@ void genetic_algorithm(const double *distance_matrix, int *path, int nnodes, dou
 
 
 /**
+ * Crossover function
+ * 
+ * @param child: child to be filled
+ * @param p1: parent 1
+ * @param p2: parent 2
+ * @param distance_matrix: distance matrix
+ * @param nnodes: number of nodes
+*/
+int* genetic_merge_parents(Individual *child, Individual *p1, Individual *p2, const double* distance_matrix, int nnodes);
+
+
+/**
+ * Repair path child
+ * 
+ * @param child: child to be fixed 
+ * @param distance_matrix: distance matrix
+ * @param nnodes: number of nodes
+ * @param effort: effort of the repair - timer or iterations
+*/
+void genetic_repair_child(Individual *child, const double* distance_matrix, int nnodes, int effort);
+
+/**
  * Individual structure used for single specimen in the genetic algorithm
 */
 typedef struct

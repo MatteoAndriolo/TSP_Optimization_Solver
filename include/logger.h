@@ -68,6 +68,14 @@ void ffflush();
 void log_path(const int *path, int nnodes);
 
 /**
+ * Return string the given path.
+ *
+ * @param path the path to be logged
+ * @param nnodes the number of nodes
+ */
+char* getPath(const int *path, int nnodes);
+
+/**
  *
  */
 void log_distancematrix(const double *distance_matrix, int nnodes);

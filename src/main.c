@@ -50,6 +50,7 @@ int main(int argc, char **argv)
 
 	// Manage model selection -------------------------------------------------
 	print_arguments(&args);
+	srand(args.randomseed);
 	Instance instances[args.num_instances];
 	for (int c_inst = 0; c_inst < args.num_instances; c_inst++)
 	{
@@ -64,7 +65,6 @@ int main(int argc, char **argv)
 		instances[c_inst].grasp_n_probabilities = args.n_probabilities;
 		instances[c_inst].grasp_probabilities = args.grasp_probabilities;
 		strcpy(instances[c_inst].input_file, args.input_file);
-
 		int *path = malloc(sizeof(int) * args.nnodes);
 		generate_path(path, starting_points[c_inst], args.nnodes);
 

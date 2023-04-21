@@ -210,7 +210,7 @@ int getChampion(Individual *champion, Individual **population, int populationSiz
     return ind;
 }
 
-int* merge_parents(Individual *child, const Individual *population, int p1, int p2, const double* distance_matrix, int nnodes)
+int* genetic_merge_parents(Individual *child, Individual *p1, Individual *p2, const double* distance_matrix, int nnodes)
 {
     int *isMissing = malloc(nnodes * sizeof(int));
     for (int j = 0; j < nnodes; j++)
@@ -219,19 +219,19 @@ int* merge_parents(Individual *child, const Individual *population, int p1, int 
         isMissing[j] = 1;
     }
     // which portion of port 1 i will use?
-    int port1 = (nnodes / 4) + rand() % (nnodes / 2); // portion between quarters
+    int portion1 = (nnodes / 4) + rand() % (nnodes / 2); // portion between quarters
     int countNodes;
-    for (countNodes = 0; countNodes < port1; countNodes++)
+    for (countNodes = 0; countNodes < portion1; countNodes++)
     {
-        child->path[countNodes] = population[p1].path[countNodes];
-        isMissing[population[p1].path[countNodes]] = 0;
+        child->path[countNodes] = p1->path[countNodes];
+        isMissing[p1->path[countNodes]] = 0;
     }
 
-    for (int j = 0; j < nnodes; j++)
+    for (int j = countNodes; j < nnodes; j++)
     {
-        int toAdd = population[p2].path[j];
+        int toAdd = p2->path[j]; //FIXME start adding from the second portion of the path
         int found = 0;
-        for (int k = 0; k < port1; k++)
+        for (int k = 0; k < portion1; k++)
         {
             if (toAdd == child->path[k])
             {
@@ -245,13 +245,26 @@ int* merge_parents(Individual *child, const Individual *population, int p1, int 
             isMissing[toAdd] = 0;
         }
     }
+
+    for (int j = 0; j < nnodes; j++)
+    {
+        if (isMissing[j])
+        {
+            child->path[countNodes++] = j;
+        }
+    }
+
     child->fitness=getFitness(distance_matrix, child->path, nnodes);
     return isMissing;
 }
 
+void genetic_repair_child(Individual *child, const double* distance_matrix, int nnodes, int effort){
+    two_opt(child->path, nnodes, distance_matrix, &child->fitness, 10 );
+    child->fitness=getFitness(distance_matrix, child->path, nnodes);
+}
+
 void genetic_algorithm(const double *distance_matrix, int *path, int nnodes, double *tour_length, int populationSize, int iterations)
 {
-    srand(time(NULL));
     INFO_COMMENT("heuristic::genetic_algorithm", "Starting genetic algorithm with population size %d and %d iterations", populationSize, iterations);
 
     // Generate random population
@@ -272,6 +285,7 @@ void genetic_algorithm(const double *distance_matrix, int *path, int nnodes, dou
         indexChampion = getChampion(&champion, population, populationSize);
 
         Individual *newGeneration = malloc(populationSize * sizeof(Individual));
+        double bestFitness = champion.fitness;
 
         INFO_COMMENT("heuristic::genetic_algorithm", "Champion of iteration %d has fitness %lf", iter, champion.fitness);
 
@@ -292,12 +306,10 @@ void genetic_algorithm(const double *distance_matrix, int *path, int nnodes, dou
              * merge parents
              */
             Individual child;
-            merge_parents(&child, population, indexParent1, indexParent2, distance_matrix, nnodes);
+            int *isMissing=genetic_merge_parents(&child, population[indexParent1], population[indexParent2], distance_matrix, nnodes);
 
             // repair
-            // collect indices 1 in array isMissing and permutate them
-            //  Count the number of missing indices (1s in the isMissing array)
-            count = 0;
+            int count = 0;
             for (int i = 0; i < nnodes; i++)
             {
                 if (isMissing[i] == 1)
@@ -305,44 +317,13 @@ void genetic_algorithm(const double *distance_matrix, int *path, int nnodes, dou
                     count++;
                 }
             }
+            genetic_repair_child(&child, distance_matrix, nnodes, count);
+            // collect indices 1 in array isMissing and permutate them
+            //  Count the number of missing indices (1s in the isMissing array)
 
             // Allocate memory for the missingIndices array
-            int *missingIndices = malloc(count * sizeof(int));
-            int missingCount = count;
-
-            // Store the indices of missing elements (1s) in the missingIndices array
-            int idx = 0;
-            for (int i = 0; i < nnodes; i++)
-            {
-                if (isMissing[i] == 1)
-                {
-                    missingIndices[idx++] = i;
-                }
-            }
-
-            // Permutate the missingIndices array
-            for (int i = 0; i < count; i++)
-            {
-                int j = rand() % count;
-                int tmp = missingIndices[i];
-                missingIndices[i] = missingIndices[j];
-                missingIndices[j] = tmp;
-            }
-
-            for(int i=0;i<missingCount;i++){
-                child[port1+i] = missingIndices[i];
-            }
-
-            DEBUG_COMMENT("heuristic::genetic_algorithm", "Mated parents to create child");
-
-            // improvement
-            double child_tourLength= getFitness(distance_matrix, child, nnodes);
-            two_opt(distance_matrix, nnodes, child, &child_tourLength, missingCount );
-            DEBUG_COMMENT("heuristic::genetic_algorithm", "Applied two_opt improvement");
-
             // Add child to population
-            newGeneration[i].path = child;
-            newGeneration[i].fitness = getFitness(distance_matrix, child, nnodes);
+            newGeneration[i] = child;
 
             if (newGeneration[i].fitness < bestFitness) //FIXME fix logic -> differentiate best of old generation with new generation, what to return
             {
@@ -350,6 +331,7 @@ void genetic_algorithm(const double *distance_matrix, int *path, int nnodes, dou
                 indexChampion = i;
             }
         }
+
         for (int i = 0; i < populationSize; i++)
         {
             free(population[i].path);
