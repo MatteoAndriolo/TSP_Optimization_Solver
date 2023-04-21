@@ -28,12 +28,93 @@ void build_model(Instance *inst, CPXENVptr env, CPXLPptr lp)
 	INFO_COMMENT("tspcplex:build_model", "number of columns in CPLEX %d", CPXgetnumcols(env,lp)); 
 
 	add_degree_constraint(inst,env, lp);		// add degree constraints (for each node
-
+	inst->ncols=CPXgetnumcols(env,lp);		// get number of columns (variables) in CPLEX model
 	free(cname[0]);
 	free(cname);
 }
 
-void TSPopt(Instance *inst, int *path)
+int CPXPUBLIC my_callback(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, void *userhandle)
+{
+    Instance *inst = (Instance *)userhandle;
+    double *xstar = (double *)malloc(inst->ncols * sizeof(double));
+	DEBUG_COMMENT("constraint.c:add_subtour_constraints", "ncols %d", inst->ncols);
+    double objval = CPX_INFBOUND;
+    if (CPXcallbackgetcandidatepoint(context, xstar, 0, inst->ncols - 1, &objval))
+        print_error("CPXcallbackgetcandidatepoint error");
+  
+   
+    //if xstart is infeasible, find a violated cut and store it in the usual Cplex's data structute (rhs, sense, nnz, index and value)
+    INFO_COMMENT("constraint.c:add_subtour_constraints", "created xstar");
+    int *succ = (int *)malloc(sizeof(int) * inst->nnodes);
+    int *comp = (int *)malloc(sizeof(int) * inst->nnodes);
+    int ncomp;
+    build_sol(xstar, inst, succ, comp, &ncomp);
+    DEBUG_COMMENT("constraint.c:add_subtour_constraints", "ncomp = %d", ncomp);
+    DEBUG_COMMENT("constraint.c:add_subtour_constraint", "succ: %s", getPath(succ, inst->nnodes));
+    DEBUG_COMMENT("constraint.c:add_subtour_constraint", "comp: %s", getPath(comp, inst->nnodes));
+
+    for (int cc = 1; cc <= ncomp; cc++)
+    {
+        // char **cname = (char **)calloc(1, sizeof(char *));
+        // cname[0] = (char *)calloc(256, sizeof(char));
+        // sprintf(cname[0], "subtour(%d)", cc);
+        int nncc = 0;
+        for (int i = 0; i < inst->nnodes; i++)
+        {
+            if (comp[i] == cc)
+                nncc++;
+        }
+
+        int *index = (int *)calloc((inst->nnodes * (inst->nnodes - 1)) / 2, sizeof(int));
+        double *value = (double *)calloc((inst->nnodes * (inst->nnodes - 1)) / 2, sizeof(double));
+        char sense = 'L'; // 'L' for less than or equal to constraint
+        int nnz = 0;
+
+        int j = 0;
+        int k;
+        while (j < inst->nnodes - 1)
+        {
+            while (comp[j] != cc && j < inst->nnodes)
+            {
+                j++;
+            }
+            k = j + 1;
+            while (k < inst->nnodes)
+            {
+                if (comp[k] == cc)
+                {
+                    index[nnz] = xpos(j, k, inst);
+                    value[nnz] = 1.0;
+                    nnz++;
+                }
+                k++;
+            }
+            j++;
+        }
+
+        DEBUG_COMMENT("constraint.c:add_subtour_constraints", "nnz = %d", nnz);
+        int izero = 0;
+        double rsh = nncc - 1;
+
+        DEBUG_COMMENT("constraint.c:add_subtour_constraints", "insert row");
+        if (CPXcallbackrejectcandidate(context,1 , nnz, &rsh, &sense, &izero, index, value))
+            ERROR_COMMENT("constraint.c:my_callback","CPXaddrows(): error 1");
+
+        // free(cname[0]);
+        // free(cname);
+        free(index);
+        free(value);
+        WARNING_COMMENT("constraint.c:add_subtour_constraints", "FREEING MEMORY, index, value, index1, cname[0], cname");
+    }
+    DEBUG_COMMENT("awdawd", " final ncomp %d ", ncomp);
+    free(xstar);
+    free(succ);
+    free(comp);
+    WARNING_COMMENT("constraint.c:add_subtour_constraints", "FREEING MEMORY, xstar, succ, comp");
+    return 0;
+}
+
+void TSPopt(Instance *inst, int *path, int callbacks)
 {  
 	INFO_COMMENT("tspcplex.c:TSPopt", "Solving TSP with CPLEX");
 	// open CPLEX model
@@ -50,9 +131,9 @@ void TSPopt(Instance *inst, int *path)
 	CPXsetintparam(env, CPX_PARAM_SCRIND, CPX_ON);
 	CPXsetintparam(env, CPX_PARAM_RANDOMSEED, 123456);	
 	CPXsetdblparam(env, CPX_PARAM_TILIM, 3600.0); 
-	
+	CPXLONG contextid= CPX_CALLBACKCONTEXT_CANDIDATE;
+	if ( CPXcallbacksetfunc(env, lp, contextid, my_callback, inst) ) ERROR_COMMENT("tspcplex.c:TSPopt","CPXcallbacksetfunc() error");
 	add_subtour_constraints(inst,env, lp);	
-	// ...
 	error = CPXmipopt(env,lp);
 	if ( error ) 
 	{

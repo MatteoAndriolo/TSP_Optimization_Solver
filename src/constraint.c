@@ -43,7 +43,7 @@ void add_degree_constraint(Instance *inst, CPXENVptr env, CPXLPptr lp)
 void add_subtour_constraints(Instance *inst, CPXENVptr env, CPXLPptr lp)
 {
     int ncomp = 0;
-    int n_STC = 0; 
+    int n_STC = 0;
     int error;
     int ncols;
     // take the time and if exceed the time limit then break the loop
@@ -68,7 +68,8 @@ void add_subtour_constraints(Instance *inst, CPXENVptr env, CPXLPptr lp)
         int *already_touched = (int *)calloc(inst->nnodes, sizeof(int));
 
         build_sol(xstar, inst, succ, comp, &ncomp);
-        if(ncomp==1){
+        if (ncomp == 1)
+        {
             break;
         }
         DEBUG_COMMENT("constraint.c:add_subtour_constraints", "ncomp = %d", ncomp);
@@ -86,7 +87,7 @@ void add_subtour_constraints(Instance *inst, CPXENVptr env, CPXLPptr lp)
                 if (comp[i] == cc)
                     nncc++;
             }
-            
+
             int *index = (int *)calloc((inst->nnodes * (inst->nnodes - 1)) / 2, sizeof(int));
             double *value = (double *)calloc((inst->nnodes * (inst->nnodes - 1)) / 2, sizeof(double));
             char sense = 'L'; // 'L' for less than or equal to constraint
@@ -119,7 +120,7 @@ void add_subtour_constraints(Instance *inst, CPXENVptr env, CPXLPptr lp)
             double rsh = nncc - 1;
 
             DEBUG_COMMENT("constraint.c:add_subtour_constraints", "insert row");
-            if (CPXaddrows(env, lp, 0, 1, nnz , &rsh, &sense, &izero, index, value, NULL, &cname[0]))
+            if (CPXaddrows(env, lp, 0, 1, nnz, &rsh, &sense, &izero, index, value, NULL, &cname[0]))
                 print_error("CPXaddrows(): error 1");
             DEBUG_COMMENT("constraint.c:add_subtour_constraints", "inserted row %d", CPXgetnumrows(env, lp));
 
@@ -131,7 +132,7 @@ void add_subtour_constraints(Instance *inst, CPXENVptr env, CPXLPptr lp)
             WARNING_COMMENT("constraint.c:add_subtour_constraints", "FREEING MEMORY, index, value, index1, cname[0], cname");
         }
         build_sol(xstar, inst, succ, comp, &ncomp);
-        DEBUG_COMMENT("awdawd"," final ncomp %d ", ncomp);
+        DEBUG_COMMENT("awdawd", " final ncomp %d ", ncomp);
         free(already_touched);
         free(xstar);
         free(succ);

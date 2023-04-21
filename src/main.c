@@ -101,7 +101,7 @@ int main(int argc, char **argv)
 			}
 			if (strcmp(passagges[j], "cplex")==0)
 			{
-				TSPopt(&instances[c_inst], path);
+				TSPopt(&instances[c_inst], path,1);
 			}
 			strcpy(title+strlen(title), passagges[j]);	
 			//TODO fix title in all the different 

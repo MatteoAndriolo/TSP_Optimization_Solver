@@ -60,6 +60,7 @@ typedef struct
 	// grasp
 
 	// global data
+	int ncols;
 	double tstart; // starting time
 				   // double tbest;	  // time for the best sol. available
 				   // double best_lb;	  // best lower bound available

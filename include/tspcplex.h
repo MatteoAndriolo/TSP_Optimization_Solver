@@ -14,8 +14,9 @@
  * @brief TSPopt
  * @param inst instance of the problem to be solved
  * @param path solution vector
+ * @param callbacks boolean of callbacks
 */
-void TSPopt(Instance *inst, int* path);
+void TSPopt(Instance *inst, int* path, int callbacks);
 /**
  * @brief build_model
  * @param inst instance of the problem to be solved
@@ -33,4 +34,11 @@ void build_model(Instance *inst, CPXENVptr env, CPXLPptr lp);
 */
 void build_sol(const double *xstar, Instance *inst, int * succ, int *comp, int* ncomp);
 
+/**
+ * @brief Add the capacity constraint to the model
+ * @param inst Instance of the problem
+ * @param env CPLEX environment
+ * @param lp CPLEX model
+*/
+int CPXPUBLIC my_callback(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, void *userhandle );
 #endif
