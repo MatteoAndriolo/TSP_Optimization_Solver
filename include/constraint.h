@@ -8,6 +8,7 @@
 #include "vrp.h"
 #include "utils.h"
 #include "logger.h"
+#include "tspcplex.h"
 
 /**
  * @brief Add the degree constraint to the model

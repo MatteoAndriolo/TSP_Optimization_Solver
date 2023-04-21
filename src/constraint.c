@@ -9,7 +9,7 @@ void add_degree_constraint(Instance *inst, CPXENVptr env, CPXLPptr lp)
 
     int *index = (int *)calloc(inst->nnodes, sizeof(int));
     double *value = (double *)calloc(inst->nnodes, sizeof(double));
-    DEBUG_COMMENT("constraint.c:add_degree_constraint", "NUMBER OF ROW IN CPLEX %d", CPXgetnumrows(env,lp));
+    DEBUG_COMMENT("constraint.c:add_degree_constraint", "NUMBER OF ROW IN CPLEX %d", CPXgetnumrows(env, lp));
 
     for (int h = 0; h < inst->nnodes; h++)
     {
@@ -26,12 +26,12 @@ void add_degree_constraint(Instance *inst, CPXENVptr env, CPXLPptr lp)
             nnz++;
             // DEBUG_COMMENT("constraint.c:add_degree_constraint", "index[%d] = %d", nnz, index[nnz]);
         }
-        log_path(index, inst->nnodes-1);
+        log_path(index, inst->nnodes - 1);
         int izero = 0;
         if (CPXaddrows(env, lp, 0, 1, nnz, &rhs, &sense, &izero, index, value, NULL, &cname[0]))
             print_error("CPXaddrows(): error 1");
     }
-    DEBUG_COMMENT("constraint.c:add_degree_constraint", "NUMBER OF ROW IN CPLEX after adding degree constraints %d", CPXgetnumrows(env,lp));
+    DEBUG_COMMENT("constraint.c:add_degree_constraint", "NUMBER OF ROW IN CPLEX after adding degree constraints %d", CPXgetnumrows(env, lp));
     free(cname[0]);
     free(cname);
     free(index);
@@ -43,14 +43,16 @@ void add_subtour_constraints(Instance *inst, CPXENVptr env, CPXLPptr lp)
     int ncomp = 0;
     int error;
     int ncols;
-    //take the time and if exceed the time limit then break the loop
+    // take the time and if exceed the time limit then break the loop
     time_t start_time = time(NULL);
     while (ncomp != 1 && difftime(time(NULL), start_time) < 100)
     {
+        //build_model(inst, env, lp);
+        //CPXstettime
         INFO_COMMENT("constraint.c:add_subtour_constraints", "starting the while loop");
         error = CPXmipopt(env, lp);
         CRITICAL_COMMENT("constraint.c:add_subtour_constraints", "0");
-        if (error)
+        if (error)po
             print_error("CPXmipopt() error");
         ncols = CPXgetnumcols(env, lp);
         CRITICAL_COMMENT("constraint.c:add_subtour_constraints", "1");
@@ -139,6 +141,8 @@ void add_subtour_constraints(Instance *inst, CPXENVptr env, CPXLPptr lp)
             free(index);
             free(value);
             free(array_to_insert);
+            CPXwriteprob(env, lp, "test.lp", NULL);
+            DEBUG_COMMENT("constraint.c:add_degree_constraint", "NUMBER OF ROW IN CPLEX after adding degree constraints %d", CPXgetnumrows(env, lp));
             WARNING_COMMENT("constraint.c:add_subtour_constraints", "FREEING MEMORY, index, value, index1, cname[0], cname");
         }
         free(already_touched);
@@ -148,3 +152,5 @@ void add_subtour_constraints(Instance *inst, CPXENVptr env, CPXLPptr lp)
         WARNING_COMMENT("constraint.c:add_subtour_constraints", "FREEING MEMORY, xstar, succ, comp");
     }
 }
+
+//Se printiamo il file possoiamo vedere se iserisce correttamente le righe facendo check dalle colonne 
