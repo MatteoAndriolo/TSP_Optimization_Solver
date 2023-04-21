@@ -65,13 +65,10 @@ void add_subtour_constraints(Instance *inst, CPXENVptr env, CPXLPptr lp)
         INFO_COMMENT("constraint.c:add_subtour_constraints", "created xstar");
         int *succ = (int *)malloc(sizeof(int) * inst->nnodes);
         int *comp = (int *)malloc(sizeof(int) * inst->nnodes);
-        int *already_touched = (int *)calloc(inst->nnodes, sizeof(int));
 
         build_sol(xstar, inst, succ, comp, &ncomp);
-        if (ncomp == 1)
-        {
-            break;
-        }
+
+        if (ncomp == 1) break;
         DEBUG_COMMENT("constraint.c:add_subtour_constraints", "ncomp = %d", ncomp);
         DEBUG_COMMENT("constraint.c:add_subtour_constraint", "succ: %s", getPath(succ, inst->nnodes));
         DEBUG_COMMENT("constraint.c:add_subtour_constraint", "comp: %s", getPath(comp, inst->nnodes));

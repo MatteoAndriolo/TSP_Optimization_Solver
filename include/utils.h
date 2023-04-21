@@ -114,24 +114,6 @@ void generate_random_starting_nodes(int *starting_nodes, int num_nodes, int num_
  * @param end2 ending index 2
  */
 void swap_array_piece(int * arr, int start1, int end1, int start2, int end2);
-/**
- * @brief a set of random starting nodes.
- * @param err The error message to print.
-*/
-void print_error(const char *err);
-/**
-* @brief the starting node with the first node in the path
-* @param i The index of the node to start the path at.
-* @param j The index of the node to start the path at.
-* @param inst The instance of the problem to be solved.
-*/
-int xpos(int i, int j, Instance *inst);
-/**
- * @brief the starting node with the first node in the path
- * @param i The index of the node to start the path at.
- * @param j The index of the node to start the path at.
- * @param inst The instance of the problem to be solved.
-*/
-double dist(int i, int j, Instance *inst);
+
 
 #endif

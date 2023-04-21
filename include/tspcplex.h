@@ -6,9 +6,9 @@
 #include<time.h>
 #include<cplex.h>
 #include "vrp.h"
-#include "utils.h"
 #include "logger.h"
 #include "constraint.h"
+#include "utilscplex.h"
 
 /**
  * @brief TSPopt
