@@ -6,6 +6,14 @@
 #include "utils.h"
 #include "logger.h"
 
+/**
+ * Individual structure used for single specimen in the genetic algorithm
+*/
+typedef struct
+{
+    int *path;
+    double fitness;
+} Individual;
 /** Nearest Neighbor Heuristic
     * @param distance_matrix: distance matrix
     * @param path: path to be filled
@@ -59,7 +67,7 @@ void genetic_algorithm(const double *distance_matrix, int *path, int nnodes, dou
  * @param distance_matrix: distance matrix
  * @param nnodes: number of nodes
 */
-int* genetic_merge_parents(Individual *child, Individual *p1, Individual *p2, const double* distance_matrix, int nnodes);
+int* genetic_merge_parents(Individual *child, const Individual *p1,const Individual *p2, const double* distance_matrix,const int nnodes);
 
 
 /**
@@ -72,13 +80,5 @@ int* genetic_merge_parents(Individual *child, Individual *p1, Individual *p2, co
 */
 void genetic_repair_child(Individual *child, const double* distance_matrix, int nnodes, int effort);
 
-/**
- * Individual structure used for single specimen in the genetic algorithm
-*/
-typedef struct
-{
-    int *path;
-    double fitness;
-} Individual;
 
 #endif

@@ -7,7 +7,7 @@ void two_opt(const double *distance_matrix, int nnodes, int *path, double *tour_
     int foundImprovement = 1;
     //log_path(path, nnodes);
     double cost_old_edge, cost_new_edge, cost_new_edge2, cost_old_edge2;
-    int c_iter=0;
+    double c_iter=0;
     while (c_iter<iterations && foundImprovement)
     {
         foundImprovement = 0;
@@ -27,10 +27,12 @@ void two_opt(const double *distance_matrix, int nnodes, int *path, double *tour_
                     foundImprovement = 1;
                     two_opt_move(path, i,j,nnodes);
                 }
+                c_iter++;
+                if(c_iter>iterations)
+                    return;
                 DEBUG_COMMENT("refinement:2opt", "delta %lf, tl %lf", delta, tour_length);
             }
         }
-        c_iter++;
     }
     //log_path(path, nnodes);
     DEBUG_COMMENT("refinement:2opt", "attual tour length %lf", *tour_length);

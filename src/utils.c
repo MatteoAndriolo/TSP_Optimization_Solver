@@ -165,7 +165,7 @@ void generate_random_path(int *path, int nnodes)
 {
     DEBUG_COMMENT("utils::generate_random_path", "Entering generate_random_path function");
     int j,tmp;
-    path = malloc(nnodes * sizeof(int));
+    //path = malloc(nnodes * sizeof(int));
     for (int i = 0; i < nnodes; i++)
     {
         path[i] = i;

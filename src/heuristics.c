@@ -193,10 +193,12 @@ double getFitness(const double *distance_matrix, int *path, int nnodes)
     return fitness;
 }
 
-int getChampion(Individual *champion, Individual **population, int populationSize)
+int getChampion(Individual *champion, Individual **population, int populationSize, int nnodes)
 {
+    DEBUG_COMMENT("heuristic::getChampion", "Entering getChampion function");
     double min = population[0]->fitness;
     int ind = 0;
+    DEBUG_COMMENT("heuristic::getChampion", "Individual %d fitness: %lf", 2, population[2]->fitness);
     for (int i = 1; i < populationSize; i++)
     {
         if (population[i]->fitness < min)
@@ -204,13 +206,15 @@ int getChampion(Individual *champion, Individual **population, int populationSiz
             min = population[i]->fitness;
             ind = i;
         }
+        DEBUG_COMMENT("heuristic::getChampion", "Individual %d ", i);
     }
-    champion->fitness=min;
-    champion->path=population[ind]->path;
+    DEBUG_COMMENT("heuristic::getChampion", "Champion: %d", ind);
+    champion->fitness = min;
+    champion->path = population[ind]->path;
     return ind;
 }
 
-int* genetic_merge_parents(Individual *child, Individual *p1, Individual *p2, const double* distance_matrix, int nnodes)
+int *genetic_merge_parents(Individual *child, const Individual *p1, const Individual *p2, const double *distance_matrix, const int nnodes)
 {
     int *isMissing = malloc(nnodes * sizeof(int));
     for (int j = 0; j < nnodes; j++)
@@ -229,7 +233,7 @@ int* genetic_merge_parents(Individual *child, Individual *p1, Individual *p2, co
 
     for (int j = countNodes; j < nnodes; j++)
     {
-        int toAdd = p2->path[j]; //FIXME start adding from the second portion of the path
+        int toAdd = p2->path[j]; // FIXME start adding from the second portion of the path
         int found = 0;
         for (int k = 0; k < portion1; k++)
         {
@@ -254,13 +258,14 @@ int* genetic_merge_parents(Individual *child, Individual *p1, Individual *p2, co
         }
     }
 
-    child->fitness=getFitness(distance_matrix, child->path, nnodes);
+    child->fitness = getFitness(distance_matrix, child->path, nnodes);
     return isMissing;
 }
 
-void genetic_repair_child(Individual *child, const double* distance_matrix, int nnodes, int effort){
-    two_opt(child->path, nnodes, distance_matrix, &child->fitness, 10 );
-    child->fitness=getFitness(distance_matrix, child->path, nnodes);
+void genetic_repair_child(Individual *child, const double *distance_matrix, int nnodes, int effort)
+{
+    two_opt(distance_matrix, nnodes, child->path, &child->fitness, effort);
+    child->fitness = getFitness(distance_matrix, child->path, nnodes);
 }
 
 void genetic_algorithm(const double *distance_matrix, int *path, int nnodes, double *tour_length, int populationSize, int iterations)
@@ -272,18 +277,41 @@ void genetic_algorithm(const double *distance_matrix, int *path, int nnodes, dou
     for (int i = 0; i < populationSize; i++)
     {
         // population[i].path = malloc(nnodes * sizeof(int));
+        population[i].path = malloc(nnodes * sizeof(int));
         generate_random_path(population[i].path, nnodes);
         population[i].fitness = getFitness(distance_matrix, population[i].path, nnodes);
+        DEBUG_COMMENT("heuristic::genetic_algorithm", "Individual %d", i);
+        DEBUG_COMMENT("heuristic::genetic_algorithm", "path: %s", getPath(population[i].path, nnodes));
+        DEBUG_COMMENT("heuristic::genetic_algorithm", "fitness: %lf", population[i].fitness);
     }
+
+    DEBUG_COMMENT("heuristic::genetic_algorithm", "Generated random population");
 
     int indexChampion;
     Individual champion;
-    
+
     for (int iter = 0; iter < iterations; iter++)
     {
         DEBUG_COMMENT("heuristic::genetic_algorithm", "Iteration %d", iter);
-        indexChampion = getChampion(&champion, population, populationSize);
-
+        // indexChampion = getChampion(&champion, &population, populationSize, nnodes);
+        /**********************/
+        double min = population[0].fitness;
+        int ind = 0;
+        for (int i = 1; i < populationSize; i++)
+        {
+            if (population[i].fitness < min)
+            {
+                min = population[i].fitness;
+                ind = i;
+            }
+            DEBUG_COMMENT("heuristic::getChampion", "Individual %d ", i);
+        }
+        DEBUG_COMMENT("heuristic::getChampion", "Champion: %d", ind);
+        champion.fitness = min;
+        indexChampion=ind;
+        champion.path = population[ind].path;
+        /**********************/
+        /**********************/
         Individual *newGeneration = malloc(populationSize * sizeof(Individual));
         double bestFitness = champion.fitness;
 
@@ -306,7 +334,50 @@ void genetic_algorithm(const double *distance_matrix, int *path, int nnodes, dou
              * merge parents
              */
             Individual child;
-            int *isMissing=genetic_merge_parents(&child, population[indexParent1], population[indexParent2], distance_matrix, nnodes);
+            child.path=malloc(nnodes * sizeof(int));
+            int *isMissing = malloc(nnodes * sizeof(int));
+            for (int j = 0; j < nnodes; j++)
+            {
+                child.path[j] = -1;
+                isMissing[j] = 1;
+            }
+            // which portion of port 1 i will use?
+            int portion1 = (nnodes / 4) + rand() % (nnodes / 2); // portion between quarters
+            int countNodes;
+            for (countNodes = 0; countNodes < portion1; countNodes++)
+            {
+                child.path[countNodes] = population[indexParent1].path[countNodes];
+                isMissing[population[indexParent1].path[countNodes]] = 0;
+            }
+
+            for (int j = countNodes; j < nnodes; j++)
+            {
+                int toAdd = population[indexParent2].path[j]; // FIXME start adding from the second portion of the path
+                int found = 0;
+                for (int k = 0; k < portion1; k++)
+                {
+                    if (toAdd == child.path[k])
+                    {
+                        found = 1;
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    child.path[countNodes++] = toAdd;
+                    isMissing[toAdd] = 0;
+                }
+            }
+
+            for (int j = 0; j < nnodes; j++)
+            {
+                if (isMissing[j])
+                {
+                    child.path[countNodes++] = j;
+                }
+            }
+
+            child.fitness = getFitness(distance_matrix, child.path, nnodes);
 
             // repair
             int count = 0;
@@ -325,7 +396,7 @@ void genetic_algorithm(const double *distance_matrix, int *path, int nnodes, dou
             // Add child to population
             newGeneration[i] = child;
 
-            if (newGeneration[i].fitness < bestFitness) //FIXME fix logic -> differentiate best of old generation with new generation, what to return
+            if (newGeneration[i].fitness < bestFitness) // FIXME fix logic -> differentiate best of old generation with new generation, what to return
             {
                 bestFitness = newGeneration[i].fitness;
                 indexChampion = i;
