@@ -34,11 +34,4 @@ void build_model(Instance *inst, CPXENVptr env, CPXLPptr lp);
 */
 void build_sol(const double *xstar, Instance *inst, int * succ, int *comp, int* ncomp);
 
-/**
- * @brief Add the capacity constraint to the model
- * @param inst Instance of the problem
- * @param env CPLEX environment
- * @param lp CPLEX model
-*/
-int CPXPUBLIC my_callback(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, void *userhandle );
 #endif
