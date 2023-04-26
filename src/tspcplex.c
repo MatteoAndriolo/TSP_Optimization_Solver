@@ -99,7 +99,6 @@ static int CPXPUBLIC my_callback(CPXCALLBACKCONTEXTptr context, CPXLONG contexti
 			DEBUG_COMMENT("constraint.c:add_subtour_constraints", "insert row");
 			if (CPXcallbackrejectcandidate(context, 1, nnz, &rsh, &sense, &izero, index, value))
 				ERROR_COMMENT("constraint.c:my_callback", "CPXaddrows(): error 1");
-
 			// free(cname[0]);
 			// free(cname);
 			free(index);
@@ -137,7 +136,7 @@ void TSPopt(Instance *inst, int *path, int callbacks)
 	CPXLONG contextid = CPX_CALLBACKCONTEXT_CANDIDATE;
 	if (CPXcallbacksetfunc(env, lp, contextid, my_callback, inst))
 		ERROR_COMMENT("tspcplex.c:TSPopt", "CPXcallbacksetfunc() error");
-	add_subtour_constraints(inst, env, lp);
+	//add_subtour_constraints(inst, env, lp);
 	error = CPXmipopt(env, lp);
 	if (error)
 	{

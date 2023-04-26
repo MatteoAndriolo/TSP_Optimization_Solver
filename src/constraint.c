@@ -130,7 +130,6 @@ void add_subtour_constraints(Instance *inst, CPXENVptr env, CPXLPptr lp)
         }
         build_sol(xstar, inst, succ, comp, &ncomp);
         DEBUG_COMMENT("awdawd", " final ncomp %d ", ncomp);
-        free(already_touched);
         free(xstar);
         free(succ);
         free(comp);

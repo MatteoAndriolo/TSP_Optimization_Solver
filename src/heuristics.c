@@ -27,57 +27,26 @@ void vnp_k(const double *distance_matrix, int *path, int nnodes, double *tour_le
     free(best_node_tour);
 }
 
+// Define the function to generate 3 sequential nodes with random values
+void generateNodes(int* firstValue, int* secondValue, int* thirdValue) {
+    // Initialize the random number generator with the current time
+    srand(time(NULL));
+
+    // Generate random values for the nodes
+    *firstValue = rand() % 100; // Generate a random value between 0 and 99
+    *secondValue = rand() % (100 - *firstValue) + *firstValue + 1; // Generate a random value between *firstValue + 1 and 99
+    *thirdValue = rand() % (100 - *secondValue) + *secondValue + 1; // Generate a random value between *secondValue + 1 and 99
+}
+
 void kick_function(const double *distance_matrix, int *path, int nnodes, double *tour_length, int k)
 {
-    int count = 0;
-    int is_odd = k % 2;
-    if (is_odd == 1)
-    {
-        // chose a random number between 0 and nnodes - 5 at lease 4 nodes to swap
-        int lower = 1;
-        int upper = nnodes - 6;
-        int start = (rand() % (upper - lower + 1)) + lower; // random number between 1 and nnodes - 5
-        swap_array_piece(path, start, start + 1, start + 2, start + 3);
-        DEBUG_COMMENT("heuristics.c:kick_function", "start=%d", start);
-        *tour_length +=   distance_matrix[path[start - 1] * nnodes + path[start + 2]]  
-                        + distance_matrix[path[start + 3] * nnodes + path[start]] 
-                        + distance_matrix[path[start + 1] * nnodes + path[start + 4]] 
-                        - distance_matrix[path[start - 1] * nnodes + path[start]]  
-                        - distance_matrix[path[start + 1] * nnodes + path[start + 2]]  
-                        - distance_matrix[path[start + 3] * nnodes + path[start + 4]];
-        DEBUG_COMMENT("heuristics.c:kick_function", "distances to sum {%f, %f, %f}", distance_matrix[path[start - 1] * nnodes + path[start + 2]], distance_matrix[path[start + 3] * nnodes + path[start]], distance_matrix[path[start + 1] * nnodes + path[start + 4]]);
-        DEBUG_COMMENT("heuristics.c:kick_function", "distances to subtract {%f, %f, %f}", distance_matrix[path[start - 1] * nnodes + path[start]], distance_matrix[path[start + 1] * nnodes + path[start + 2]], distance_matrix[path[start + 3] * nnodes + path[start + 4]]);
-        DEBUG_COMMENT("heuristics.c:kick_function", "tour_length=%f", *tour_length);
-        count += 3;
 
-        while (count < k)
-        {
 
-            int lower = 0;
-            int upper = nnodes - 6;
-            int start = (rand() % (upper - lower + 1)) + lower;
-            swap(path, start, start + 1);
-            DEBUG_COMMENT("heuristics.c:kick_function", "start=%d", start);
-            *tour_length += distance_matrix[path[start - 1] * nnodes + path[start + 1]] + distance_matrix[path[start + 2] * nnodes + path[start]] -
-                            distance_matrix[path[start - 1] * nnodes + path[start]] - distance_matrix[path[start + 1] * nnodes + path[start + 2]];
-            DEBUG_COMMENT("heuristics.c:kick_function", "tour_length=%f", *tour_length);
-            count += 2;
-        }
-    }
-    else
-    {
-        while (count < k)
-        {
-            int lower = 0;
-            int upper = nnodes - 6;
-            int start = (rand() % (upper - lower + 1)) + lower;
-            swap(path, start, start + 1);
-            DEBUG_COMMENT("heuristics.c:kick_function", "start=%d", start);
-            *tour_length += distance_matrix[path[start - 1] * nnodes + path[start + 1]] + distance_matrix[path[start + 2] * nnodes + path[start]] -
-                            distance_matrix[path[start - 1] * nnodes + path[start]] - distance_matrix[path[start + 1] * nnodes + path[start + 2]];
-            DEBUG_COMMENT("heuristics.c:kick_function", "tour_length=%f", *tour_length);
-            count += 2;
-        }
+    for (int i = 0; i < k;i++){
+        int firstValue, secondValue, thirdValue;
+        generateNodes(&firstValue, &secondValue, &thirdValue);
+        DEBUG_COMMENT("heuristics.c:kick_function", " [%d,%d,%d]", firstValue, secondValue, thirdValue);
+
     }
     CRITICAL_COMMENT("heuristics.c:kick_function", "tour_length=%f", *tour_length);
 }
