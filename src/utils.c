@@ -86,6 +86,14 @@ double get_tour_length(const int *path, const int nnodes, const double *distance
     }
     return tour_length;
 }
+int feasiblePath(const int *path, const int nnodes){
+    // all nodes used
+    int check_nnodes = (nnodes * (nnodes - 1)) / 2;
+    for (int i = 0; i < nnodes; check_nnodes -= path[i++])
+        ;
+    
+    return check_nnodes == 0;
+}
 
 int assert_path(const int *path, const double *distance_matrix, const int nnodes, const double tour_length)
 {
