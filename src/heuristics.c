@@ -11,61 +11,56 @@ void vnp_k(const double *distance_matrix, int *path, int nnodes, double *tour_le
     INFO_COMMENT("heuristics.c:vnp_k", "starting the huristics loop for vnp_k");
     while (difftime(end_time, time(NULL)) > 0)
     {
-        printf("Time left: %.0f seconds\n", difftime(end_time, time(NULL)));
+        // printf("Time left: %.0f seconds\n", difftime(end_time, time(NULL)));
         two_opt(distance_matrix, nnodes, path, tour_length);
         kick_function(distance_matrix, path, nnodes, tour_length, k);
     }
 }
 
+int randomBetween(int lowerBound, int upperBound)
+{
+    int randomBetween = (rand() % (upperBound - lowerBound + 1)) + lowerBound;
+    return randomBetween;
+}
+
 void kick_function(const double *distance_matrix, int *path, int nnodes, double *tour_length, int k)
 {
-    int *start = (int *)malloc(k * sizeof(int));
-    //create a random number between 0 and nnodes/k
-    start[0] = rand() % (nnodes / k) + 1;
-    //create block size between that could be at max the number of remaining nodes divided by k
-    int max_blok_size = (nnodes - start[0]) / k - 1 ;
-    for (int i = 0; i < k; i++)
-        start[i] = start[i - 1] + rand() % max_blok_size + rand() % ((nnodes - start[i - 1]) / k - 1);
-
-    // genera a random number between 0 and 1
-    if (rand() % 2 == 0)
+    int found = 0;
+    int index_0, index_1, index_2, index_3, index_4;
+    while (found != 4)
     {
-        //if 0 then swap the blocks form the start array
-        // ABC -> BAC == (i j-1) (j k-1) (k i-1)
-        // ABC -> BAC == (j k-1) (i j-1) (k i-1) to add (k-1 i) (j-1 k) to remove (j-1 j) (k-1 k) (i-1 i)
-        for (int i = 0; i < k - 1; i = i + 2)
+        found = 0;
+        index_0 = randomBetween(1, nnodes);
+        found++;
+        index_1 = randomBetween(index_0 + 1, nnodes);
+        if (nnodes - index_1 > 6)
         {
-            int I = start[i];
-            int J = start[i + 1];
-            int K = start[i + 2];
-            swap_array_piece(path, I, J-1, J, K-1);
-            DEBUG_COMMENT("heuristics:kick_function", "swap_array_piece(%d, %d, %d, %d)", start[i], start[i + 1] - 1, start[i + 1], start[i + 2] - 1);
-            /**tour_length += distance_matrix[path[K-1] * nnodes + path[I]]
-                          + distance_matrix[path[J-1] * nnodes + path[K]]
-                          + distance_matrix[path[I-1] * nnodes + path[J]]
-                          - distance_matrix[path[J-1] * nnodes + path[J]]
-                          - distance_matrix[path[K-1] * nnodes + path[K]]
-                          - distance_matrix[path[I-1] * nnodes + path[I]];*/
+            CRITICAL_COMMENT("ENTER1", "enter1");
+            index_2 = randomBetween(index_1 + 1, nnodes);
+            found ++;
         }
-    }else{
-        swap_array_piece(path, start[k], nnodes - 1, start[k-1], start[k-1] + nnodes - start[k] - 1);
-        DEBUG_COMMENT("heuristics:kick_function", "swap_array_piece(%d, %d, %d, %d)", start[k], nnodes - 1, start[k - 1], start[k - 1] + nnodes - start[k] - 1);
-        swap_array_piece(path, start[0], start[1] - 1, start[k-1] + nnodes - start[k], start[k] - 1);
-        DEBUG_COMMENT("heuristics:kick_function", "swap_array_piece(%d, %d, %d, %d)", start[0], start[1] - 1, start[k - 1] + nnodes - start[k], start[k] - 1);
-        for (int i = k - 2; i >= 0; i = i - 2){
-            int I = start[i];
-            int J = start[i-1];
-            int K = start[i-2];
-            swap_array_piece(path, I-1, K, K-1, J-1);
-        DEBUG_COMMENT("heuristics:kick_function", "swap_array_piece(%d, %d, %d, %d)", start[i] - 1, start[i - 2], start[i - 1] - 1, start[i - 1]);
+        if (nnodes - index_2 > 4)
+        {
+            CRITICAL_COMMENT("ENTER2", "enter2");
+            index_3 = randomBetween(index_2 + 1, nnodes);
+            found ++;
+        }
+        if (nnodes - index_3 > 2)
+        {
+            CRITICAL_COMMENT("ENTER3", "enter3");
+            index_4 = randomBetween(index_3 + 1, nnodes);
+            found ++; 
+        }
+        if (found == 4){
+            index_0 --;
+            index_1 --; 
+            index_2 --; 
+            index_3 --;
+            index_4 --;
+            DEBUG_COMMENT("heuristics.c:kick_function", "found 5 indexes{%d, %d, %d, %d, %d}", index_0, index_1, index_2, index_3, index_4);
         }
     }
+    //---------------------------------------------------------------------------------------
 
-    double new_path_cost = 0;
-    for (int i = 0; i < nnodes - 1; i++)
-    {
-        new_path_cost += distance_matrix[path[i] * nnodes + path[i + 1]];
-    }
-    new_path_cost += distance_matrix[path[nnodes - 1] * nnodes + path[0]];
-    *tour_length = new_path_cost;  
+
 }
