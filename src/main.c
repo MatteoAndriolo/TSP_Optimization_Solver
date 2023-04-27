@@ -88,11 +88,11 @@ int main(int argc, char **argv)
 			}
 			else if (strcmp(passagges[j], "em") == 0)
 			{
-				extra_mileage(distance_matrix, path, instances[c_inst].nnodes, &(instances[c_inst].tour_lenght));
+				two_opt(distance_matrix, args.nnodes, path, &(instances[c_inst].tour_lenght), INFINITY);
 			}
 			else if (strcmp(passagges[j], "2opt") == 0)
 			{
-				two_opt(distance_matrix, instances[c_inst].nnodes, path, &(instances[c_inst].tour_lenght));
+				two_opt(distance_matrix, instances[c_inst].nnodes, path, &(instances[c_inst].tour_lenght), INFINITY);
 			}
 			else if (strcmp(passagges[j], "vpn") == 0)
 			{

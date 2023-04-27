@@ -11,9 +11,10 @@
  * @param matrix A pointer to the distance matrix.
  * @param size_node The number of nodes in the tour.
  * @param node A pointer to the array of nodes in the tour.
- *
+ * @param tour_lenght A pointer to the tour length.
+ * @param iterations The number of iterations to perform. (INFINITY: until no improvement is found)
  * @return void
  */
-void two_opt(const double *matrix, int size_node, int *path, double *tour_lenght);
+void two_opt(const double *matrix, int size_node, int *path, double *tour_lenght, double iterations);
 
 #endif

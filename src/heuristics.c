@@ -9,59 +9,83 @@ void vnp_k(const double *distance_matrix, int *path, int nnodes, double *tour_le
     time_t start_time = time(NULL);
     time_t end_time = start_time + duration;
     // while non finisce il tempo
+    double best_tour = INFINITY;
+    int* best_path = malloc (nnodes * sizeof(int));
     INFO_COMMENT("heuristics.c:vnp_k", "starting the huristics loop for vnp_k");
     while (difftime(end_time, time(NULL)) > 0)
     {
         printf("Time left: %.0f seconds\n", difftime(end_time, time(NULL)));
-        two_opt(distance_matrix, nnodes, path, tour_length);
+        two_opt(distance_matrix, nnodes, path, tour_length, INFINITY);
         kick_function(distance_matrix, path, nnodes, tour_length, k);
+        if (best_tour > *tour_length){
+            best_tour = *tour_length;
+            memcpy(best_path, path, nnodes * sizeof(int));
+            CRITICAL_COMMENT("heuristics.c:vnp_k", "found a better tour with length %lf", best_tour);
+            log_path(best_path, nnodes);
+        }
     }
+    *tour_length = best_tour;
+    path = best_path;
+    INFO_COMMENT("heuristics.c:vnp_k", "finished the huristics loop for vnp_k, best path found= %lf", best_tour);
+    log_path(path, nnodes);
+}
+
+int randomBetween(int lowerBound, int upperBound)
+{
+    int randomBetween = (rand() % (upperBound - lowerBound + 1)) + lowerBound;
+    return randomBetween;
 }
 
 void kick_function(const double *distance_matrix, int *path, int nnodes, double *tour_length, int k)
 {
-    int *start = (int *)malloc(k * sizeof(int));
-    start[0] = rand() % (nnodes / k);
-    for (int i = 0; i < k; i++)
-        start[i] = start[i - 1] + 5 + rand() % ((nnodes - start[i - 1]) / k - 1);
-
-    if (k % 2 == 1)
+    int found = 0;
+    int index_0, index_1, index_2, index_3, index_4;
+    while (found != 4)
     {
-        // if odd
-        // ABC -> BAC == (i j-1) (j k-1) (k i-1)
-        // ABC -> BAC == (j k-1) (i j-1) (k i-1) to add (k-1 i) (j-1 k) to remove (j-1 j) (k-1 k) (i-1 i)
-        for (int i = 0; i < k - 1; i = i + 2)
+        found = 0;
+        index_0 = 1; 
+        found++;
+        index_1 = randomBetween(index_0 + 1, nnodes);
+        if (nnodes - index_1 > 6)
         {
-            int I = start[i];
-            int J = start[i + 1];
-            int K = start[i + 2];
-            swap_array_piece(path, I, J - 1, J, K - 1);
-            DEBUG_COMMENT("heuristics:kick_function", "swap_array_piece(%d, %d, %d, %d)", start[i], start[i + 1] - 1, start[i + 1], start[i + 2] - 1);
-            /**tour_length += distance_matrix[path[K-1] * nnodes + path[I]]
-                          + distance_matrix[path[J-1] * nnodes + path[K]]
-                          + distance_matrix[path[I-1] * nnodes + path[J]]
-                          - distance_matrix[path[J-1] * nnodes + path[J]]
-                          - distance_matrix[path[K-1] * nnodes + path[K]]
-                          - distance_matrix[path[I-1] * nnodes + path[I]];*/
+            index_2 = randomBetween(index_1 + 2, nnodes);
+            found ++;
+        }
+        if (nnodes - index_2 > 4)
+        {
+            index_3 = randomBetween(index_2 + 2, nnodes);
+            found ++;
+        }
+        if (nnodes - index_3 > 2)
+        {
+            index_4 = randomBetween(index_3 + 2, nnodes);
+            found ++; 
+        }
+        if (found == 4){
+            index_0 --;
+            index_1 --; 
+            index_2 --; 
+            index_3 --;
+            index_4 --;
+            DEBUG_COMMENT("heuristics.c:kick_function", "found 5 indexes{%d, %d, %d, %d, %d}", index_0, index_1, index_2, index_3, index_4);
         }
     }
-    else
-    {
-        // if even
-        // ABCD -> CABD == (i j-1) (j k-1) (k l-1) (l i-1)
-        for (int i = 0; i < k - 1; i = i + 2)
-        {
-            swap_array_piece(path, start[i], start[i + 1] - 1, start[i + 2], start[i + 3] - 1);
-        }
+    //---------------------------------------------------------------------------------------
+    int* final_path = malloc(nnodes * sizeof(int));
+    int count = 0;
+    for (int i = 0; i < index_1; i++) final_path[count++] = path[i];
+    for (int i = index_4; i < nnodes; i++) final_path[count++] = path[i];
+    for (int i = index_4 - 1; i >= index_3; i--) final_path[count++] = path[i];
+    for (int i = index_2; i < index_3; i ++) final_path[count++] = path[i]; 
+    for (int i = index_2 - 1; i >= index_1; i--) final_path[count++] = path[i];
+    //---------------------------------------------------------------------------------------
+    for (int i = 0; i < nnodes; i++) path[i] = final_path[i];
+    *tour_length = 0; 
+    for (int i = 1; i < nnodes; i++){
+        *tour_length += distance_matrix[path[i-1] * nnodes + path[i]];
     }
+    *tour_length += distance_matrix[path[0] * nnodes + path[nnodes - 1]];
 
-    double new_path_cost = 0;
-    for (int i = 0; i < nnodes - 1; i++)
-    {
-        new_path_cost += distance_matrix[path[i] * nnodes + path[i + 1]];
-    }
-    new_path_cost += distance_matrix[path[nnodes - 1] * nnodes + path[0]];
-    *tour_length = new_path_cost;
 }
 
 //-----------------------------------------------------------------------------------------------
