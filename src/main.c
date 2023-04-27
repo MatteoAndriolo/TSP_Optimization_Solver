@@ -115,7 +115,7 @@ int main(int argc, char **argv)
 			if(j==n_passagges-1) strcpy(title,"\0");
 
 		}
-		sprintf(title + strlen(title), str_startingNode);
+		//sprintf(title + strlen(title), str_startingNode);
 		free(path);
 	}
 	free(distance_matrix);
