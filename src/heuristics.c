@@ -193,23 +193,31 @@ double getFitness(const double *distance_matrix, int *path, int nnodes)
     return fitness;
 }
 
-int getChampion(Individual *champion, Individual **population, int populationSize, int nnodes)
+void getChampion(Individual *champion, Individual population[], int populationSize, int nnodes)
 {
-    double min = population[0]->fitness;
-    int ind_min = 0;
+    DEBUG_COMMENT("getChampion", "fitness: ");
+    champion->fitness = population[0].fitness;
+    champion->path = population[0].path;
+    double max = 0;
+    int ind_max = 0;
     for (int i = 1; i < populationSize; i++)
     {
-        if (population[i]->fitness < min)
+        DEBUG_COMMENT("getChampion", "fitness: ");
+        if (population[i].fitness < champion->fitness)
         {
-            min = population[i]->fitness;
-            ind_min = i;
+            champion->fitness = population[i].fitness;
+            champion->path = population[i].path;
+        }
+        if (population[i].fitness > max)
+        {
+            max = population[i].fitness;
+            ind_max = i;
         }
     }
-    champion->fitness = min;
-    champion->path = population[ind_min]->path;
-    return ind_min;
+    DEBUG_COMMENT("heuristic.c::getChampion", "Champion fitness is %lf", champion->fitness);
+    DEBUG_COMMENT("heuristic.c::getChampion", "Champion path is %s", getPath(champion->path, nnodes));
+    DEBUG_COMMENT("heuristic.c::getChampion", "Max fitness is %lf in specimen %d", max, ind_max);
 }
-
 int *genetic_merge_parents(Individual *child, const Individual *p1, const Individual *p2, const double *distance_matrix, const int nnodes)
 {
     int *isMissing = malloc(nnodes * sizeof(int));
@@ -286,40 +294,19 @@ void genetic_algorithm(const double *distance_matrix, int *path, int nnodes, dou
         DEBUG_COMMENT("heuristic::genetic_algorithm", "fitness: %lf", population[i].fitness);
     }
 
-    DEBUG_COMMENT("heuristic::genetic_algorithm", "Generated random population");
+    INFO_COMMENT("heuristic::genetic_algorithm", "Generated random population");
 
-    // indexChampion = getChampion(&champion, &population, populationSize, nnodes);
-    /**********************/
-    double min = population[0].fitness;
-    double max = 0;
-    int ind_min = 0;
-    for (int i = 1; i < populationSize; i++)
-    {
-        if (population[i].fitness < min)
-        {
-            min = population[i].fitness;
-            ind_min = i;
-        }
-        if (population[i].fitness > max)
-        {
-            max = population[i].fitness;
-        }
-    }
-    DEBUG_COMMENT("heuristic::getChampion", "Champion: %d", ind_min);
-    int indexChampion = ind_min;
+    /*******************/
+    /* Search champion */
+    /*******************/
     Individual champion;
-    champion.fitness = min;
-    champion.path = population[ind_min].path;
+    getChampion(&champion, population, populationSize, nnodes);
 
     /** ENCUMBENT **/
-    Individual encumbment = {NULL, INFINITY};
-    double encumbment_fitness = INFINITY;
-    int *encumbment_path = malloc(nnodes * sizeof(int));
-    if (champion.fitness < encumbment_fitness)
-    {
-        encumbment_fitness = champion.fitness;
-        memcpy(encumbment_path, champion.path, nnodes * sizeof(int));
-    }
+    Individual encumbment = champion;
+    DEBUG_COMMENT("heuristic::genetic_algorithm", "Encumbment with fitness %lf", champion.fitness);
+    return;
+    int indexChampion;
 
     /***********************************/
     /* Start generating new population */
@@ -468,7 +455,6 @@ void genetic_algorithm(const double *distance_matrix, int *path, int nnodes, dou
         if (champion.fitness < encumbment.fitness)
         {
             encumbment = champion;
-            memcpy(encumbment_path, champion.path, nnodes * sizeof(int));
         }
         printf("Champion fitness = %lf\n", champion.fitness);
     }
@@ -482,6 +468,6 @@ void genetic_algorithm(const double *distance_matrix, int *path, int nnodes, dou
     {
         free(population[i].path);
     }
-    path = encumbment_path;
+    path = encumbment.path;
     free(population);
 }
