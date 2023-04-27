@@ -92,7 +92,7 @@ int main(int argc, char **argv)
 			}
 			if (strcmp(passagges[j], "2opt") == 0)
 			{
-				two_opt(distance_matrix, args.nnodes, path, &(instances[c_inst].tour_lenght));
+				two_opt(distance_matrix, args.nnodes, path, &(instances[c_inst].tour_lenght), INFINITY);
 			}
 			if (strcmp(passagges[j], "vpn")==0)
 			{

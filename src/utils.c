@@ -130,3 +130,14 @@ void swap_array_piece(int* arr, int start1, int end1, int start2, int end2) {
     memcpy(&arr[start1], &arr[start2], sizeof(int) * (end1 - start1 + 1)); // Copy the second piece to the first piece
     memcpy(&arr[start2], temp, sizeof(int) * (end1 - start1 + 1)); // Copy the temp array (first piece) to the second piece
 }
+void two_opt_move(int *path, int n1, int n2, int nnodes)
+{
+    int t=(n1+1)%nnodes;
+    for (int z = 0; z < (int)(n2 - n1 + 1) / 2; z++) // reverse order cells (n1+1,index_min)
+    {
+        double temp = path[z + t];
+        path[z + t] = path[n2 - z];
+        path[n2 - z] = temp;
+    }
+
+}

@@ -115,4 +115,6 @@ void generate_random_starting_nodes(int *starting_nodes, int num_nodes, int num_
  */
 void swap_array_piece(int * arr, int start1, int end1, int start2, int end2);
 
+void two_opt_move(int *path, int n1, int n2, int nnodes);
+
 #endif
