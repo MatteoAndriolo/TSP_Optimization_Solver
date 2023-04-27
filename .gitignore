@@ -238,4 +238,6 @@ poetry.toml
 
 vgcore.*
 src/*.p
+plot/
+bin/
 
