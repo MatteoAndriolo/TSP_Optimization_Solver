@@ -30,7 +30,7 @@ void two_opt(const double *distance_matrix, int nnodes, int *path, double *tour_
                 c_iter++;
                 if(c_iter>iterations)
                     return;
-                DEBUG_COMMENT("refinement:2opt", "delta %lf, tl %lf", delta, tour_length);
+                //DEBUG_COMMENT("refinement:2opt", "delta %lf, tl %lf", delta, tour_length);
             }
         }
     }
