@@ -100,7 +100,7 @@ void tabu_search(const double *distance_matrix, int *path, int nnodes, double *t
     double min_increase = INFTY;
     int improvementOperation[2];
     double pendingTourLenght;
-    int tabuNodes[2];
+    int tabuNodes[2] = {-1, -1};
     double cost_old_edge, cost_new_edge, cost_old_edge2, cost_new_edge2;
     int encumbment_path[nnodes];
     memcpy(encumbment_path, path, nnodes * sizeof(int));
@@ -184,6 +184,11 @@ void tabu_search(const double *distance_matrix, int *path, int nnodes, double *t
 
 //---------------------------------------------------------------------------------------------
 // Genetic Algorithm
+int randomBetween(int lowerBound, int upperBound)
+{
+    int randomBetween = (rand() % (upperBound - lowerBound + 1)) + lowerBound;
+    return randomBetween;
+}
 int compare_individuals(const void *a, const void *b)
 {
     const Individual *ind_a = (const Individual *)a;
@@ -235,8 +240,9 @@ static int genetic_merge_parents(Individual *child, const Individual *p1, const 
         isMissing[i] = 1;
     }
     // which portion of port 1 i will use?
-    //int portion1 = (int)(nnodes * (4/10) ) + rand() % (int)(nnodes * (2/10)+1); // portion between quarters
-    int portion1 = (int)nnodes * 3/5; // portion between quarters
+    // int portion1 = (int)(nnodes * (4/10) ) + rand() % (int)(nnodes * (2/10)+1); // portion between quarters
+    int portion1 = randomBetween((int)(nnodes * (7 / 10)), nnodes - 1); // portion between quarters
+
     DEBUG_COMMENT("genetic_merge_parents", "portion1: %d", portion1);
 
     // START MERGING
@@ -286,7 +292,8 @@ void genetic_repair_child(Individual *child, const double *distance_matrix, int 
 void genetic_add_mutations(Individual *child, int nnodes, int prob_mutation)
 {
     int p1, p2, tmp;
-    for (int i = 0; i < rand() % prob_mutation; i++)
+    int num_mut= randomBetween(1, nnodes/2);
+    for (int i = 0; i < num_mut; i++)
     {
         p1 = rand() % nnodes;
         do
@@ -310,8 +317,8 @@ void genetic_algorithm(const double *distance_matrix, int *path, int nnodes, dou
     char *tmp_string;
     int prob_deletion = 5;
     int prob_mutation = 5;
-    //int newGenerationDimension = populationSize * 1.3;
-    int newGenerationDimension = populationSize ;
+    // int newGenerationDimension = populationSize * 1.3;
+    int newGenerationDimension = populationSize;
     int pps;
     // Generate random population
     Individual *population = malloc(populationSize * sizeof(Individual));
@@ -348,7 +355,7 @@ void genetic_algorithm(const double *distance_matrix, int *path, int nnodes, dou
     /***********************************/
     /* Start generating new population */
     /***********************************/
-    Individual *newGeneration ;
+    Individual *newGeneration;
     Individual child;
     child.path = malloc(nnodes * sizeof(int));
 
@@ -356,7 +363,7 @@ void genetic_algorithm(const double *distance_matrix, int *path, int nnodes, dou
     double totalCumulative = 0;
     for (int i = 0; i < newGenerationDimension; cumulativeProbabilityRemove[i] = 1 / (i + 1), totalCumulative += 1 / (i + 1), i++)
         ;
-    //double prob_selection;
+    // double prob_selection;
 
     int indexParent1, indexParent2;
     int effort;
@@ -384,11 +391,11 @@ void genetic_algorithm(const double *distance_matrix, int *path, int nnodes, dou
                 indexParent2 = rand() % populationSize;
             }
             DEBUG_COMMENT("heuristic::genetic_algorithm", "Selected parents %d and %d", indexParent1, indexParent2);
-            tmp_string=malloc(nnodes*sizeof(char));
+            tmp_string = malloc(nnodes * sizeof(char));
             tmp_string = getPath(population[indexParent1].path, nnodes);
             DEBUG_COMMENT("heuristic::genetic_algorithm", "Path p1: %s", tmp_string);
             free(tmp_string);
-            tmp_string=malloc(nnodes*sizeof(char));
+            tmp_string = malloc(nnodes * sizeof(char));
             tmp_string = getPath(population[indexParent2].path, nnodes);
             DEBUG_COMMENT("heuristic::genetic_algorithm", "Path p2: %s", tmp_string);
             free(tmp_string);
@@ -396,7 +403,7 @@ void genetic_algorithm(const double *distance_matrix, int *path, int nnodes, dou
             /* Merge Parents */
             /*****************/
             effort = genetic_merge_parents(&child, &population[indexParent1], &population[indexParent2], nnodes, prob_deletion);
-            effort = 100;
+            effort = nnodes * 4;
 #ifndef PRODUCTION
             tmp_string = getPath(child.path, nnodes);
             DEBUG_COMMENT("heuristic::genetic_algorithm", "merged\t%s", tmp_string);
@@ -405,7 +412,7 @@ void genetic_algorithm(const double *distance_matrix, int *path, int nnodes, dou
             /**********/
             /* Repair */
             /**********/
-            genetic_repair_child(&child, distance_matrix, nnodes, effort);
+            genetic_repair_child(&child, distance_matrix, nnodes, INFINITY);
 
 #ifndef PRODUCTION
             tmp_string = getPath(child.path, nnodes);
@@ -416,7 +423,7 @@ void genetic_algorithm(const double *distance_matrix, int *path, int nnodes, dou
             /*****************/
             /* Add mutations */
             /*****************/
-            //if(iter<iterations-1)
+            // if(iter<iterations-1)
             genetic_add_mutations(&child, nnodes, prob_mutation);
 
             /***************/
@@ -451,50 +458,50 @@ void genetic_algorithm(const double *distance_matrix, int *path, int nnodes, dou
 
         INFO_COMMENT("heuristic::genetic_algorithm", "Champion of iteration %d has fitness %lf", iter, minFitnessGeneration);
 
-//         /***************************/
-//         /* Kinda natural selection */
-//         /***************************/
-//         qsort(newGeneration, pps, sizeof(Individual), compare_individuals);
-//         int *indices_selected = malloc((pps - populationSize) * sizeof(int));
-//         int size_indicex = 0;
-//         int index, indRemove_found;
+        //         /***************************/
+        //         /* Kinda natural selection */
+        //         /***************************/
+        //         qsort(newGeneration, pps, sizeof(Individual), compare_individuals);
+        //         int *indices_selected = malloc((pps - populationSize) * sizeof(int));
+        //         int size_indicex = 0;
+        //         int index, indRemove_found;
 
-//         for (int i = 0; i < pps - populationSize; i++)
-//         {
-//             indRemove_found = 0;
-//             do
-//             {
-//                 prob_selection = ((double)rand() / RAND_MAX) * totalCumulative;
-//                 index = 0;
-//                 while (prob_selection > 0)
-//                 {
-//                     prob_selection -= cumulativeProbabilityRemove[index];
-//                     index++;
-//                 }
-//                 index--;
+        //         for (int i = 0; i < pps - populationSize; i++)
+        //         {
+        //             indRemove_found = 0;
+        //             do
+        //             {
+        //                 prob_selection = ((double)rand() / RAND_MAX) * totalCumulative;
+        //                 index = 0;
+        //                 while (prob_selection > 0)
+        //                 {
+        //                     prob_selection -= cumulativeProbabilityRemove[index];
+        //                     index++;
+        //                 }
+        //                 index--;
 
-//                 for (int j = 0; j < size_indicex; j++)
-//                 {
-//                     if (indices_selected[j] == index)
-//                     {
-//                         indRemove_found = 1;
-//                         break;
-//                     }
-//                 }
-//             } while (indRemove_found);
-//             indices_selected[size_indicex++] = index;
-//         }
+        //                 for (int j = 0; j < size_indicex; j++)
+        //                 {
+        //                     if (indices_selected[j] == index)
+        //                     {
+        //                         indRemove_found = 1;
+        //                         break;
+        //                     }
+        //                 }
+        //             } while (indRemove_found);
+        //             indices_selected[size_indicex++] = index;
+        //         }
 
-//         qsort(indices_selected, size_indicex, sizeof(int), compare_ints);
-// #ifndef PRODUCTION
-//         tmp_string = getPath(indices_selected, size_indicex);
-//         DEBUG_COMMENT("heurisict.c::genetic_algorithm", "indices selected: %s", tmp_string);
-//         free(tmp_string);
-// #endif
-//         return;
-//         for (int i = size_indicex; i > 0; i--)
-//         {
-//         }
+        //         qsort(indices_selected, size_indicex, sizeof(int), compare_ints);
+        // #ifndef PRODUCTION
+        //         tmp_string = getPath(indices_selected, size_indicex);
+        //         DEBUG_COMMENT("heurisict.c::genetic_algorithm", "indices selected: %s", tmp_string);
+        //         free(tmp_string);
+        // #endif
+        //         return;
+        //         for (int i = size_indicex; i > 0; i--)
+        //         {
+        //         }
 
         /*******************************************/
         /* Store new generation, memory management */
@@ -516,7 +523,8 @@ void genetic_algorithm(const double *distance_matrix, int *path, int nnodes, dou
         /*************/
         if (champion.fitness < encumbment.fitness)
             encumbment.fitness = champion.fitness;
-        else{
+        else
+        {
             break;
         }
         memcpy(encumbment.path, champion.path, nnodes * sizeof(int));
@@ -544,5 +552,5 @@ void genetic_algorithm(const double *distance_matrix, int *path, int nnodes, dou
 
     free(child.path);
     free(population);
-    //free(newGeneration);
+    // free(newGeneration);
 }

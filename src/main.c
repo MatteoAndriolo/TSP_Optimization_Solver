@@ -105,7 +105,7 @@ int main(int argc, char **argv)
 				tabu_search(distance_matrix, path, instances[c_inst].nnodes,&instances[c_inst].tour_lenght, args.nnodes/10 );
 			}else if (strcmp(passagges[j], "gen")==0)
 			{
-				genetic_algorithm(distance_matrix, path, instances[c_inst].nnodes,&instances[c_inst].tour_lenght, 10000, 10);
+				genetic_algorithm(distance_matrix, path, instances[c_inst].nnodes,&instances[c_inst].tour_lenght, 40000, 100);
 			}
 			else
 			{
