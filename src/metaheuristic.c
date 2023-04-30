@@ -7,55 +7,46 @@ double randomBetween_d(double lowerBound, double upperBound)
     return randomBetween;
 }
 
-void simulate_anealling(const double *distance_matrix, int *path, int nnodes, double *tour_length, double T, int duration)
+double energy_probabilities(double cost_current, double cost_new, double T, double coefficient)
+{
+    // the coefficient shold be between 0 and 1
+    // the more is near to 0 the more we have probability to take bad moves 
+    // the more is near to 1 the more we are not allowd to take a bad move 
+    // suggestion between 0.6 and 0.9 but there is a proble does not depend on the current value new cost and current cost
+    if (cost_new < cost_current) return 1;
+    return exp( - coefficient / T);
+}
+
+void simulate_anealling(const double *distance_matrix, int *path, int nnodes, double *tour_length, double k_max, int duration)
 {
     INFO_COMMENT("metaheuristic.c:simulate_anealling", "Starting simulated annealing metaheuristic");
-    double curren_tour_lenght = *tour_length;
-    double best_tour_length = *tour_length;
-    double next_tour_length = *tour_length;
-    int *current_path = malloc(nnodes * sizeof(int));
-    int *next_tour = malloc(nnodes * sizeof(int));
-    int *best_tour = malloc(nnodes * sizeof(int));
-    memcpy(best_tour, path, nnodes * sizeof(int));
-    memcpy(current_path, path, nnodes * sizeof(int));
-    memcpy(next_tour, path, nnodes * sizeof(int));
-    time_t start_time = time(NULL);
-    time_t end_time = start_time + duration;
-    double delta_E = 0;
+    double T;
 
-    while (T > 0 && difftime(end_time, time(NULL)) > 0)
+    int *current_state = malloc(nnodes * sizeof(int));
+    double current_state_cost = *tour_length;
+    memcpy(current_state, path, nnodes * sizeof(int));
+
+    int *new_state = malloc(nnodes * sizeof(int));
+    double new_state_cost;
+
+    for (int k = 0; k < k_max; k++)
     {
-        T -= 1; // lower slowly the temperature
-        // T high a lot of kick function done 
-        kick_function(distance_matrix, path, nnodes, tour_length, (int)T);
-        memcpy(next_tour, path, nnodes * sizeof(int));
-        next_tour_length = *tour_length;
-        delta_E = next_tour_length - curren_tour_lenght;
-        if (delta_E > 0)
+        T = (1 - ((double)k / k_max));
+        kick_function(distance_matrix, current_state, nnodes, &current_state_cost, 5);
+        two_opt(distance_matrix, nnodes, current_state, &current_state_cost, INFINITY);
+        new_state_cost = current_state_cost;
+        memcpy(new_state, current_state, nnodes * sizeof(int));
+        double value = energy_probabilities(current_state_cost, new_state_cost, T, 0.6);
+        double random = randomBetween_d(0, 1);
+        DEBUG_COMMENT("metaheuristic.c:simulate_anealling", "k: %d, T: %f, value: %f, random: %f", k, T, value, random);
+        if (value >= random)
         {
-            two_opt(distance_matrix, nnodes,next_tour, &next_tour_length, INFINITY);
-            memcpy(current_path, next_tour, nnodes * sizeof(int));
-            curren_tour_lenght = next_tour_length;
-            CRITICAL_COMMENT("metaheuristic.c:simulate_anealling", " BETTER SOLUTION FOUND - %lf", delta_E);
-            if (curren_tour_lenght < best_tour_length)
-            {
-                best_tour_length = curren_tour_lenght;
-                memcpy(best_tour, current_path, nnodes * sizeof(int));
-                CRITICAL_COMMENT("metaheuristic.c:simulate_anealling", " BETTER SOLUTION FOUND - %lf", delta_E);
-            }
-        }
-        else
-        {
-            if (randomBetween_d(0, 1) < exp(delta_E / T))
-            {
-                CRITICAL_COMMENT("metaheuristic.c:simulate_anealling", " ALLOWED BAD MOVE - %lf", delta_E);
-                memcpy(current_path, next_tour, nnodes * sizeof(int));
-                curren_tour_lenght = next_tour_length;
-            }
+            memcpy(current_state, new_state, nnodes * sizeof(int));
+            current_state_cost = new_state_cost;
+            CRITICAL_COMMENT("metaheuristic.c:simulate_anealling", "New state accepted, cost: %f", current_state_cost);
         }
     }
-    memcpy(path, best_tour, nnodes * sizeof(int));
-    *tour_length = best_tour_length;
-    INFO_COMMENT("metaheuristic.c:simulate_anealling", "Finished simulated annealing metaheuristic, best path found= %lf", *tour_length);
-
+    memcpy(path, current_state, nnodes * sizeof(int));
+    *tour_length = current_state_cost;
+    INFO_COMMENT("metaheuristic.c:simulate_anealling", "Simulated annealing metaheuristic finished");
 }

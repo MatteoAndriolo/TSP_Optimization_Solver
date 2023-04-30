@@ -99,8 +99,9 @@ int main(int argc, char **argv)
 			{
 				vnp_k(distance_matrix, path, instances[c_inst].nnodes, &instances[c_inst].tour_lenght, 5, 4);
 			}
-			else if (strcmp(passagges[j], "sa") == 0){
-				simulate_anealling(distance_matrix, path, instances[c_inst].nnodes, &instances[c_inst].tour_lenght, 100000, 40);
+			else if (strcmp(passagges[j], "sa")== 0)
+			{
+				simulate_anealling(distance_matrix, path, instances[c_inst].nnodes, &instances[c_inst].tour_lenght, 10000, 100);
 			}
 
 			if (strcmp(passagges[j], "tabu")==0)
@@ -128,3 +129,4 @@ int main(int argc, char **argv)
 	logger_close();
 	return 0;
 }
+
