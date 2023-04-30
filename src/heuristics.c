@@ -85,7 +85,6 @@ void kick_function(const double *distance_matrix, int *path, int nnodes, double 
         *tour_length += distance_matrix[path[i-1] * nnodes + path[i]];
     }
     *tour_length += distance_matrix[path[0] * nnodes + path[nnodes - 1]];
-
 }
 
 //-----------------------------------------------------------------------------------------------
