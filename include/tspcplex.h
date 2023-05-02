@@ -9,6 +9,15 @@
 #include "logger.h"
 #include "constraint.h"
 #include "utilscplex.h"
+#include <concorde.h>
+
+typedef struct {
+    Instance *inst;
+    CPXCENVptr env; 
+    void * cbdata; 
+    int wherefrom;
+    int * useraction_p;
+}input;
 
 /**
  * @brief TSPopt
@@ -33,5 +42,7 @@ void build_model(Instance *inst, CPXENVptr env, CPXLPptr lp);
  * @param ncomp number of components
 */
 void build_sol(const double *xstar, Instance *inst, int * succ, int *comp, int* ncomp);
+
+void TSPopt_concorde(Instance *inst, int* path, int *succ, int *comp, int* ncomp);
 
 #endif

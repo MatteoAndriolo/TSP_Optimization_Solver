@@ -136,7 +136,7 @@ void TSPopt(Instance *inst, int *path, int callbacks)
 	CPXLONG contextid = CPX_CALLBACKCONTEXT_CANDIDATE;
 	if (CPXcallbacksetfunc(env, lp, contextid, my_callback, inst))
 		ERROR_COMMENT("tspcplex.c:TSPopt", "CPXcallbacksetfunc() error");
-	//add_subtour_constraints(inst, env, lp);
+	// add_subtour_constraints(inst, env, lp);
 	error = CPXmipopt(env, lp);
 	if (error)
 	{
@@ -250,5 +250,116 @@ void build_sol(const double *xstar, Instance *inst, int *succ, int *comp, int *n
 						 // go to the next component...
 		DEBUG_COMMENT("tspcplex.c:build_model", "succ: %s", getPath(succ, inst->nnodes));
 		DEBUG_COMMENT("tspcplex.c:build_model", "comp: %s", getPath(comp, inst->nnodes));
+	}
+}
+
+int  doit_fn_concorde(double cutval, int cutcount, int * cut, void* in_param){
+	in_param = (input*) in_param; 
+	UserCutCallback(in_param->env, in_param->cbdata, in_param->wherefrom, in_param->useraction_p);
+}
+
+/********************************************************************************************************/
+static int CPXPUBLIC my_callback(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, void *userhandle)
+/********************************************************************************************************/
+{
+	Instance *inst = (Instance *)userhandle;
+	double *xstar = (double *)malloc(inst->ncols * sizeof(double));
+	double objval = CPX_INFBOUND;
+	int izero = 0;
+	int purgeable = CPX_USECUT_FILTER;
+	int local = 0;
+	if (contextid == CPX_CALLBACKCONTEXT_CANDIDATE && CPXcallbackgetcandidatepoint(context, xstar, 0, inst->ncols - 1, &objval))
+		print_error("CPXcallbackgetcandidatepoint error");
+	if (contextid == CPX_CALLBACKCONTEXT_RELAXATION && CPXcallbackgetrelaxationpoint(context, xstar, 0, inst->ncols - 1, &objval))
+		print_error("CPXcallbackgetrelaxationpoint error");
+	
+	if (contextid == CPX_CALLBACKCONTEXT_CANDIDATE)
+	{
+		// if xstart is infeasible, find a violated cut and store it in the usual Cplex's data structute (rhs, sense, nnz, index and value)
+		INFO_COMMENT("constraint.c:add_subtour_constraints", "created xstar");
+		int *succ = (int *)malloc(sizeof(int) * inst->nnodes);
+		int *comp = (int *)malloc(sizeof(int) * inst->nnodes);
+		int ncomp;
+		build_sol(xstar, inst, succ, comp, &ncomp);
+		DEBUG_COMMENT("constraint.c:add_subtour_constraints", "ncomp = %d", ncomp);
+		DEBUG_COMMENT("constraint.c:add_subtour_constraint", "succ: %s", getPath(succ, inst->nnodes));
+		DEBUG_COMMENT("constraint.c:add_subtour_constraint", "comp: %s", getPath(comp, inst->nnodes));
+
+		if (ncomp > 1)
+		{
+			for (int cc = 1; cc <= ncomp; cc++)
+			{
+				int nncc = 0;
+				for (int i = 0; i < inst->nnodes; i++)
+				{
+					if (comp[i] == cc)
+						nncc++;
+				}
+
+				int *index = (int *)calloc((inst->nnodes * (inst->nnodes - 1)) / 2, sizeof(int));
+				double *value = (double *)calloc((inst->nnodes * (inst->nnodes - 1)) / 2, sizeof(double));
+				char sense = 'L'; // 'L' for less than or equal to constraint
+				int nnz = 0;
+
+				int j = 0;
+				int k;
+				while (j < inst->nnodes - 1)
+				{
+					while (comp[j] != cc && j < inst->nnodes)
+					{
+						j++;
+					}
+					k = j + 1;
+					while (k < inst->nnodes)
+					{
+						if (comp[k] == cc)
+						{
+							index[nnz] = xpos(j, k, inst);
+							value[nnz] = 1.0;
+							nnz++;
+						}
+						k++;
+					}
+					j++;
+				}
+
+				DEBUG_COMMENT("constraint.c:add_subtour_constraints", "nnz = %d", nnz);
+				int izero = 0;
+				double rsh = nncc - 1;
+
+				DEBUG_COMMENT("constraint.c:add_subtour_constraints", "insert row");
+				if (CPXcallbackrejectcandidate(context, 1, nnz, &rsh, &sense, &izero, index, value))
+					ERROR_COMMENT("constraint.c:my_callback", "CPXaddrows(): error 1");
+				free(index);
+				free(value);
+				WARNING_COMMENT("constraint.c:add_subtour_constraints", "FREEING MEMORY, index, value, index1, cname[0], cname");
+			}
+		}
+		DEBUG_COMMENT("awdawd", " final ncomp %d ", ncomp);
+		free(succ);
+		free(comp);
+		WARNING_COMMENT("constraint.c:add_subtour_constraints", "FREEING MEMORY, xstar, succ, comp");
+	}
+
+	if (contextid == CPX_CALLBACKCONTEXT_RELAXATION)
+	{
+		int ncomp = 0;
+		int **comps_count = (int **)malloc(sizeof(int *));
+		int **comps = (int **)malloc(sizeof(int *));
+		int elist[inst->nnodes * (inst->nnodes - 1)];
+		int loader = 0;
+		for (int i = 0; i < inst->nnodes; i++)
+		{
+			for (int j = i + 1; j < inst->nnodes; j++)
+			{
+				elist[loader++] = i;
+				elist[loader++] = j;
+			}
+		}
+		if(CCcut_connect_components(inst->nnodes, inst->nnodes * (inst->nnodes - 1) / 2, xstar, &ncomp, &comps_count, &comps)) print_error("CCcut_connect_components error");
+		if (ncomp == 1)
+		{
+			if(CCcut_violated_cuts(inst->nnodes, inst->nnodes * (inst->nnodes - 1) / 2, elist, xstar, 2.0 - EPSILON, doit_fn_concorde, (void *) in)) print_error("CCcut_violated_cuts error");
+		}
 	}
 }
