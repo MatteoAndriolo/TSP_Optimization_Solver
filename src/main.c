@@ -106,6 +106,8 @@ int main(int argc, char **argv)
 			}else if (strcmp(passagges[j], "gen")==0)
 			{
 				genetic_algorithm(distance_matrix, path, instances[c_inst].nnodes,&instances[c_inst].tour_lenght, 40000, 100);
+			}else if(strcmp(passagges[j], "test")==0){
+				continue;
 			}
 			else
 			{
