@@ -35,10 +35,21 @@ void build_model(Instance *inst, CPXENVptr env, CPXLPptr lp)
 	free(cname);
 }
 
+// https://www.math.uwaterloo.ca/tsp/concorde/DOC/cut.html#CCcut_violated_cuts
+/**
+ * @brief doit_fn_concorde
+ * 
+ * @param cutval : value of the cut
+ * @param cutcount : number of nodes in the cut
+ * @param cut : array of members of cut
+ * @param inparam : pass_param of CCcut_violated_cuts 
+*/
 int doit_fn_concorde(double cutval, int cutcount, int* cut, void* inparam){
 	Input *in= (Input*)inparam;
+	
 	//TODO complete this part
-	int status = CPXcutcallbackadd(in->env, in->cbdata, in->wherefrom, nzcnt, rhs, sense, indices, values, CPX_USECUT_FORCE);
+	// https://www.ibm.com/docs/en/cofz/12.8.0?topic=cpxxcallbackaddusercuts-cpxcallbackaddusercuts
+	int status = CPXcallbackaddusercuts(in->context, 1, cutcount, (double*) &cutval, 'L', );
 
 	return 0;
 }
@@ -50,7 +61,7 @@ int my_callback_relaxation(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, voi
 	int ncomp = 0;
 	int **comps_count = (int **)malloc(sizeof(int *));
 	int **comps = (int **)malloc(sizeof(int *));
-	int elist[inst->nnodes * (inst->nnodes - 1)];
+	int elist[ecount];
 	int loader = 0;
 	for (int i = 0; i < inst->nnodes; i++)
 	{
@@ -60,13 +71,14 @@ int my_callback_relaxation(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, voi
 			elist[loader++] = j;
 		}
 	}
+	// https://www.math.uwaterloo.ca/tsp/concorde/DOC/cut.html#CCcut_violated_cuts
 	if (CCcut_connect_components(inst->nnodes, ecount,elist, xstar, &ncomp, comps_count, comps))
 		print_error("CCcut_connect_components error");
 	if (ncomp == 1)
 	{
 		Input *in = (Input *)malloc(sizeof(Input));
-		//in->cbdata
-		in->env=env;
+		in->context=context;
+		in->elist=elist;
 		in->inst=inst;
 		//in->useraction_p
 		//in->wherefrom

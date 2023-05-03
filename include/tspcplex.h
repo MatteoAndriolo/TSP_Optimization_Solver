@@ -13,8 +13,9 @@
 
 typedef struct{
     Instance *inst;
-    CPXCENVptr env;
-    void* cbdata;
+    CPXCALLBACKCONTEXTptr context;
+    int* elist;
+    int ecount;
     int wherefrom;
     int* useraction_p;
 }Input;
