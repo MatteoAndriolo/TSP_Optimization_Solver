@@ -13,6 +13,8 @@
 
 typedef struct{
     Instance *inst;
+    CPXENVptr env;
+    CPXLPptr lp;
     CPXCALLBACKCONTEXTptr context;
     int* elist;
     int ecount;

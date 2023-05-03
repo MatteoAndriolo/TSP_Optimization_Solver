@@ -67,6 +67,9 @@ typedef struct
 				   // double *load_min; // minimum load when leaving a node
 				   // double *load_max; // maximum load when leaving a node
 
+	CPXENVptr env;
+	CPXLPptr lp;
+	CPXCALLBACKCONTEXTptr context;
 } Instance;
 
 // inline

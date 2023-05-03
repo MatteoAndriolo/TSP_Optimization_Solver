@@ -38,26 +38,33 @@ void build_model(Instance *inst, CPXENVptr env, CPXLPptr lp)
 // https://www.math.uwaterloo.ca/tsp/concorde/DOC/cut.html#CCcut_violated_cuts
 /**
  * @brief doit_fn_concorde
- * 
+ *
  * @param cutval : value of the cut
  * @param cutcount : number of nodes in the cut
  * @param cut : array of members of cut
- * @param inparam : pass_param of CCcut_violated_cuts 
-*/
-int doit_fn_concorde(double cutval, int cutcount, int* cut, void* inparam){
-	Input *in= (Input*)inparam;
-	
-	//TODO complete this part
+ * @param inparam : pass_param of CCcut_violated_cuts
+ */
+int doit_fn_concorde(double cutval, int cutcount, int *cut, void *inparam)
+{
+	Input *in = (Input *)inparam;
+	int num_nonzero = 0;
+	int ncols = CPXgetnumcols(in->env, in->lp);
+	int *cmatbeg = malloc(ncols * sizeof(int));
+	int *cmatind = malloc(ncols * sizeof(int));
+	double *cmatval = malloc(ncols * sizeof(double));
+	int cmatspace = ncols;
+	int *surplus_p=0;
+	CPXgetcols(in->env, in->lp, &num_nonzero, cmatbeg, cmatind, cmatval, cmatspace, surplus_p, 0, ncols);
 	// https://www.ibm.com/docs/en/cofz/12.8.0?topic=cpxxcallbackaddusercuts-cpxcallbackaddusercuts
-	int status = CPXcallbackaddusercuts(in->context, 1, cutcount, (double*) &cutval, 'L', );
-
+	int status = CPXcallbackaddusercuts(in->context, 1, cutcount, (double *)&cutval, (char*)'L', cmatbeg, cmatind, cmatval,(int*) CPX_USECUT_FILTER, 0);
+	return status;
 	return 0;
 }
 
-int my_callback_relaxation(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, void *userhandle, double *xstar)
+int my_callback_relaxation(CPXLPptr lp, CPXENVptr env, CPXCALLBACKCONTEXTptr context, CPXLONG contextid, void *userhandle, double *xstar)
 {
 	Instance *inst = (Instance *)userhandle;
-	int ecount=inst->nnodes * (inst->nnodes - 1) / 2;
+	int ecount = inst->nnodes * (inst->nnodes - 1) / 2;
 	int ncomp = 0;
 	int **comps_count = (int **)malloc(sizeof(int *));
 	int **comps = (int **)malloc(sizeof(int *));
@@ -72,18 +79,19 @@ int my_callback_relaxation(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, voi
 		}
 	}
 	// https://www.math.uwaterloo.ca/tsp/concorde/DOC/cut.html#CCcut_violated_cuts
-	if (CCcut_connect_components(inst->nnodes, ecount,elist, xstar, &ncomp, comps_count, comps))
+	if (CCcut_connect_components(inst->nnodes, ecount, elist, xstar, &ncomp, comps_count, comps))
 		print_error("CCcut_connect_components error");
 	if (ncomp == 1)
 	{
 		Input *in = (Input *)malloc(sizeof(Input));
-		in->context=context;
-		in->elist=elist;
-		in->inst=inst;
-		//in->useraction_p
-		//in->wherefrom
+		in->context = context;
+		in->elist = elist;
+		in->env = env;
+		in->inst = inst;
+		in->lp = lp;
+		// in->useraction_p
+		// in->wherefrom
 
-		
 		if (CCcut_violated_cuts(inst->nnodes, ecount, elist, xstar, 2.0 - EPSILON, doit_fn_concorde, (void *)in))
 			print_error("CCcut_violated_cuts error");
 	}
@@ -164,7 +172,7 @@ static int CPXPUBLIC my_callback(CPXCALLBACKCONTEXTptr context, CPXLONG contexti
 	Instance *inst = (Instance *)userhandle;
 	double *xstar = (double *)malloc(inst->ncols * sizeof(double));
 	double objval = CPX_INFBOUND;
-
+	inst->context=context;
 	// int izero = 0;
 	// int purgeable = CPX_USECUT_FILTER;
 	// int local = 0;
@@ -173,7 +181,7 @@ static int CPXPUBLIC my_callback(CPXCALLBACKCONTEXTptr context, CPXLONG contexti
 		print_error("CPXcallbackgetcandidatepoint error");
 	if (contextid == CPX_CALLBACKCONTEXT_RELAXATION)
 	{
-		my_callback_relaxation(context, contextid, userhandle, xstar);
+		my_callback_relaxation(inst->lp, inst->env, context, contextid, userhandle, xstar);
 	}
 
 	if (contextid == CPX_CALLBACKCONTEXT_RELAXATION && CPXcallbackgetrelaxationpoint(context, xstar, 0, inst->ncols - 1, &objval))
@@ -209,6 +217,9 @@ void TSPopt(Instance *inst, int *path, int callbacks)
 	build_model(inst, env, lp);
 	INFO_COMMENT("tspcplex.c:TSPopt", "Model built FINISHED");
 
+	
+	inst->lp=lp;
+	inst->env=env;
 	CPXLONG contextid = CPX_CALLBACKCONTEXT_CANDIDATE;
 	if (CPXcallbacksetfunc(env, lp, contextid, my_callback, inst))
 		ERROR_COMMENT("tspcplex.c:TSPopt", "CPXcallbacksetfunc() error");
