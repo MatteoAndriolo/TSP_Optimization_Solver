@@ -9,6 +9,15 @@
 #include "logger.h"
 #include "constraint.h"
 #include "utilscplex.h"
+#include "concorde.h"
+
+typedef struct{
+    Instance *inst;
+    CPXCENVptr env;
+    void* cbdata;
+    int wherefrom;
+    int* useraction_p;
+}Input;
 
 /**
  * @brief TSPopt

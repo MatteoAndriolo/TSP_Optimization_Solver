@@ -24,4 +24,5 @@ int xpos(int i, int j, Instance *inst);
 */
 double dist(int i, int j, Instance *inst);
 
+void xstarToPath(Instance *inst, double *xstar, int dim_xstar, int *path );
 #endif
