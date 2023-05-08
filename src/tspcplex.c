@@ -62,7 +62,8 @@ int doit_fn_concorde(double cutval, int cutcount, int *cut, void *inparam)
 }
 
 int my_callback_relaxation(CPXLPptr lp, CPXENVptr env, CPXCALLBACKCONTEXTptr context, CPXLONG contextid, void *userhandle, double *xstar)
-{
+{	
+	INFO_COMMENT("tspcplex.c:my_callback_relaxation", "entering relaxation callbacks");
 	Instance *inst = (Instance *)userhandle;
 	int ecount = inst->nnodes * (inst->nnodes - 1) / 2;
 	int ncomp = 0;
@@ -79,10 +80,13 @@ int my_callback_relaxation(CPXLPptr lp, CPXENVptr env, CPXCALLBACKCONTEXTptr con
 		}
 	}
 	// https://www.math.uwaterloo.ca/tsp/concorde/DOC/cut.html#CCcut_violated_cuts
+	INFO_COMMENT("tspcplex.c:my_callback_relaxation", "calling CCcut_connect_components");
 	if (CCcut_connect_components(inst->nnodes, ecount, elist, xstar, &ncomp, comps_count, comps))
-		print_error("CCcut_connect_components error");
+		print_error("CCcut_connect_components error"); // FIXME seg fault inside CCcut_connect_components
+	DEBUG_COMMENT("tspcplex.c:my_callback_relaxation", "exit CCcut_connect_components");
 	if (ncomp == 1)
 	{
+		DEBUG_COMMENT("tspcplex.c:my_callback_relaxation", "ncomp = %d", ncomp);
 		Input *in = (Input *)malloc(sizeof(Input));
 		in->context = context;
 		in->elist = elist;
@@ -161,7 +165,7 @@ int my_callback_encumbment(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, voi
 			WARNING_COMMENT("constraint.c:add_subtour_constraints", "FREEING MEMORY, index, value, index1, cname[0], cname");
 		}
 	}
-	DEBUG_COMMENT("awdawd", " final ncomp %d ", ncomp);
+	DEBUG_COMMENT("tspcplex.c:my_callback_encumbment", " final ncomp %d ", ncomp);
 	free(succ);
 	free(comp);
 	return 0;
@@ -169,6 +173,7 @@ int my_callback_encumbment(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, voi
 
 static int CPXPUBLIC my_callback(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, void *userhandle)
 {
+	INFO_COMMENT("tspcplex.c:my_callback", "entering callbacks");
 	Instance *inst = (Instance *)userhandle;
 	double *xstar = (double *)malloc(inst->ncols * sizeof(double));
 	double objval = CPX_INFBOUND;
@@ -220,7 +225,8 @@ void TSPopt(Instance *inst, int *path, int callbacks)
 	
 	inst->lp=lp;
 	inst->env=env;
-	CPXLONG contextid = CPX_CALLBACKCONTEXT_CANDIDATE;
+	//CPXLONG contextid = CPX_CALLBACKCONTEXT_CANDIDATE | CPX_CALLBACKCONTEXT_RELAXATION;
+	CPXLONG contextid = CPX_CALLBACKCONTEXT_RELAXATION;
 	if (CPXcallbacksetfunc(env, lp, contextid, my_callback, inst))
 		ERROR_COMMENT("tspcplex.c:TSPopt", "CPXcallbacksetfunc() error");
 	// add_subtour_constraints(inst, env, lp);
