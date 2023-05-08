@@ -9,7 +9,7 @@
 #include "logger.h"
 #include "constraint.h"
 #include "utilscplex.h"
-#include "concorde.h"
+#include <concorde.h>
 
 typedef struct{
     Instance *inst;

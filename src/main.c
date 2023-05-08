@@ -19,6 +19,7 @@ int main(int argc, char **argv)
 	Args args;
 	parse_command_line(argc, argv, &args);
 
+	print_arguments(&args);
 	// Read TLP library -------------------------------------------------------
 	INFO_COMMENT("main::main", "Reading input");
 	read_input(&args);
@@ -28,7 +29,7 @@ int main(int argc, char **argv)
 	INFO_COMMENT("main::main", "Generating distance matrix");
 	double *distance_matrix = (double *)malloc(sizeof(double) * args.nnodes * args.nnodes);
 	generate_distance_matrix(&distance_matrix, args.nnodes, args.x, args.y, args.integer_costs);
-	log_distancematrix(distance_matrix, args.nnodes);
+	// log_distancematrix(distance_matrix, args.nnodes);
 	DEBUG_COMMENT("main::main", "Distance matrix generated");
 
 	// Parsing model ----------------------------------------------------------
@@ -50,10 +51,9 @@ int main(int argc, char **argv)
 	}
 
 	// Manage model selection -------------------------------------------------
-	print_arguments(&args);
 	Instance instances[args.num_instances];
 	for (int c_inst = 0; c_inst < args.num_instances; c_inst++)
-	{
+	{	
 		instances[c_inst].nnodes = args.nnodes;
 		instances[c_inst].x = args.x;
 		instances[c_inst].y = args.y;
@@ -70,7 +70,9 @@ int main(int argc, char **argv)
 		snprintf(title, 25, "sn%d_", starting_points[c_inst]);
 		for (int j = 0; j < n_passagges; j++)
 		{
+			printf("main::main | Generating instance");
 			INFO_COMMENT("main::main", "Generating instance");
+			INFO_COMMENT("main.c::main", "model %s", passagges[j]);
 			if (strcmp(passagges[j], "nn") == 0)
 			{
 				nearest_neighboor(distance_matrix, path, args.nnodes, &instances[c_inst].tour_lenght);

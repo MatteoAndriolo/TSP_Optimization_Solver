@@ -2,6 +2,7 @@
 
 void add_degree_constraint(Instance *inst, CPXENVptr env, CPXLPptr lp)
 {
+    //char *tmp; //for debug purposes
 
     INFO_COMMENT("constraint.c:add_degree_constraint", "Adding degree constraints");
     char **cname = (char **)calloc(1, sizeof(char *));
@@ -9,7 +10,7 @@ void add_degree_constraint(Instance *inst, CPXENVptr env, CPXLPptr lp)
 
     int *index = (int *)calloc(inst->nnodes, sizeof(int));
     double *value = (double *)calloc(inst->nnodes, sizeof(double));
-    DEBUG_COMMENT("constraint.c:add_degree_constraint", "NUMBER OF ROW IN CPLEX %d", CPXgetnumrows(env, lp));
+    DEBUG_COMMENT("constraint.c:add_degree_constraint", "initial number of rows in cplex %d", CPXgetnumrows(env, lp));
 
     for (int h = 0; h < inst->nnodes; h++)
     {
@@ -26,7 +27,11 @@ void add_degree_constraint(Instance *inst, CPXENVptr env, CPXLPptr lp)
             nnz++;
             // DEBUG_COMMENT("constraint.c:add_degree_constraint", "index[%d] = %d", nnz, index[nnz]);
         }
-        log_path(index, inst->nnodes - 1);
+// #ifndef PRODUCTION
+        // tmp=getPath(index, inst->nnodes-1);
+        // DEBUG_COMMENT("constraint.c:add_degree_constraint","index: %s",tmp);
+        // free(tmp);
+// #endif
         int izero = 0;
         // DEBUG_COMMENT("constraint.c:add_degree_constraint", "index = %s", getPath(index, inst->nnodes - 1));
         // DEBUG_COMMENT("constraint.c:add_degree_constraint", "value = %s", getPathDBL(value, inst->nnodes - 1));

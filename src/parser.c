@@ -97,6 +97,7 @@ void print_arguments(const Args *args)
     if (strcmp(args->grasp, "1") != 0)
         printf("--grasp %s\n", args->grasp);
     printf("----------------------------------------------------------------------------------------------\n\n");
+    ffflush();
 }
 
 void parse_model_name(char *model_type, char ***passagges, int *n_passagges)

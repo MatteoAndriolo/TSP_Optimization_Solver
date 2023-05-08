@@ -7,6 +7,7 @@
 #include <string.h>
 #include <getopt.h>
 #include <cplex.h>
+#include <concorde.h>
 
 // #include <cplex.h>
 #include <pthread.h>

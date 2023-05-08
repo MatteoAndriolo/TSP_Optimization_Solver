@@ -1,12 +1,14 @@
+CPLEXDIR=/opt/ibm/ILOG/CPLEX_Studio2211
+CCDIR=/home/matteo/Documenti/OperationResearchLaboratory/concorde_build
+
 
 CC = gcc
 CFLAGS += -Wall -Werror -pedantic -I./include
-CFLAGS += -I/opt/ibm/ILOG/CPLEX_Studio2211/cplex/include/ilcplex -I/opt/ibm/ILOG/CPLEX_Studio2211/concert/include
-CFLAGS += -I/opt/concorde
+CFLAGS += -I${CPLEXDIR}/cplex/include/ilcplex -I${CPLEXDIR}/concert/includes -I${CCDIR}
 #CFLAGS += -g
 
-LDFLAGS = -lm -L/opt/ibm/ILOG/CPLEX_Studio2211/cplex/lib/x86-64_linux/static_pic -L/opt/ibm/ILOG/CPLEX_Studio2211/concert/lib/x86-64_linux/static_pic -lilocplex -lcplex -lconcert
-LDFLAGS += -L/opt/concorde
+
+LDFLAGS = -lm -L${CPLEXDIR}/cplex/lib/x86-64_linux/static_pic -L${CPLEXDIR}/concert/lib/x86-64_linux/static_pic -L${CCDIR} -lilocplex -lcplex -lconcert -lpthread -ldl -lconcorde
 
 SRC_DIR = ./src
 OBJ_DIR = ./obj
@@ -22,7 +24,6 @@ dir_guard=@mkdir -p $(@D)
 .PHONY: all clean production preprofiling profiling   # all and clean are not file, just targets.
 
 all: clean $(TARGET)
-	mkdir plot
 
 $(TARGET): $(OBJ_FILES)
 	$(dir_guard)
