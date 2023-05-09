@@ -8,10 +8,15 @@
 #include "heuristics.h"
 #include <stdlib.h>
 #include <unistd.h>
+#include <time.h>
+
+#define START_CLOCK time_start = clock();
+#define END_CLOCK time_end = clock();
 
 int main(int argc, char **argv)
 {
 	logger_init("example.log");
+	clock_t time_start, time_end;
 
 	// Parsing Arguments ------------------------------------------------------
 	INFO_COMMENT("main::parse_command_line", "Parsing arguments");
@@ -75,6 +80,7 @@ int main(int argc, char **argv)
 
 		for (int j = 0; j < n_passagges; j++)
 		{
+			START_CLOCK
 			INFO_COMMENT("main::main", "Generating instance");
 			if (strcmp(passagges[j], "nn") == 0)
 			{
@@ -106,7 +112,8 @@ int main(int argc, char **argv)
 				} 
 				tabu_search(distance_matrix, path, instances[c_inst].nnodes,&instances[c_inst].tour_lenght, args.nnodes/10 );
 			}
-
+			END_CLOCK
+			instances[c_inst].duration = time_end - time_start;
 			strcpy(title+strlen(title), passagges[j]);	
 			//TODO fix title in all the different 
 			// like in grasp specify also the probabilities
