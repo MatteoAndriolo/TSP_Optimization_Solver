@@ -80,6 +80,12 @@ int my_callback_relaxation(CPXLPptr lp, CPXENVptr env, CPXCALLBACKCONTEXTptr con
 		}
 	}
 	// https://www.math.uwaterloo.ca/tsp/concorde/DOC/cut.html#CCcut_violated_cuts
+	// char *tmp;
+	// DEBUG_COMMENT("tspcplex.c:my_callback_relaxation", "before xstar");
+	// tmp = getPathDBL(xstar, inst->nnodes*(inst->nnodes-1)/2);
+	// DEBUG_COMMENT("tspcplex.c:my_callback_relaxation", "xstar = %s", tmp);
+	// free(tmp);
+	// DEBUG_COMMENT("tspcplex.c:my_callback_relaxation", "xstar 1 %lf", xstar[0]);
 	INFO_COMMENT("tspcplex.c:my_callback_relaxation", "calling CCcut_connect_components");
 	if (CCcut_connect_components(inst->nnodes, ecount, elist, xstar, &ncomp, comps_count, comps))
 		print_error("CCcut_connect_components error"); // FIXME seg fault inside CCcut_connect_components
@@ -101,6 +107,8 @@ int my_callback_relaxation(CPXLPptr lp, CPXENVptr env, CPXCALLBACKCONTEXTptr con
 	}
 	return 0;
 }
+
+
 int my_callback_encumbment(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, void *userhandle, double *xstar)
 {
 	Instance *inst = (Instance *)userhandle;
@@ -182,16 +190,24 @@ static int CPXPUBLIC my_callback(CPXCALLBACKCONTEXTptr context, CPXLONG contexti
 	// int purgeable = CPX_USECUT_FILTER;
 	// int local = 0;
 
-	if (contextid == CPX_CALLBACKCONTEXT_CANDIDATE && CPXcallbackgetcandidatepoint(context, xstar, 0, inst->ncols - 1, &objval))
-		print_error("CPXcallbackgetcandidatepoint error");
+	if(contextid == CPX_CALLBACKCONTEXT_RELAXATION && CPXcallbackgetrelaxationpoint(context, xstar, 0, inst->ncols - 1, &objval))
+		print_error("CPXcallbackgetrelaxationpoint error");
 	if (contextid == CPX_CALLBACKCONTEXT_RELAXATION)
 	{
+		DEBUG_COMMENT("tspcplex.c:my_callback", "xsta 0 %lf", xstar[1]);
+		char *tmp;
+		DEBUG_COMMENT("tspcplex.c:my_callback", "before xstar");
+		tmp = getPathDBL(xstar, inst->nnodes*(inst->nnodes-1)/2);
+		DEBUG_COMMENT("tspcplex.c:my_callback", "xstar = %s", tmp);
+		free(tmp);
+
 		my_callback_relaxation(inst->lp, inst->env, context, contextid, userhandle, xstar);
 	}
 
-	if (contextid == CPX_CALLBACKCONTEXT_RELAXATION && CPXcallbackgetrelaxationpoint(context, xstar, 0, inst->ncols - 1, &objval))
 		print_error("CPXcallbackgetrelaxationpoint error");
 
+	if (contextid == CPX_CALLBACKCONTEXT_CANDIDATE && CPXcallbackgetcandidatepoint(context, xstar, 0, inst->ncols - 1, &objval))
+		print_error("CPXcallbackgetcandidatepoint error");
 	if (contextid == CPX_CALLBACKCONTEXT_CANDIDATE)
 	{
 		my_callback_encumbment(context, contextid, userhandle, xstar);
@@ -225,6 +241,7 @@ void TSPopt(Instance *inst, int *path, int callbacks)
 	
 	inst->lp=lp;
 	inst->env=env;
+	//CPXLONG contextid = CPX_CALLBACKCONTEXT_CANDIDATE | CPX_CALLBACKCONTEXT_RELAXATION;
 	//CPXLONG contextid = CPX_CALLBACKCONTEXT_CANDIDATE | CPX_CALLBACKCONTEXT_RELAXATION;
 	CPXLONG contextid = CPX_CALLBACKCONTEXT_RELAXATION;
 	if (CPXcallbacksetfunc(env, lp, contextid, my_callback, inst))

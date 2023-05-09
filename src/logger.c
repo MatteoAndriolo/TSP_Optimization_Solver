@@ -27,10 +27,12 @@ void log_path(const int *path, int nnodes)
 }
 char* getPathDBL(const double *path, int nnodes)
 {
-    char *path_str = (char *)malloc(sizeof(char) * nnodes * 5);
+    char *path_str = (char *)malloc(sizeof(char) * nnodes * 100);
     sprintf(path_str, "[");
     for (int i = 0; i < nnodes; i++)
     {
+        if(i%100==0)
+            sprintf(path_str+strlen(path_str), "\n%d\t", i);
         sprintf(path_str+strlen(path_str), "\t%lf,", path[i]);
     }
     sprintf(path_str+strlen(path_str), "]");
@@ -43,6 +45,8 @@ char* getPath(const int *path, int nnodes)
     sprintf(path_str, "[");
     for (int i = 0; i < nnodes; i++)
     {
+        if(i%100==0)
+            sprintf(path_str+strlen(path_str), "\n%d\t", i);
         sprintf(path_str+strlen(path_str), "\t%d,", path[i]);
     }
     sprintf(path_str+strlen(path_str), "]");
