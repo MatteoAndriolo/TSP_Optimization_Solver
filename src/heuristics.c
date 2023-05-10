@@ -67,7 +67,7 @@ void kick_function(const double *distance_matrix, int *path, int nnodes, double 
             index_2 --; 
             index_3 --;
             index_4 --;
-            DEBUG_COMMENT("heuristics.c:kick_function", "found 5 indexes{%d, %d, %d, %d, %d}", index_0, index_1, index_2, index_3, index_4);
+            //DEBUG_COMMENT("heuristics.c:kick_function", "found 5 indexes{%d, %d, %d, %d, %d}", index_0, index_1, index_2, index_3, index_4);
         }
     }
     //---------------------------------------------------------------------------------------
@@ -85,7 +85,6 @@ void kick_function(const double *distance_matrix, int *path, int nnodes, double 
         *tour_length += distance_matrix[path[i-1] * nnodes + path[i]];
     }
     *tour_length += distance_matrix[path[0] * nnodes + path[nnodes - 1]];
-
 }
 
 //-----------------------------------------------------------------------------------------------
