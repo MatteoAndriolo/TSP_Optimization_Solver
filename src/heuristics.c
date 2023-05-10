@@ -12,14 +12,15 @@ void vnp_k(const double *distance_matrix, int *path, int nnodes, double *tour_le
     time_t end_time = start_time + duration;
     // while non finisce il tempo
     double best_tour = INFINITY;
-    int* best_path = malloc (nnodes * sizeof(int));
+    int *best_path = malloc(nnodes * sizeof(int));
     INFO_COMMENT("heuristics.c:vnp_k", "starting the huristics loop for vnp_k");
     while (difftime(end_time, time(NULL)) > 0)
     {
         printf("Time left: %.0f seconds\n", difftime(end_time, time(NULL)));
         two_opt(distance_matrix, nnodes, path, tour_length, INFINITY);
         kick_function(distance_matrix, path, nnodes, tour_length, k);
-        if (best_tour > *tour_length){
+        if (best_tour > *tour_length)
+        {
             best_tour = *tour_length;
             memcpy(best_path, path, nnodes * sizeof(int));
             CRITICAL_COMMENT("heuristics.c:vnp_k", "found a better tour with length %lf", best_tour);
@@ -45,46 +46,54 @@ void kick_function(const double *distance_matrix, int *path, int nnodes, double 
     while (found != 4)
     {
         found = 0;
-        index_0 = 1; 
+        index_0 = 1;
         found++;
         index_1 = randomBetween(index_0 + 1, nnodes);
         if (nnodes - index_1 > 6)
         {
             index_2 = randomBetween(index_1 + 2, nnodes);
-            found ++;
+            found++;
         }
         if (nnodes - index_2 > 4)
         {
             index_3 = randomBetween(index_2 + 2, nnodes);
-            found ++;
+            found++;
         }
         if (nnodes - index_3 > 2)
         {
             index_4 = randomBetween(index_3 + 2, nnodes);
-            found ++; 
+            found++;
         }
-        if (found == 4){
-            index_0 --;
-            index_1 --; 
-            index_2 --; 
-            index_3 --;
-            index_4 --;
-            //DEBUG_COMMENT("heuristics.c:kick_function", "found 5 indexes{%d, %d, %d, %d, %d}", index_0, index_1, index_2, index_3, index_4);
+        if (found == 4)
+        {
+            index_0--;
+            index_1--;
+            index_2--;
+            index_3--;
+            index_4--;
+            // DEBUG_COMMENT("heuristics.c:kick_function", "found 5 indexes{%d, %d, %d, %d, %d}", index_0, index_1, index_2, index_3, index_4);
         }
     }
     //---------------------------------------------------------------------------------------
-    int* final_path = malloc(nnodes * sizeof(int));
+    int *final_path = malloc(nnodes * sizeof(int));
     int count = 0;
-    for (int i = 0; i < index_1; i++) final_path[count++] = path[i];
-    for (int i = index_4; i < nnodes; i++) final_path[count++] = path[i];
-    for (int i = index_4 - 1; i >= index_3; i--) final_path[count++] = path[i];
-    for (int i = index_2; i < index_3; i ++) final_path[count++] = path[i]; 
-    for (int i = index_2 - 1; i >= index_1; i--) final_path[count++] = path[i];
+    for (int i = 0; i < index_1; i++)
+        final_path[count++] = path[i];
+    for (int i = index_4; i < nnodes; i++)
+        final_path[count++] = path[i];
+    for (int i = index_4 - 1; i >= index_3; i--)
+        final_path[count++] = path[i];
+    for (int i = index_2; i < index_3; i++)
+        final_path[count++] = path[i];
+    for (int i = index_2 - 1; i >= index_1; i--)
+        final_path[count++] = path[i];
     //---------------------------------------------------------------------------------------
-    for (int i = 0; i < nnodes; i++) path[i] = final_path[i];
-    *tour_length = 0; 
-    for (int i = 1; i < nnodes; i++){
-        *tour_length += distance_matrix[path[i-1] * nnodes + path[i]];
+    for (int i = 0; i < nnodes; i++)
+        path[i] = final_path[i];
+    *tour_length = 0;
+    for (int i = 1; i < nnodes; i++)
+    {
+        *tour_length += distance_matrix[path[i - 1] * nnodes + path[i]];
     }
     *tour_length += distance_matrix[path[0] * nnodes + path[nnodes - 1]];
 }
@@ -207,11 +216,6 @@ void tabu_search(const double *distance_matrix, int *path, int nnodes, double *t
 
 //---------------------------------------------------------------------------------------------
 // Genetic Algorithm
-int randomBetween(int lowerBound, int upperBound)
-{
-    int randomBetween = (rand() % (upperBound - lowerBound + 1)) + lowerBound;
-    return randomBetween;
-}
 
 int compare_individuals(const void *a, const void *b)
 {
@@ -254,7 +258,7 @@ static int getIndexChampion(Individual population[], int populationSize, int nno
     return indexChampion;
 }
 
-void longest_common_subpath(const int* nnodes, const int *tour1, const int *tour2, int *length, int *subpath, int *reverse, int *max_start1, int *max_start2)
+void longest_common_subpath(const int *nnodes, const int *tour1, const int *tour2, int *length, int *subpath, int *reverse, int *max_start1, int *max_start2)
 {
     int max_length = 0;
     *max_start1 = 0;
@@ -325,40 +329,46 @@ void longest_common_subpath(const int* nnodes, const int *tour1, const int *tour
     *length = max_length;
 }
 
-void genetic_simple_merge (int *child, const int* p1, const int* p2, const int* nnodes){
-    int lenChild=randomBetween((int)(*nnodes/2), (int)(*nnodes*(2/3)));
-    int *isInChild=calloc(*nnodes, sizeof(int));
-    
-    for(int i=0; i<lenChild; i++){
-        child[i]=p1[i];
-        isInChild[p1[i]]=1;
-    }
-    
-    int pos2=0, last=child[lenChild-1];
-    while(p2[pos2]!=last)pos2++;
-    while(pos2<*nnodes){
-        if(!isInChild[p2[pos2]]){
-            child[lenChild]=p2[pos2];
-            lenChild++;
-        }
-        pos2++;
-    } 
-    pos2=0;
-    while(lenChild<*nnodes){
-        if(!isInChild[p2[pos2]]){
-            child[lenChild]=p2[pos2];
-            lenChild++;
-        }
-        pos2++;
-    } 
+void genetic_simple_merge(int *child, const int *p1, const int *p2, const int *nnodes)
+{
+    int lenChild = randomBetween((int)(*nnodes / 2), (int)(*nnodes * (2 / 3)));
+    int *isInChild = calloc(*nnodes, sizeof(int));
 
+    for (int i = 0; i < lenChild; i++)
+    {
+        child[i] = p1[i];
+        isInChild[p1[i]] = 1;
+    }
+
+    int pos2 = 0, last = child[lenChild - 1];
+    while (p2[pos2] != last)
+        pos2++;
+    while (pos2 < *nnodes)
+    {
+        if (!isInChild[p2[pos2]])
+        {
+            child[lenChild] = p2[pos2];
+            lenChild++;
+        }
+        pos2++;
+    }
+    pos2 = 0;
+    while (lenChild < *nnodes)
+    {
+        if (!isInChild[p2[pos2]])
+        {
+            child[lenChild] = p2[pos2];
+            lenChild++;
+        }
+        pos2++;
+    }
 }
 
 void genetic_new_merge(const int *p1, const int *p2, int *newPath, const int *nnodes)
 {
 
     // Get longhest common subpath
-    int reverse=0, lensubpath;
+    int reverse = 0, lensubpath;
     int *subpath = malloc(*nnodes * sizeof(int));
     int pos1 = 0, pos2 = 0;
     longest_common_subpath(nnodes, p1, p2, &lensubpath, subpath, &reverse, &pos1, &pos2);
@@ -373,37 +383,44 @@ void genetic_new_merge(const int *p1, const int *p2, int *newPath, const int *nn
         ;
 
     // copy big portion of parent 1 (champion)
-    int *isMissing=calloc(*nnodes,sizeof(int));
-    int partOfP1=randomBetween((int)(*nnodes/2), (int)(*nnodes*2/3));
+    int *isMissing = calloc(*nnodes, sizeof(int));
+    int partOfP1 = randomBetween((int)(*nnodes / 2), (int)(*nnodes * 2 / 3));
 
-    while(lenNewPath<partOfP1){
-        newPath[++lenNewPath] = p1[pos1%*nnodes];
-        isMissing[p1[pos1]%*nnodes]=1;
+    while (lenNewPath < partOfP1)
+    {
+        newPath[++lenNewPath] = p1[pos1 % *nnodes];
+        isMissing[p1[pos1] % *nnodes] = 1;
         pos1++;
     }
 
-    //take (order) remaining nodes from parent 2
-    if(!reverse){
-        pos2+=lenNewPath;
-        while(lenNewPath!=*nnodes){
-            if(isMissing[p2[pos2%*nnodes]]==0){
-                newPath[++lenNewPath] = p2[pos2%*nnodes];
+    // take (order) remaining nodes from parent 2
+    if (!reverse)
+    {
+        pos2 += lenNewPath;
+        while (lenNewPath != *nnodes)
+        {
+            if (isMissing[p2[pos2 % *nnodes]] == 0)
+            {
+                newPath[++lenNewPath] = p2[pos2 % *nnodes];
             }
             pos2++;
         }
-    }else{
-        pos2-=lenNewPath;
-        while(lenNewPath!=*nnodes){
-            if(isMissing[p2[pos2%*nnodes]]==0){
-                newPath[++lenNewPath] = p2[pos2%*nnodes];
+    }
+    else
+    {
+        pos2 -= lenNewPath;
+        while (lenNewPath != *nnodes)
+        {
+            if (isMissing[p2[pos2 % *nnodes]] == 0)
+            {
+                newPath[++lenNewPath] = p2[pos2 % *nnodes];
             }
-            pos2=pos2+*nnodes-1;
-            //if(pos2==-1)pos2=*nnodes-1;
+            pos2 = pos2 + *nnodes - 1;
+            // if(pos2==-1)pos2=*nnodes-1;
         }
     }
     free(subpath);
     free(isMissing);
-
 }
 
 /**
@@ -595,8 +612,8 @@ void genetic_algorithm(const double *distance_matrix, int *path, int nnodes, dou
             /*****************/
             /* Merge Parents */
             /*****************/
-            //effort = genetic_merge_parents(&child, &population[indexParent1], &population[indexParent2], nnodes, prob_deletion);
-            genetic_simple_merge( child.path,population[indexParent1].path, population[indexParent2].path,  &nnodes);
+            // effort = genetic_merge_parents(&child, &population[indexParent1], &population[indexParent2], nnodes, prob_deletion);
+            genetic_simple_merge(child.path, population[indexParent1].path, population[indexParent2].path, &nnodes);
             effort = nnodes * 4;
 
 #ifdef VERBOSE
@@ -607,7 +624,7 @@ void genetic_algorithm(const double *distance_matrix, int *path, int nnodes, dou
             /**********/
             /* Repair */
             /**********/
-            //genetic_repair_child(&child, distance_matrix, nnodes, INFINITY);
+            // genetic_repair_child(&child, distance_matrix, nnodes, INFINITY);
 
 #ifdef VERBOSE
             tmp_string = getPath(child.path, nnodes);
@@ -619,7 +636,7 @@ void genetic_algorithm(const double *distance_matrix, int *path, int nnodes, dou
             /* Add mutations */
             /*****************/
             // if(iter<iterations-1)
-            //genetic_add_mutations(&child, nnodes, prob_mutation);
+            // genetic_add_mutations(&child, nnodes, prob_mutation);
 
             /***************/
             /* Store child */
@@ -649,7 +666,6 @@ void genetic_algorithm(const double *distance_matrix, int *path, int nnodes, dou
             }
         }
         /**END OF GENERATION ITERATIONS**/
-
 
         //         /***************************/
         //         /* Kinda natural selection */
@@ -700,7 +716,7 @@ void genetic_algorithm(const double *distance_matrix, int *path, int nnodes, dou
         /* Store new generation, memory management */
         /*******************************************/
         /* Champion */
-        //OUTPUT_COMMENT("heuristic::genetic_algorithm", "Champion of iteration %d has fitness %lf", iter, minFitnessGeneration);
+        // OUTPUT_COMMENT("heuristic::genetic_algorithm", "Champion of iteration %d has fitness %lf", iter, minFitnessGeneration);
         champion.fitness = minFitnessGeneration;
         memcpy(champion.path, newGeneration[indexChampion].path, nnodes * sizeof(int));
 
@@ -717,7 +733,7 @@ void genetic_algorithm(const double *distance_matrix, int *path, int nnodes, dou
         /*************/
         if (champion.fitness >= encumbment.fitness)
             break;
-        
+
         encumbment.fitness = champion.fitness;
         memcpy(encumbment.path, champion.path, nnodes * sizeof(int));
 
