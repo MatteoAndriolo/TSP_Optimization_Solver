@@ -362,4 +362,5 @@ static int CPXPUBLIC my_callback(CPXCALLBACKCONTEXTptr context, CPXLONG contexti
 			if(CCcut_violated_cuts(inst->nnodes, inst->nnodes * (inst->nnodes - 1) / 2, elist, xstar, 2.0 - EPSILON, doit_fn_concorde, (void *) in)) print_error("CCcut_violated_cuts error");
 		}
 	}
+	return 0;
 }

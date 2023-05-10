@@ -58,7 +58,7 @@ void add_subtour_constraints(Instance *inst, CPXENVptr env, CPXLPptr lp)
         INFO_COMMENT("constraint.c:add_subtour_constraints", "starting the while loop");
         error = CPXmipopt(env, lp);
         CRITICAL_COMMENT("constraint.c:add_subtour_constraints", "0");
-        if (error)po
+        if (error)
             print_error("CPXmipopt() error");
         ncols = CPXgetnumcols(env, lp);
         CRITICAL_COMMENT("constraint.c:add_subtour_constraints", "1");
