@@ -1,5 +1,6 @@
 #ifndef HEURISTICS_H
-#define HEURISTICS_h
+#define HEURISTICS_H
+
 #include "vrp.h"
 #include "plot.h"
 #include "refinement.h"
@@ -33,9 +34,9 @@ void vnp_k(const double *distance_matrix, int *path, int nnodes, double *tour_le
  */
 void kick_function(const double *distance_matrix, int *path, int nnodes, double *tour_length, int k);
 /**
- * @param 
-*/
-int randomBetween( int lowerBound, int upperBound);
+ * @param
+ */
+int randomBetween(int lowerBound, int upperBound);
 
 /**
  * Tabu Search
