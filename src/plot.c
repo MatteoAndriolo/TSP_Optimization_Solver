@@ -1,7 +1,7 @@
 #include "plot.h"
 #include "logger.h"
 
-void plot(const int *path, const double *x, const double *y, const int nnodes, const char *title, const int starting_node )
+void plot(const int *path, const double *x, const double *y, const int nnodes, const char *title, const int starting_node)
 {
     DEBUG_COMMENT("plot::plot", "open gnuplot pipe");
     FILE *gnuplotPipe = fopen("src/script.p", "w");
@@ -26,8 +26,9 @@ void plot(const int *path, const double *x, const double *y, const int nnodes, c
     for (int i = 0; i < nnodes; i++)
     {
         node = path[i];
-        if(node==-1) continue;
-        if(node == starting_node)
+        if (node == -1)
+            continue;
+        if (node == starting_node)
             index_starting_node = i;
         fprintf(gnuplotPipe, "%d %d\n", (int)x[node], (int)y[node]);
     }
@@ -58,6 +59,6 @@ void plot(const int *path, const double *x, const double *y, const int nnodes, c
     DEBUG_COMMENT("plot::plot", "close gnuplot pipe");
     fclose(gnuplotPipe);
     DEBUG_COMMENT("plot::plot", "write on the terminal the command to launch gnuplot");
-    int i=system("gnuplot -p src/script.p");
-    printf("%d",i);
+    int i = system("gnuplot -p src/script.p");
+    printf("%d", i);
 }

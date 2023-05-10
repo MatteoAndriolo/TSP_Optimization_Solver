@@ -102,7 +102,7 @@ int assert_path(const int *path, const double *distance_matrix, const int nnodes
     return 1;
 }
 
-//TODO: permutation of the nodes 
+// TODO: permutation of the nodes
 void generate_random_starting_nodes(int *starting_nodes, int num_nodes, int num_instances, int seed)
 {
     srand(seed);
@@ -124,11 +124,10 @@ void generate_path(int *path, int starting_node, int num_nodes)
     path[0] = starting_node;
 }
 
-void swap_array_piece(int* arr, int start1, int end1, int start2, int end2) {
-    int temp[end1 - start1 + 1]; // Create a temporary array to hold the first piece
-    memcpy(temp, &arr[start1], sizeof(int) * (end1 - start1 + 1)); // Copy the first piece to the temp array
+void swap_array_piece(int *arr, int start1, int end1, int start2, int end2)
+{
+    int temp[end1 - start1 + 1];                                           // Create a temporary array to hold the first piece
+    memcpy(temp, &arr[start1], sizeof(int) * (end1 - start1 + 1));         // Copy the first piece to the temp array
     memcpy(&arr[start1], &arr[start2], sizeof(int) * (end1 - start1 + 1)); // Copy the second piece to the first piece
-    memcpy(&arr[start2], temp, sizeof(int) * (end1 - start1 + 1)); // Copy the temp array (first piece) to the second piece
+    memcpy(&arr[start2], temp, sizeof(int) * (end1 - start1 + 1));         // Copy the temp array (first piece) to the second piece
 }
-
-

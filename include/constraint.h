@@ -3,8 +3,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include<time.h>
-#include<cplex.h>
+#include <time.h>
+#include <cplex.h>
 #include "vrp.h"
 #include "utilscplex.h"
 #include "logger.h"
@@ -15,7 +15,7 @@
  * @param inst Instance of the problem
  * @param env CPLEX environment
  * @param lp CPLEX model
-*/
+ */
 void add_degree_constraint(Instance *inst, CPXENVptr env, CPXLPptr lp);
 
 /**
@@ -23,7 +23,7 @@ void add_degree_constraint(Instance *inst, CPXENVptr env, CPXLPptr lp);
  * @param inst Instance of the problem
  * @param env CPLEX environment
  * @param lp CPLEX model
-*/
+ */
 void add_subtour_constraints(Instance *inst, CPXENVptr env, CPXLPptr lp);
 
 #endif

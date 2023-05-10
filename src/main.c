@@ -45,7 +45,7 @@ int main(int argc, char **argv)
 	INFO_COMMENT("main::main", "Generating starting points");
 	int *starting_points = (int *)malloc(sizeof(int) * args.num_instances);
 	generate_random_starting_nodes(starting_points, args.nnodes, args.num_instances, args.randomseed);
-	for(int i=0;i<args.num_instances;i++)
+	for (int i = 0; i < args.num_instances; i++)
 	{
 		DEBUG_COMMENT("main::main", "Starting point %d: %d", i, starting_points[i]);
 	}
@@ -53,7 +53,7 @@ int main(int argc, char **argv)
 	// Manage model selection -------------------------------------------------
 	Instance instances[args.num_instances];
 	for (int c_inst = 0; c_inst < args.num_instances; c_inst++)
-	{	
+	{
 		instances[c_inst].nnodes = args.nnodes;
 		instances[c_inst].x = args.x;
 		instances[c_inst].y = args.y;
@@ -66,7 +66,7 @@ int main(int argc, char **argv)
 
 		int *path = malloc(sizeof(int) * args.nnodes);
 		generate_path(path, starting_points[c_inst], args.nnodes);
-		char title[40]="\0";
+		char title[40] = "\0";
 		snprintf(title, 25, "sn%d_", starting_points[c_inst]);
 		for (int j = 0; j < n_passagges; j++)
 		{
@@ -78,18 +78,19 @@ int main(int argc, char **argv)
 				nearest_neighboor(distance_matrix, path, args.nnodes, &instances[c_inst].tour_lenght);
 			}
 			if (strcmp(passagges[j], "nng") == 0)
-			{				
+			{
 				log_path(path, args.nnodes);
 				int n_prob;
 				double *prob;
 				parse_grasp_probabilities(args.grasp, &prob, &n_prob);
-				sprintf(title+strlen(title),"_%.1f_", prob[0]);
-				for(int i=1; i<n_prob; i++){
-					sprintf(title+strlen(title),"_%.1f_", prob[i]-prob[i-1]);
+				sprintf(title + strlen(title), "_%.1f_", prob[0]);
+				for (int i = 1; i < n_prob; i++)
+				{
+					sprintf(title + strlen(title), "_%.1f_", prob[i] - prob[i - 1]);
 				}
 				nearest_neighboor_grasp(distance_matrix, path, args.nnodes, &(instances[c_inst].tour_lenght), prob, n_prob);
 			}
-			if (strcmp(passagges[j], "em")==0)
+			if (strcmp(passagges[j], "em") == 0)
 			{
 				extra_mileage(distance_matrix, path, args.nnodes, &(instances[c_inst].tour_lenght));
 			}
@@ -97,20 +98,21 @@ int main(int argc, char **argv)
 			{
 				two_opt(distance_matrix, args.nnodes, path, &(instances[c_inst].tour_lenght));
 			}
-			if (strcmp(passagges[j], "vpn")==0)
+			if (strcmp(passagges[j], "vpn") == 0)
 			{
-				vnp_k(distance_matrix, path ,args.nnodes, &instances[c_inst].tour_lenght, 5, 4);
+				vnp_k(distance_matrix, path, args.nnodes, &instances[c_inst].tour_lenght, 5, 4);
 			}
-			if (strcmp(passagges[j], "cplex")==0)
+			if (strcmp(passagges[j], "cplex") == 0)
 			{
-				TSPopt(&instances[c_inst], path,1);
+				TSPopt(&instances[c_inst], path, 1);
 			}
-			strcpy(title+strlen(title), passagges[j]);	
-			//TODO fix title in all the different 
-			// like in grasp specify also the probabilities
-			// put first name of model then the rest
-			plot(path, args.x,args.y, args.nnodes, title, instances[c_inst].node_start ); 
-			if(j==n_passagges-1) strcpy(title,"\0");
+			strcpy(title + strlen(title), passagges[j]);
+			// TODO fix title in all the different
+			//  like in grasp specify also the probabilities
+			//  put first name of model then the rest
+			plot(path, args.x, args.y, args.nnodes, title, instances[c_inst].node_start);
+			if (j == n_passagges - 1)
+				strcpy(title, "\0");
 		}
 		free(path);
 	}

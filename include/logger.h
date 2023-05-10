@@ -10,9 +10,9 @@
 #define OUTPUT_COMMENT(position, ...) log_message(OUTPUT, position, __VA_ARGS__)
 #else
 #define DEBUG_COMMENT(position, ...)
-#define INFO_COMMENT(position, ...)
+#define INFO_COMMENT(position, ...) log_message(INFO, position, __VA_ARGS__)
 #define WARNING_COMMENT(position, ...)
-#define ERROR_COMMENT(position, ...)
+#define ERROR_COMMENT(position, ...) log_message(ERROR, position, __VA_ARGS__)
 #define CRITICAL_COMMENT(position, ...)
 #define OUTPUT_COMMENT(position, ...) log_message(OUTPUT, position, __VA_ARGS__)
 #endif
@@ -66,12 +66,12 @@ void log_path(const int *path, int nnodes);
 
 /**
  * Return string of the given path.
- * 
+ *
  * @param path the path to be logged
  * @param nnodes the number of nodes
  * @return string of the given path
-*/
-char* getPath(const int *path, int nnodes);
+ */
+char *getPath(const int *path, int nnodes);
 
 /**
  *
@@ -98,6 +98,5 @@ void log_output_inst(const Instance *inst);
  */
 void log_output(int model_type, int node_start, double zbest, double timelimit, int randomseed, int nnodes, char *input_file);
 
-
-char* getPathDBL(const double *path, int nnodes);
+char *getPathDBL(const double *path, int nnodes);
 #endif

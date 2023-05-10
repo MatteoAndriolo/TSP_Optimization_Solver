@@ -1,32 +1,36 @@
 #include "utilscplex.h"
 
-void print_error(const char *err) 
-{ 
+void print_error(const char *err)
+{
 	DEBUG_COMMENT("utils.c:print_error", "\n\n ERROR: %s \n\n", err);
-	printf("\n\n ERROR: %s \n\n", err); 
-	fflush(NULL); 
-	exit(1); 
+	printf("\n\n ERROR: %s \n\n", err);
+	fflush(NULL);
+	exit(1);
 }
 
 double dist(int i, int j, Instance *inst)
 {
 	double dx = inst->x[i] - inst->x[j];
-	double dy = inst->y[i] - inst->y[j]; 
-	if ( !inst->integer_costs ) return sqrt(dx*dx+dy*dy);
-	int dis = sqrt(dx*dx+dy*dy) + 0.499999999;
-    DEBUG_COMMENT("utils.c:dist", "i=%d, j=%d, dis=%d", i, j, dis); 				
-	return dis+0.0;
-}  
+	double dy = inst->y[i] - inst->y[j];
+	if (!inst->integer_costs)
+		return sqrt(dx * dx + dy * dy);
+	int dis = sqrt(dx * dx + dy * dy) + 0.499999999;
+	DEBUG_COMMENT("utils.c:dist", "i=%d, j=%d, dis=%d", i, j, dis);
+	return dis + 0.0;
+}
 
 int xpos(int i, int j, Instance *inst)
-{ 
-	if ( i == j ) print_error(" i == j in xpos" );
-	if ( i > j ) return xpos(j,i,inst);
-	int pos = i * inst->nnodes + j - (( i + 1 ) * ( i + 2 )) / 2;
+{
+	if (i == j)
+		print_error(" i == j in xpos");
+	if (i > j)
+		return xpos(j, i, inst);
+	int pos = i * inst->nnodes + j - ((i + 1) * (i + 2)) / 2;
 	return pos;
 }
 
-void xstarToPath(Instance *inst, double *xstar, int dim_xstar, int *path ){
+void xstarToPath(Instance *inst, double *xstar, int dim_xstar, int *path)
+{
 	int *copy_path = (int *)calloc(inst->nnodes * 2, sizeof(int));
 	int count = 0;
 	for (int i = 0; i < inst->nnodes; i++)
@@ -42,10 +46,9 @@ void xstarToPath(Instance *inst, double *xstar, int dim_xstar, int *path ){
 		}
 	}
 
-	
 	for (int i = 0; i < inst->nnodes; i++)
 		path[i] = 0;
-	//log_path(copy_path, inst->nnodes * 2);
+	// log_path(copy_path, inst->nnodes * 2);
 
 	path[0] = copy_path[0];
 	DEBUG_COMMENT("utilscplex.c:xstarToPath", "path[%d] = %d", 0, path[0]);
@@ -77,14 +80,13 @@ void xstarToPath(Instance *inst, double *xstar, int dim_xstar, int *path ){
 		}
 
 		DEBUG_COMMENT("utilscplex.c:xstarToPath", "path[%d] = %d", i, path[i]);
-
 	}
 	free(copy_path);
 	for (int j = 0; j < inst->nnodes; j++)
 		path[j]--;
 #ifndef PRODUCTION
 	char *tmp;
-	tmp=getPath(path, inst->nnodes);
+	tmp = getPath(path, inst->nnodes);
 	DEBUG_COMMENT("utilscplex.c:xstarToPath", "path = %s", tmp);
 	free(tmp);
 #endif

@@ -22,38 +22,37 @@ void log_path(const int *path, int nnodes)
     sprintf(c, "[");
     for (int i = 0; i < nnodes; i++)
     {
-        sprintf(c+strlen(c), "%d,", path[i]);
+        sprintf(c + strlen(c), "%d,", path[i]);
     }
-    sprintf(c+strlen(c), "]");
-    DEBUG_COMMENT("logger::log_path","%s", c);
+    sprintf(c + strlen(c), "]");
+    DEBUG_COMMENT("logger::log_path", "%s", c);
 }
 
-char* getPath(const int *path, int nnodes)
+char *getPath(const int *path, int nnodes)
 {
     char *path_str = (char *)malloc(sizeof(char) * nnodes * 5);
     sprintf(path_str, "[");
     for (int i = 0; i < nnodes; i++)
     {
-        if(i%100==0)
-            sprintf(path_str+strlen(path_str), "\n%d\t", i);
-        sprintf(path_str+strlen(path_str), "\t%d,", path[i]);
+        if (i % 100 == 0)
+            sprintf(path_str + strlen(path_str), "\n%d\t", i);
+        sprintf(path_str + strlen(path_str), "\t%d,", path[i]);
     }
-    sprintf(path_str+strlen(path_str), "]");
+    sprintf(path_str + strlen(path_str), "]");
     return path_str;
 }
 
-char* getPathDBL(const double *path, int nnodes)
+char *getPathDBL(const double *path, int nnodes)
 {
     char *path_str = (char *)malloc(sizeof(char) * nnodes * 5);
     sprintf(path_str, "[");
     for (int i = 0; i < nnodes; i++)
     {
-        sprintf(path_str+strlen(path_str), "\t%lf,", path[i]);
+        sprintf(path_str + strlen(path_str), "\t%lf,", path[i]);
     }
-    sprintf(path_str+strlen(path_str), "]");
+    sprintf(path_str + strlen(path_str), "]");
     return path_str;
 }
-
 
 void log_distancematrix(const double *distance_matrix, int nnodes)
 {

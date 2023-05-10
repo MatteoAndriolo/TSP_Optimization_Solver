@@ -2,7 +2,7 @@
 
 void add_degree_constraint(Instance *inst, CPXENVptr env, CPXLPptr lp)
 {
-    //char *tmp; //for debug purposes
+    // char *tmp; //for debug purposes
 
     INFO_COMMENT("constraint.c:add_degree_constraint", "Adding degree constraints");
     char **cname = (char **)calloc(1, sizeof(char *));
@@ -27,11 +27,11 @@ void add_degree_constraint(Instance *inst, CPXENVptr env, CPXLPptr lp)
             nnz++;
             // DEBUG_COMMENT("constraint.c:add_degree_constraint", "index[%d] = %d", nnz, index[nnz]);
         }
-// #ifndef PRODUCTION
+        // #ifndef PRODUCTION
         // tmp=getPath(index, inst->nnodes-1);
         // DEBUG_COMMENT("constraint.c:add_degree_constraint","index: %s",tmp);
         // free(tmp);
-// #endif
+        // #endif
         int izero = 0;
         // DEBUG_COMMENT("constraint.c:add_degree_constraint", "index = %s", getPath(index, inst->nnodes - 1));
         // DEBUG_COMMENT("constraint.c:add_degree_constraint", "value = %s", getPathDBL(value, inst->nnodes - 1));
@@ -57,8 +57,8 @@ void add_subtour_constraints(Instance *inst, CPXENVptr env, CPXLPptr lp)
     time_t start_time = time(NULL);
     while (ncomp != 1 && difftime(time(NULL), start_time) < 100)
     {
-        //build_model(inst, env, lp);
-        //CPXstettime
+        // build_model(inst, env, lp);
+        // CPXstettime
         INFO_COMMENT("constraint.c:add_subtour_constraints", "starting the while loop");
         error = CPXmipopt(env, lp);
         CRITICAL_COMMENT("constraint.c:add_subtour_constraints", "0");
@@ -77,7 +77,8 @@ void add_subtour_constraints(Instance *inst, CPXENVptr env, CPXLPptr lp)
 
         build_sol(xstar, inst, succ, comp, &ncomp);
 
-        if (ncomp == 1) break;
+        if (ncomp == 1)
+            break;
         DEBUG_COMMENT("constraint.c:add_subtour_constraints", "ncomp = %d", ncomp);
         DEBUG_COMMENT("constraint.c:add_subtour_constraint", "succ: %s", getPath(succ, inst->nnodes));
         DEBUG_COMMENT("constraint.c:add_subtour_constraint", "comp: %s", getPath(comp, inst->nnodes));
@@ -146,4 +147,4 @@ void add_subtour_constraints(Instance *inst, CPXENVptr env, CPXLPptr lp)
     }
 }
 
-//Se printiamo il file possoiamo vedere se iserisce correttamente le righe facendo check dalle colonne 
+// Se printiamo il file possoiamo vedere se iserisce correttamente le righe facendo check dalle colonne
