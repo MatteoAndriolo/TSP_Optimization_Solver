@@ -39,6 +39,7 @@ void add_degree_constraint(Instance *inst, CPXENVptr env, CPXLPptr lp)
             print_error("CPXaddrows(): error 1");
     }
     DEBUG_COMMENT("constraint.c:add_degree_constraint", "NUMBER OF ROW IN CPLEX after adding degree constraints %d", CPXgetnumrows(env, lp));
+    DEBUG_COMMENT("constraint.c:add_degree_constraint", "NUMBER OF ROW IN CPLEX after adding degree constraints %d", CPXgetnumrows(env, lp));
     free(cname[0]);
     free(cname);
     free(index);
@@ -52,9 +53,12 @@ void add_subtour_constraints(Instance *inst, CPXENVptr env, CPXLPptr lp)
     int error;
     int ncols;
     // take the time and if exceed the time limit then break the loop
+    // take the time and if exceed the time limit then break the loop
     time_t start_time = time(NULL);
     while (ncomp != 1 && difftime(time(NULL), start_time) < 100)
     {
+        //build_model(inst, env, lp);
+        //CPXstettime
         INFO_COMMENT("constraint.c:add_subtour_constraints", "starting the while loop");
         error = CPXmipopt(env, lp);
         CRITICAL_COMMENT("constraint.c:add_subtour_constraints", "0");
@@ -141,3 +145,5 @@ void add_subtour_constraints(Instance *inst, CPXENVptr env, CPXLPptr lp)
         WARNING_COMMENT("constraint.c:add_subtour_constraints", "FREEING MEMORY, xstar, succ, comp");
     }
 }
+
+//Se printiamo il file possoiamo vedere se iserisce correttamente le righe facendo check dalle colonne 

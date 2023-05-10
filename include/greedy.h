@@ -40,6 +40,6 @@ void extra_mileage(const double *distance_matrix, int *path, int nnodes, double 
  * Implements an updated version of the extra mileage heuristic to solve the TSP for the given instance.
  *
  * @param inst a pointer to the instance to be solved
-void updated_extra_mileage(Instance *inst);
  */
+void updated_extra_mileage(Instance *inst);
 #endif /* NEAREST_NEIGHBOR_H */

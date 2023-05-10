@@ -46,4 +46,6 @@ void build_model(Instance *inst, CPXENVptr env, CPXLPptr lp);
 */
 void build_sol(const double *xstar, Instance *inst, int * succ, int *comp, int* ncomp);
 
+void TSPopt_concorde(Instance *inst, int* path, int *succ, int *comp, int* ncomp);
+
 #endif
