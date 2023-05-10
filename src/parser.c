@@ -54,7 +54,7 @@ void read_input(Args *args) // simplified CVRP parser, not all SECTIONs detected
                 int nn = node_number - 1;
                 args->x[nn] = node_x;
                 args->y[nn] = node_y;
-                DEBUG_COMMENT("parser::read_input", "[NodesIndex: ( x , y ) ] [%d: (%lf, %lf)]", nn, args->x[nn], args->y[nn]);
+                //DEBUG_COMMENT("parser::read_input", "[NodesIndex: ( x , y ) ] [%d: (%lf, %lf)]", nn, args->x[nn], args->y[nn]);
                 node_saved++;
             }
             else

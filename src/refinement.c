@@ -5,7 +5,9 @@ void two_opt(const double *distance_matrix, int nnodes, int *path, double *tour_
 {
     INFO_COMMENT("refinement:2opt", "starting 2opt");
     int foundImprovement = 1;
+    #ifndef PRODUCTION
     log_path(path, nnodes);
+    #endif
     double cost_old_edge, cost_new_edge, cost_new_edge2, cost_old_edge2;
     while (foundImprovement)
     {
@@ -35,6 +37,8 @@ void two_opt(const double *distance_matrix, int nnodes, int *path, double *tour_
             }
         }
     }
+    #ifndef PRODUCTION
     log_path(path, nnodes);
+    #endif
     DEBUG_COMMENT("refinement:2opt", "attual tour length %lf", *tour_length);
 }

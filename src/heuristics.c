@@ -98,7 +98,7 @@ void tabu_search(const double *distance_matrix, int *path, int nnodes, double *t
     double min_increase = INFTY;
     int improvementOperation[2];
     double pendingTourLenght;
-    int tabuNodes[2];
+    int tabuNodes[2]={1,2};
     double cost_old_edge, cost_new_edge, cost_old_edge2, cost_new_edge2;
     int encumbment_path[nnodes];
     memcpy(encumbment_path, path, nnodes * sizeof(int));
@@ -124,6 +124,10 @@ void tabu_search(const double *distance_matrix, int *path, int nnodes, double *t
 
                 if (*tour_length + delta < *tour_length)
                 {
+                    // not sure about this logic
+                    foundImprovement = 1;
+                    improvementOperation[0] = i;
+                    improvementOperation[1] = j;
                     if (*tour_length + delta < encumbment_tour_length || (*tour_length + delta < pendingTourLenght && !tabuListContains(i, tabuList, tabuListSize, maxTabuSize) && !tabuListContains(j, tabuList, tabuListSize, maxTabuSize)))
                     {
                         foundImprovement = 1;
