@@ -89,7 +89,9 @@ void nearest_neighboor_grasp(const double *distance_matrix, int *path, const int
     }
     // complete the tour
     (*tour_length) += distance_matrix[path[0] * nnodes + path[nnodes - 1]];
+    #ifndef PRODUCTION
     log_path(path, nnodes);
+    #endif
 }
 
 void extra_mileage(const double *distance_matrix, int *path, int nnodes, double *tour_length)

@@ -8,7 +8,9 @@
 #define ERROR_COMMENT(position, ...) log_message(ERROR, position, __VA_ARGS__)
 #define CRITICAL_COMMENT(position, ...) log_message(CRITICAL, position, __VA_ARGS__)
 #define OUTPUT_COMMENT(position, ...) log_message(OUTPUT, position, __VA_ARGS__)
-#define FATAL_COMMENT(position, ...) log_message(FATAL, position, __VA_ARGS__); exit(1);
+#define FATAL_COMMENT(position, ...)           \
+    log_message(FATAL, position, __VA_ARGS__); \
+    exit(1);
 #else
 #define DEBUG_COMMENT(position, ...)
 #define INFO_COMMENT(position, ...) log_message(INFO, position, __VA_ARGS__)
@@ -16,7 +18,9 @@
 #define ERROR_COMMENT(position, ...) log_message(ERROR, position, __VA_ARGS__)
 #define CRITICAL_COMMENT(position, ...)
 #define OUTPUT_COMMENT(position, ...) log_message(OUTPUT, position, __VA_ARGS__)
-#define FATAL_COMMENT(position, ...) log_message(FATAL, position, __VA_ARGS__); exit(1);
+#define FATAL_COMMENT(position, ...)           \
+    log_message(FATAL, position, __VA_ARGS__); \
+    exit(1);
 #endif
 
 #include <stdio.h>
@@ -73,7 +77,7 @@ void log_path(const int *path, int nnodes);
  * @param path the path to be logged
  * @param nnodes the number of nodes
  */
-char* getPath(const int *path, int nnodes);
+char *getPath(const int *path, int nnodes);
 
 /**
  *
@@ -102,8 +106,7 @@ void log_output(int model_type, int node_start, double zbest, double timelimit, 
 
 /**
  * Closes the log file.
-*/
+ */
 void logger_close();
-
 
 #endif

@@ -158,6 +158,10 @@ void tabu_search(const double *distance_matrix, int *path, int nnodes, double *t
 
                 if (*tour_length + delta < *tour_length)
                 {
+                    // not sure about this logic
+                    foundImprovement = 1;
+                    improvementOperation[0] = i;
+                    improvementOperation[1] = j;
                     if (*tour_length + delta < encumbment_tour_length || (*tour_length + delta < pendingTourLenght && !tabuListContains(i, tabuList, tabuListSize, maxTabuSize) && !tabuListContains(j, tabuList, tabuListSize, maxTabuSize)))
                     {
                         foundImprovement = 1;
