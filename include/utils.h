@@ -78,6 +78,15 @@ void generate_distance_matrix(double **matrix, const int nnodes, const double *x
 void generate_path(int *path, int starting_node, int num_nodes);
 
 /**
+ * Is path feasible?
+ * 
+ * @param path The path to check.
+ * @param nnodes The number of nodes in the graph.
+ * @return 1 if the path is feasible, 0 otherwise.
+ */
+int feasiblePath(const int *path, const int nnodes);
+
+/**
  * Asserts that a path is valid.
  *
  * @param path The path to check.
@@ -136,5 +145,16 @@ double get_tour_length(const int *path, const int nnodes, const double *distance
  * @return The length of the tour.
 */
 void two_opt_move(int *path, int n1, int n2, int nnodes);
+
+
+/**
+ * Generate a random path.
+ * 
+ * @param path pointer to path
+ * @param nnodes The number of nodes in the graph.
+ * 
+*/
+void generate_random_path(int *path, int nnodes);
+
 
 #endif

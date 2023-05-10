@@ -51,6 +51,7 @@ int main(int argc, char **argv)
 
 	// Manage model selection -------------------------------------------------
 	print_arguments(&args);
+	srand(args.randomseed);
 	Instance instances[args.num_instances];
 	for (int c_inst = 0; c_inst < args.num_instances; c_inst++)
 	{
@@ -65,7 +66,6 @@ int main(int argc, char **argv)
 		instances[c_inst].grasp_n_probabilities = args.n_probabilities;
 		instances[c_inst].grasp_probabilities = args.grasp_probabilities;
 		strcpy(instances[c_inst].input_file, args.input_file);
-
 		int *path = malloc(sizeof(int) * args.nnodes);
 		generate_path(path, starting_points[c_inst], args.nnodes);
 
@@ -84,7 +84,7 @@ int main(int argc, char **argv)
 			else if (strcmp(passagges[j], "nng") == 0)
 			{
 				log_path(path, instances[c_inst].nnodes);
-				//parse_grasp_probabilities(args.grasp, instances[c_inst].grasp_probabilities, &instances[c_inst].grasp_n_probabilities);
+				// parse_grasp_probabilities(args.grasp, instances[c_inst].grasp_probabilities, &instances[c_inst].grasp_n_probabilities);
 				nearest_neighboor_grasp(distance_matrix, path, instances[c_inst].nnodes, &(instances[c_inst].tour_lenght), instances[c_inst].grasp_probabilities, instances[c_inst].grasp_n_probabilities);
 			}
 			else if (strcmp(passagges[j], "em") == 0)
@@ -94,33 +94,49 @@ int main(int argc, char **argv)
 			else if (strcmp(passagges[j], "2opt") == 0)
 			{
 				two_opt(distance_matrix, instances[c_inst].nnodes, path, &(instances[c_inst].tour_lenght), INFINITY);
+				two_opt(distance_matrix, instances[c_inst].nnodes, path, &(instances[c_inst].tour_lenght), INFINITY);
 			}
 			else if (strcmp(passagges[j], "vpn") == 0)
 			{
 				vnp_k(distance_matrix, path, instances[c_inst].nnodes, &instances[c_inst].tour_lenght, 5, 4);
 			}
-			else if (strcmp(passagges[j], "sa")== 0)
+			else if (strcmp(passagges[j], "sa") == 0)
 			{
 				simulate_anealling(distance_matrix, path, instances[c_inst].nnodes, &instances[c_inst].tour_lenght, 10000, 100);
 			}
 
-			if (strcmp(passagges[j], "tabu")==0)
+			if (strcmp(passagges[j], "tabu") == 0)
 			{
-				if(j==0){
+				if (j == 0)
+				{
 					FATAL_COMMENT("main::main", "Tabu search must be used with a starting point");
-				} 
-				tabu_search(distance_matrix, path, instances[c_inst].nnodes,&instances[c_inst].tour_lenght, args.nnodes/10 );
+				}
+				tabu_search(distance_matrix, path, instances[c_inst].nnodes, &instances[c_inst].tour_lenght, args.nnodes / 10);
 			}
-
-			strcpy(title+strlen(title), passagges[j]);	
-			//TODO fix title in all the different 
-			// like in grasp specify also the probabilities
-			// put first name of model then the rest
-			plot(path, args.x,args.y, args.nnodes, title, instances[c_inst].node_start); 
-			if(j==n_passagges-1) strcpy(title,"\0");
-
+			else if (strcmp(passagges[j], "gen") == 0)
+			{
+				genetic_algorithm(distance_matrix, path, instances[c_inst].nnodes, &instances[c_inst].tour_lenght, 40000, 100);
+			}
+			else if (strcmp(passagges[j], "test") == 0)
+			{
+				continue;
+			}
+			else
+			{
+				FATAL_COMMENT("main::main", "Model %s not recognized", passagges[j]);
+				printf("Model %s not recognized", passagges[j]);
+			}
+			printf("finished");
+			ffflush();
+			strcpy(title + strlen(title), passagges[j]);
+			// TODO fix title in all the different
+			//  like in grasp specify also the probabilities
+			//  put first name of model then the rest
+			plot(path, args.x, args.y, args.nnodes, title, instances[c_inst].node_start);
+			if (j == n_passagges - 1)
+				strcpy(title, "\0");
 		}
-		//sprintf(title + strlen(title), str_startingNode);
+		// sprintf(title + strlen(title), str_startingNode);
 		free(path);
 	}
 	free(distance_matrix);
@@ -129,4 +145,3 @@ int main(int argc, char **argv)
 	logger_close();
 	return 0;
 }
-

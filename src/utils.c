@@ -86,6 +86,15 @@ double get_tour_length(const int *path, const int nnodes, const double *distance
     }
     return tour_length;
 }
+int feasiblePath(const int *path, const int nnodes)
+{
+    // all nodes used
+    int check_nnodes = (nnodes * (nnodes - 1)) / 2;
+    for (int i = 0; i < nnodes; check_nnodes -= path[i++])
+        ;
+
+    return check_nnodes == 0;
+}
 
 int assert_path(const int *path, const double *distance_matrix, const int nnodes, const double tour_length)
 {
@@ -150,12 +159,31 @@ void swap_array_piece(int *arr, int start1, int end1, int start2, int end2)
 }
 void two_opt_move(int *path, int n1, int n2, int nnodes)
 {
-    int t=(n1+1)%nnodes;
+    int t = (n1 + 1) % nnodes;
+    int t = (n1 + 1) % nnodes;
     for (int z = 0; z < (int)(n2 - n1 + 1) / 2; z++) // reverse order cells (n1+1,index_min)
     {
         double temp = path[z + t];
         path[z + t] = path[n2 - z];
         path[n2 - z] = temp;
     }
+}
 
+void generate_random_path(int *path, int nnodes)
+{
+    DEBUG_COMMENT("utils::generate_random_path", "Entering generate_random_path function");
+    int j, tmp;
+    // path = malloc(nnodes * sizeof(int));
+    for (int i = 0; i < nnodes; i++)
+    {
+        path[i] = i;
+    }
+    for (int i = 0; i < nnodes; i++)
+    {
+        j = rand() % nnodes;
+        tmp = path[i];
+        path[i] = path[j];
+        path[j] = tmp;
+    }
+    DEBUG_COMMENT("utils::generate_random_path", "Generated random path");
 }

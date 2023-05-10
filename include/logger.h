@@ -11,7 +11,7 @@
 #define FATAL_COMMENT(position, ...) log_message(FATAL, position, __VA_ARGS__); exit(1);
 #else
 #define DEBUG_COMMENT(position, ...)
-#define INFO_COMMENT(position, ...)
+#define INFO_COMMENT(position, ...) log_message(INFO, position, __VA_ARGS__)
 #define WARNING_COMMENT(position, ...)
 #define ERROR_COMMENT(position, ...) log_message(ERROR, position, __VA_ARGS__)
 #define CRITICAL_COMMENT(position, ...)
@@ -66,6 +66,14 @@ void ffflush();
  * @param nnodes the number of nodes
  */
 void log_path(const int *path, int nnodes);
+
+/**
+ * Return string the given path.
+ *
+ * @param path the path to be logged
+ * @param nnodes the number of nodes
+ */
+char* getPath(const int *path, int nnodes);
 
 /**
  *
