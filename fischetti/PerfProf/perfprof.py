@@ -1,13 +1,9 @@
-#!/usr/bin/env python2
-
-from __future__ import print_function
+from argparse import ArgumentParser
 import numpy as np
 import matplotlib
 matplotlib.use('PDF')
 import matplotlib.pyplot as plt
 import sys
-
-from optparse import OptionParser
 
 # parameters
 defLW = 1.2  # default line width
@@ -25,26 +21,31 @@ colors = ['r', 'b', 'y', 'g', 'm', 'c']
 
 class CmdLineParser(object):
 	def __init__(self):
-		self.parser = OptionParser(usage='usage: python2 perfprof.py [options] cvsfile.csv outputfile.pdf')
+		self.parser = ArgumentParser(description='Plot performance profiles.')
 		# default options
-		self.parser.add_option("-D", "--delimiter", dest="delimiter", default=None, help="delimiter for input files")
-		self.parser.add_option("-M", "--maxratio", dest="maxratio", default=4, type=float, help="maxratio for perf. profile")
-		self.parser.add_option("-S", "--shift", dest="shift", default=0, type=float, help="shift for data")
-		self.parser.add_option("-L", "--logplot", dest="logplot", action="store_true", default=False, help="log scale for x")
-		self.parser.add_option("-T", "--timelimit", dest="timelimit", default=1e99, type=float, help="time limit for runs")
-		self.parser.add_option("-P", "--plot-title", dest="plottitle", default=None, help="plot title")
-		self.parser.add_option("-X", "--x-label", dest="xlabel", default='Time Ratio', help="x axis label")
-		self.parser.add_option("-B", "--bw", dest="bw", action="store_true", default=False, help="plot B/W")
-
-	def addOption(self, *args, **kwargs):
-		self.parser.add_option(*args, **kwargs)
+		self.parser.add_argument(dest="input", metavar="INPUT",
+			help="CSV file with performance profile specification")
+		self.parser.add_argument(dest="output", metavar="OUTPUT",
+			help="output file (PDF format)")
+		self.parser.add_argument("-D", "--delimiter", dest="delimiter", default=',',
+			help="delimiter for input files")
+		self.parser.add_argument("-M", "--maxratio", dest="maxratio", default=4, type=float,
+			help="maxratio for perf. profile")
+		self.parser.add_argument("-S", "--shift", dest="shift", default=0, type=float,
+			help="shift for data")
+		self.parser.add_argument("-L", "--logplot", dest="logplot", action="store_true", default=False,
+			help="log scale for x")
+		self.parser.add_argument("-T", "--timelimit", dest="timelimit", default=1e99, type=float,
+			help="time limit for runs")
+		self.parser.add_argument("-P", "--plot-title", dest="plottitle", default=None,
+			help="plot title")
+		self.parser.add_argument("-X", "--x-label", dest="xlabel", default='Time Ratio',
+			help="x axis label")
+		self.parser.add_argument("-B", "--bw", dest="bw", action="store_true", default=False,
+			help="plot B/W")
 
 	def parseArgs(self):
-		(options, args) = self.parser.parse_args()
-		options.input = args[0]
-		options.output = args[1]
-		return options
-
+		return self.parser.parse_args()
 
 def readTable(fp, delimiter):
 	"""
@@ -97,9 +98,11 @@ def main():
 	ratio.sort(axis=0)
 	# plot first
 	y = np.arange(nrows, dtype=np.float64) / nrows
+	print(f'y = {y}, len(y) = {len(y)}')
+	print(f'ratio = {ratio}, len(ratio) = {len(ratio)}')
 	for j in range(ncols):
 		options = dict(label=cnames[j],
-				linewidth=defLW, linestyle='steps-post' + dashes[j],
+				linewidth=defLW, linestyle = dashes[j],
 				marker=markers[j], markeredgewidth=defLW, markersize=defMS)
 		#plt.step(ratio[:,j], y, label=cnames[j], linewidth=defLW, marker=markers[j], markersize=defMS)
 		if opt.bw:
