@@ -79,7 +79,7 @@ int main(int argc, char **argv)
 
 		for (int j = 0; j < n_passagges; j++)
 		{
-			INFO_COMMENT("main::main", "Generating instance");
+			INFO_COMMENT("main::main", "Generating instance %s", passagges[j]);
 			if (strcmp(passagges[j], "nn") == 0)
 			{
 				nearest_neighboor(distance_matrix, path, instances[c_inst].nnodes, &instances[c_inst].tour_lenght);
@@ -94,11 +94,10 @@ int main(int argc, char **argv)
 			}
 			else if (strcmp(passagges[j], "em") == 0)
 			{
-				two_opt(distance_matrix, args.nnodes, path, &(instances[c_inst].tour_lenght), INFINITY);
+				extra_mileage(distance_matrix, path, instances[c_inst].nnodes, &instances[c_inst].tour_lenght);
 			}
 			else if (strcmp(passagges[j], "2opt") == 0)
 			{
-				two_opt(distance_matrix, instances[c_inst].nnodes, path, &(instances[c_inst].tour_lenght), INFINITY);
 				two_opt(distance_matrix, instances[c_inst].nnodes, path, &(instances[c_inst].tour_lenght), INFINITY);
 			}
 			else if (strcmp(passagges[j], "vpn") == 0)
@@ -109,8 +108,7 @@ int main(int argc, char **argv)
 			{
 				simulate_anealling(distance_matrix, path, instances[c_inst].nnodes, &instances[c_inst].tour_lenght, 10000, 100);
 			}
-
-			if (strcmp(passagges[j], "tabu") == 0)
+			else if (strcmp(passagges[j], "tabu") == 0)
 			{
 				if (j == 0)
 				{
@@ -129,7 +127,6 @@ int main(int argc, char **argv)
 			else
 			{
 				FATAL_COMMENT("main::main", "Model %s not recognized", passagges[j]);
-				printf("Model %s not recognized", passagges[j]);
 			}
 			printf("finished");
 			ffflush();
