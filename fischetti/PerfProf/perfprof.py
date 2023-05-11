@@ -123,6 +123,7 @@ def main():
 		plt.xlabel(opt.xlabel)
 		plt.savefig(opt.output)
 	else:
+		nb_colors = len(plt.rcParams['axes.prop_cycle'])
 		minima = data.min(axis=1)
 		ratio = data
 		for j in range(ncols):

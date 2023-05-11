@@ -43,6 +43,7 @@ int main(int argc, char **argv)
 	INFO_COMMENT("main::main", "Generating starting points");
 	int *starting_points = (int *)malloc(sizeof(int) * args.num_instances);
 	generate_random_starting_nodes(starting_points, args.nnodes, args.num_instances, args.randomseed);
+
 	for (int i = 0; i < args.num_instances; i++)
 	{
 		DEBUG_COMMENT("main::main", "Starting point %d: %d", i, starting_points[i]);
@@ -52,7 +53,7 @@ int main(int argc, char **argv)
 	print_arguments(&args);
 	Instance instances[args.num_instances];
 	int n_times = 0;
-	double *times = malloc(sizeof(double) * args.num_instances * 4);
+	double *times = malloc(sizeof(double) * args.num_instances * n_passagges);
 	for (int c_inst = 0; c_inst < args.num_instances; c_inst++)
 	{
 		instances[c_inst].nnodes = args.nnodes;
@@ -69,7 +70,7 @@ int main(int argc, char **argv)
 
 		int *path = malloc(sizeof(int) * args.nnodes);
 		generate_path(path, starting_points[c_inst], args.nnodes);
-
+		int * current_starting_path = path;
 		char str_startingNode[20];
 		sprintf(str_startingNode, "%d-", starting_points[c_inst]);
 
@@ -79,19 +80,19 @@ int main(int argc, char **argv)
 			INFO_COMMENT("main::main", "Generating instance");
 			if (strcmp(passagges[j], "nn") == 0)
 			{
-				double time = nearest_neighboor(distance_matrix, path, instances[c_inst].nnodes, &instances[c_inst].tour_lenght);
+				double time = nearest_neighboor(distance_matrix, current_starting_path, instances[c_inst].nnodes, &instances[c_inst].tour_lenght);
 				times[n_times++] = time;
 			}
 			else if (strcmp(passagges[j], "nng") == 0) // nng
 			{
 				// log_path(path, instances[c_inst].nnodes);
 				// parse_grasp_probabilities(args.grasp, instances[c_inst].grasp_probabilities, &instances[c_inst].grasp_n_probabilities);
-				double time = nearest_neighboor_grasp(distance_matrix, path, instances[c_inst].nnodes, &(instances[c_inst].tour_lenght), instances[c_inst].grasp_probabilities, instances[c_inst].grasp_n_probabilities);
+				double time = nearest_neighboor_grasp(distance_matrix, current_starting_path, instances[c_inst].nnodes, &(instances[c_inst].tour_lenght), instances[c_inst].grasp_probabilities, instances[c_inst].grasp_n_probabilities);
 				times[n_times++] = time;
 			}
 			else if (strcmp(passagges[j], "em") == 0) // em
 			{
-				double time = extra_mileage(distance_matrix, path, args.nnodes, &(instances[c_inst].tour_lenght));
+				double time = extra_mileage(distance_matrix, current_starting_path, args.nnodes, &(instances[c_inst].tour_lenght));
 				times[n_times++] = time;
 			}
 			else if (strcmp(passagges[j], "2opt") == 0)

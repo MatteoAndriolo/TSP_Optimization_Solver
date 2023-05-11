@@ -324,7 +324,7 @@ void parse_grasp_probabilities(char *grasp, double *probabilities, int *n_probab
 */
 void write_csv(int N_ALGORITHMS, int N_INSTANCES, double *times, int j)
 {
-    printf("j: %d\n", j);
+    /*printf("j: %d\n", j);
     if (j == 0){
         // in first run write also the header
         FILE *fp = fp = fopen("./performance/performance_data.csv", "w");
@@ -337,7 +337,7 @@ void write_csv(int N_ALGORITHMS, int N_INSTANCES, double *times, int j)
         }
         fprintf(fp, "\n");
         fclose(fp);
-    }
+    }*/
 
     FILE *fp;
     fp = fopen("./performance/performance_data.csv", "a");
