@@ -1,6 +1,47 @@
 #include "tspcplex.h"
 #define EPS 1e-5
 
+void get_path_from_CPXIntSolution(const double *xstar, Instance *inst, int *succ, int *comp, int *ncomp)
+{
+
+  *ncomp = 0;
+  for (int i = 0; i < inst->nnodes; i++)
+  {
+    succ[i] = -1;
+    comp[i] = -1;
+  }
+
+  for (int start = 0; start < inst->nnodes; start++)
+  {
+    if (comp[start] >= 0)
+      continue; // node "start" was already visited, just skip it
+
+    // a new component is found
+    (*ncomp)++;
+    int i = start;
+    int done = 0;
+    while (!done) // go and visit the current component
+    {
+      comp[i] = *ncomp;
+      done = 1;
+      for (int j = 0; j < inst->nnodes; j++)
+      {
+        if (i != j && xstar[xpos(i, j, inst)] > 0.5 && comp[j] == -1) // the edge [i,j] is selected in xstar and j was not visited before
+        {
+          succ[i] = j;
+          i = j;
+          done = 0;
+          break;
+        }
+      }
+    }
+    succ[i] = start; // last arc to close the cycle
+                     // go to the next component...
+    DEBUG_COMMENT("tspcplex.c:build_model", "succ: %s", getPath(succ, inst->nnodes));
+    DEBUG_COMMENT("tspcplex.c:build_model", "comp: %s", getPath(comp, inst->nnodes));
+  }
+}
+
 void build_model(Instance *inst, CPXENVptr env, CPXLPptr lp)
 {
   INFO_COMMENT("tspcplex:build_model", "Building model");
@@ -122,7 +163,7 @@ int my_callback_encumbment(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, voi
   int *succ = (int *)malloc(sizeof(int) * inst->nnodes);
   int *comp = (int *)malloc(sizeof(int) * inst->nnodes);
   int ncomp;
-  build_sol(xstar, inst, succ, comp, &ncomp);
+  get_path_from_CPXIntSolution(xstar, inst, succ, comp, &ncomp);
   DEBUG_COMMENT("constraint.c:add_subtour_constraints", "ncomp = %d", ncomp);
   DEBUG_COMMENT("constraint.c:add_subtour_constraint", "succ: %s", getPath(succ, inst->nnodes));
   DEBUG_COMMENT("constraint.c:add_subtour_constraint", "comp: %s", getPath(comp, inst->nnodes));
@@ -280,45 +321,4 @@ void TSPopt(Instance *inst, int *path, int callbacks)
   // free and close cplex model
   CPXfreeprob(env, &lp);
   CPXcloseCPLEX(&env);
-}
-
-void build_sol(const double *xstar, Instance *inst, int *succ, int *comp, int *ncomp)
-{
-
-  *ncomp = 0;
-  for (int i = 0; i < inst->nnodes; i++)
-  {
-    succ[i] = -1;
-    comp[i] = -1;
-  }
-
-  for (int start = 0; start < inst->nnodes; start++)
-  {
-    if (comp[start] >= 0)
-      continue; // node "start" was already visited, just skip it
-
-    // a new component is found
-    (*ncomp)++;
-    int i = start;
-    int done = 0;
-    while (!done) // go and visit the current component
-    {
-      comp[i] = *ncomp;
-      done = 1;
-      for (int j = 0; j < inst->nnodes; j++)
-      {
-        if (i != j && xstar[xpos(i, j, inst)] > 0.5 && comp[j] == -1) // the edge [i,j] is selected in xstar and j was not visited before
-        {
-          succ[i] = j;
-          i = j;
-          done = 0;
-          break;
-        }
-      }
-    }
-    succ[i] = start; // last arc to close the cycle
-                     // go to the next component...
-    DEBUG_COMMENT("tspcplex.c:build_model", "succ: %s", getPath(succ, inst->nnodes));
-    DEBUG_COMMENT("tspcplex.c:build_model", "comp: %s", getPath(comp, inst->nnodes));
-  }
 }

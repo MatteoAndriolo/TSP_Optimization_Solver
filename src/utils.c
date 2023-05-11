@@ -102,7 +102,6 @@ int assert_path(const int *path, const double *distance_matrix, const int nnodes
     return 1;
 }
 
-// TODO: permutation of the nodes
 void generate_random_starting_nodes(int *starting_nodes, int num_nodes, int num_instances, int seed)
 {
     srand(seed);

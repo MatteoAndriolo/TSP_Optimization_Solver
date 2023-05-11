@@ -38,14 +38,14 @@ void TSPopt(Instance *inst, int *path, int callbacks);
  */
 void build_model(Instance *inst, CPXENVptr env, CPXLPptr lp);
 /**
- * @brief build_sol
+ * @brief get_path_from_CPXIntSolution
  * @param xstar solution vector
  * @param inst instance of the problem to be solved
  * @param succ successor vector
  * @param comp component vector
  * @param ncomp number of components
  */
-void build_sol(const double *xstar, Instance *inst, int *succ, int *comp, int *ncomp);
+void get_path_from_CPXIntSolution(const double *xstar, Instance *inst, int *succ, int *comp, int *ncomp);
 
 void TSPopt_concorde(Instance *inst, int *path, int *succ, int *comp, int *ncomp);
 
