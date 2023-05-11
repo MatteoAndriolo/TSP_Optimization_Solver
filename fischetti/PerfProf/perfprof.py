@@ -4,6 +4,7 @@ import matplotlib
 matplotlib.use('PDF')
 import matplotlib.pyplot as plt
 import sys
+import csv
 
 # parameters
 defLW = 1.2  # default line width
@@ -37,12 +38,13 @@ class CmdLineParser(object):
 			help="log scale for x")
 		self.parser.add_argument("-T", "--timelimit", dest="timelimit", default=1e99, type=float,
 			help="time limit for runs")
-		self.parser.add_argument("-P", "--plot-title", dest="plottitle", default=None,
+		self.parser.add_argument("-P", "--plot-title", dest="plottitle", default='comparison of algorithms',
 			help="plot title")
-		self.parser.add_argument("-X", "--x-label", dest="xlabel", default='Time Ratio',
+		self.parser.add_argument("-X", "--x-label", dest="xlabel", default='number of instances generated',
 			help="x axis label")
 		self.parser.add_argument("-B", "--bw", dest="bw", action="store_true", default=False,
 			help="plot B/W")
+		self.parser.add_argument("-G", "-typeplot", dest="old", action="store_false", default = True, help = "type of plot profile/times")
 
 	def parseArgs(self):
 		return self.parser.parse_args()
@@ -81,46 +83,80 @@ def main():
 	nrows, ncols = data.shape
 	# add shift
 	data = data + opt.shift
-	# compute ratios
-	minima = data.min(axis=1)
-	ratio = data
-	for j in range(ncols):
-		ratio[:, j] = data[:, j] / minima
-	# compute maxratio
-	if opt.maxratio == -1:
-		opt.maxratio = ratio.max()
-	# any time >= timelimit will count as maxratio + bigM (so that it does not show up in plots)
-	for i in range(nrows):
+	if (opt.old):
+		# compute ratios
+		minima = data.min(axis=1)
+		ratio = data
 		for j in range(ncols):
-			if data[i,j] >= opt.timelimit:
-				ratio[i,j] = opt.maxratio + 1e6
-	# sort ratios
-	ratio.sort(axis=0)
-	# plot first
-	y = np.arange(nrows, dtype=np.float64) / nrows
-	print(f'y = {y}, len(y) = {len(y)}')
-	print(f'ratio = {ratio}, len(ratio) = {len(ratio)}')
-	for j in range(ncols):
-		options = dict(label=cnames[j],
-				linewidth=defLW, linestyle = dashes[j],
-				marker=markers[j], markeredgewidth=defLW, markersize=defMS)
-		#plt.step(ratio[:,j], y, label=cnames[j], linewidth=defLW, marker=markers[j], markersize=defMS)
-		if opt.bw:
-			options['markerfacecolor'] = 'w'
-			options['markeredgecolor'] = 'k'
-			options['color'] = 'k'
-		else:
-			options['color'] = colors[j]
-		if opt.logplot:
-			plt.semilogx(ratio[:, j], y, **options)
-		else:
-			plt.plot(ratio[:, j], y, **options)
-	plt.axis([1, opt.maxratio, 0, 1])
-	plt.legend(loc='lower right')
-	if opt.plottitle is not None:
-		plt.title(opt.plottitle)
-	plt.xlabel(opt.xlabel)
-	plt.savefig(opt.output)
+			ratio[:, j] = data[:, j] / minima 
+		# compute maxratio
+		if opt.maxratio == -1:
+			opt.maxratio = ratio.max()
+		# any time >= timelimit will count as maxratio + bigM (so that it does not show up in plots)
+		for i in range(nrows):
+			for j in range(ncols):
+				if data[i,j] >= opt.timelimit:
+					ratio[i,j] = opt.maxratio + 1e6
+		# sort ratios
+		ratio.sort(axis=0)
+		# plot first
+		y = np.arange(nrows, dtype=np.float64) / nrows
+		for j in range(ncols):
+			options = dict(label=cnames[j],
+					linewidth=defLW, linestyle = dashes[j],
+					marker=markers[j], markeredgewidth=defLW, markersize=defMS)
+			#plt.step(ratio[:,j], y, label=cnames[j], linewidth=defLW, marker=markers[j], markersize=defMS)
+			if opt.bw:
+				options['markerfacecolor'] = 'w'
+				options['markeredgecolor'] = 'k'
+				options['color'] = 'k'
+			else:
+				options['color'] = colors[j]
+			if opt.logplot:
+				plt.semilogx(ratio[:, j], y, **options)
+			else:
+				plt.plot(ratio[:, j], y, **options)
+		plt.axis([1, opt.maxratio, 0, 1])
+		plt.legend(loc='lower right')
+		if opt.plottitle is not None:
+			plt.title(opt.plottitle)
+		plt.xlabel(opt.xlabel)
+		plt.savefig(opt.output)
+	else:
+		minima = data.min(axis=1)
+		ratio = data
+		for j in range(ncols):
+			ratio[:, j] = data[:, j] / minima 
+		# compute maxratio
+		if opt.maxratio == -1:
+			opt.maxratio = ratio.max()
+		# any time >= timelimit will count as maxratio + bigM (so that it does not show up in plots)
+		for i in range(nrows):
+			for j in range(ncols):
+				if data[i,j] >= opt.timelimit:
+					ratio[i,j] = opt.maxratio + 1e6
+		for j in range(ncols):
+			options = dict(label=cnames[j],
+							linewidth=defLW, linestyle = dashes[j],
+							marker=markers[j], markeredgewidth=defLW, markersize=defMS)
+							#plt.step(ratio[:,j], y, label=cnames[j], linewidth=defLW, marker=markers[j], markersize=defMS)
+			x = np.arange(nrows, dtype= np.int32)
+			if opt.bw:
+				options['markerfacecolor'] = 'w'
+				options['markeredgecolor'] = 'k'
+				options['color'] = 'k'
+			else:
+				options['color'] = colors[j]
+			if opt.logplot:
+				plt.semilogx(x, ratio[:, j], **options)
+			else:
+				plt.plot(x, ratio[:, j], **options)
+		plt.legend(loc='lower right')
+		if opt.plottitle is not None:
+			plt.title(opt.plottitle)
+		plt.xlabel(opt.xlabel)
+		plt.ylabel("Times")
+		plt.savefig(opt.output)
 
 if __name__ == '__main__':
 	main()

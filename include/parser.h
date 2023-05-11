@@ -69,4 +69,13 @@ void parse_model_name(char *model_type, char ***passagges, int *n_passagges);
  */
 void parse_grasp_probabilities(char *grasp, double *probabilities, int *n_probabilities);
 
+/**
+* Generate random starting nodes
+* @param N_ALGORITHMS numeber of algorithms
+* @param N_INSTANCES number of instances
+* @param times the times stored in an array int
+* @param j the index of the array 
+*/
+void write_csv(int N_ALGORITHMS, int N_INSTANCES, double * times, int j);
+
 #endif

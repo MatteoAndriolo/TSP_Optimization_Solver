@@ -137,4 +137,10 @@ double get_tour_length(const int *path, const int nnodes, const double *distance
 */
 void two_opt_move(int *path, int n1, int n2, int nnodes);
 
+/**
+ * Calculates the length of a tour.
+ * @param start_time The starting time.
+*/
+double calculate_running_time(clock_t start_time);
+
 #endif

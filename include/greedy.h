@@ -12,7 +12,7 @@
  * @param nnodes the number of nodes
  * @param tour_length a pointer to the tour length
  */
-void nearest_neighboor(const double *distance_matrix, int *path, int nnodes, double *tour_length);
+double nearest_neighboor(const double *distance_matrix, int *path, int nnodes, double *tour_length);
 
 /**
  * Implements the nearest neighbor heuristic to solve the TSP for the given instance.
@@ -24,7 +24,7 @@ void nearest_neighboor(const double *distance_matrix, int *path, int nnodes, dou
  * @param probabilities a pointer to the probabilities array
  * @param n_prob the number of probabilities
  */
-void nearest_neighboor_grasp(const double *distance_matrix, int *path, const int nnodes, double *tour_length, const double *probabilities, const int n_prob);
+double nearest_neighboor_grasp(const double *distance_matrix, int *path, const int nnodes, double *tour_length, const double *probabilities, const int n_prob);
 
 /**
  * Implements a variation of the extra mileage heuristic to solve the TSP for the given instance.
@@ -34,7 +34,7 @@ void nearest_neighboor_grasp(const double *distance_matrix, int *path, const int
  * @param nnodes the number of nodes
  * @param tour_length a pointer to the tour length
  */
-void extra_mileage(const double *distance_matrix, int *path, int nnodes, double *tour_length);
+double extra_mileage(const double *distance_matrix, int *path, int nnodes, double *tour_length);
 
 /**
  * Implements an updated version of the extra mileage heuristic to solve the TSP for the given instance.

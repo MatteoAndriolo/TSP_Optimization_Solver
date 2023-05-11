@@ -6,8 +6,9 @@
 #include <math.h>
 #include "refinement.h"
 
-void nearest_neighboor(const double *distance_matrix, int *path, int nnodes, double *tour_length)
+double nearest_neighboor(const double *distance_matrix, int *path, int nnodes, double *tour_length)
 {
+    clock_t start_time = clock(); 
     int current_node;
     int best_remaining = -1;
     DEBUG_COMMENT("greedy::nearest_neighboor", "start nearest neighboor");
@@ -38,10 +39,13 @@ void nearest_neighboor(const double *distance_matrix, int *path, int nnodes, dou
         ERROR_COMMENT("greedy::model_nearest_neighboor", "path is not ok");
         *tour_length = -1;
     }
+    double time = calculate_running_time(start_time);
+    return time; 
 }
 
-void nearest_neighboor_grasp(const double *distance_matrix, int *path, const int nnodes, double *tour_length, const double *probabilities, const int n_prob)
+double nearest_neighboor_grasp(const double *distance_matrix, int *path, const int nnodes, double *tour_length, const double *probabilities, const int n_prob)
 {
+    clock_t start_time = clock(); 
     DEBUG_COMMENT("greedy::nng", "start nearest neighboor");
 
     int rankings_index[n_prob];
@@ -90,10 +94,13 @@ void nearest_neighboor_grasp(const double *distance_matrix, int *path, const int
     // complete the tour
     (*tour_length) += distance_matrix[path[0] * nnodes + path[nnodes - 1]];
     log_path(path, nnodes);
+    double time = calculate_running_time(start_time);
+    return time; 
 }
 
-void extra_mileage(const double *distance_matrix, int *path, int nnodes, double *tour_length)
+double extra_mileage(const double *distance_matrix, int *path, int nnodes, double *tour_length)
 {
+     clock_t start_time = clock(); 
     //--------------- FIND DIAMETER -------------------------------------------
     double max_distance = 0;
     int max_index = -1;
@@ -185,4 +192,7 @@ void extra_mileage(const double *distance_matrix, int *path, int nnodes, double 
     // Put the saved value from position j into position i
     if (assert_path(path, distance_matrix, nnodes, *tour_length))
         OUTPUT_COMMENT("greedy::extra_mileage", "found best tour lenght %lf", tour_length);
+    
+    double time = calculate_running_time(start_time);
+    return time; 
 }

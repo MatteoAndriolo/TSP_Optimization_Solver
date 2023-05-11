@@ -157,5 +157,10 @@ void two_opt_move(int *path, int n1, int n2, int nnodes)
         path[z + t] = path[n2 - z];
         path[n2 - z] = temp;
     }
+}
 
+double calculate_running_time(clock_t start_time) {
+    clock_t end_time = clock();  // Get the current time
+    double running_time = ((double)(end_time - start_time) * 1000) / CLOCKS_PER_SEC;
+    return running_time;
 }

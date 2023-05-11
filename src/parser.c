@@ -103,6 +103,7 @@ void print_arguments(const Args *args)
 void parse_model_name(char *model_type, char ***passagges, int *n_passagges)
 {
     (*n_passagges) = 0;
+     char delimiter = '.';
     int length = strlen(model_type);
     for (int i = 0; i < length; i++)
         if (model_type[i] == delimiter)
@@ -255,9 +256,9 @@ void parse_grasp_probabilities(char *grasp, double *probabilities, int *n_probab
     char delimiter = '.';
     *n_probabilities = 0;
     int length = strlen(grasp);
-    int cur_ind=0;
+    int cur_ind = 0;
     int i;
-    for( i = 0; i < length; i++)
+    for (i = 0; i < length; i++)
         if (grasp[i] == delimiter)
         {
             grasp[i] = '\0';
@@ -288,7 +289,6 @@ void parse_grasp_probabilities(char *grasp, double *probabilities, int *n_probab
         probabilities[i] += probabilities[i - 1];
         DEBUG_COMMENT("parser::parser_grasp_probabilities", "probabilities[%d]=%lf", i, probabilities[i]);
     }
-
 }
 
 /*
@@ -322,3 +322,38 @@ void parse_grasp_probabilities(char *grasp, double *probabilities, int *n_probab
         probabilities[i] = probabilities[i - 1] + probabilities[i];
 }
 */
+void write_csv(int N_ALGORITHMS, int N_INSTANCES, double *times, int j)
+{
+    printf("j: %d\n", j);
+    if (j == 0){
+        // in first run write also the header
+        FILE *fp = fp = fopen("./performance/performance_data.csv", "w");
+        if (fp == NULL)
+            printf("Error: Failed to open file\n");
+        fprintf(fp, "%d", N_ALGORITHMS);
+        for (int i = 1; i <= N_ALGORITHMS; i++)
+        {
+            fprintf(fp, ", algorithm %d", i);
+        }
+        fprintf(fp, "\n");
+        fclose(fp);
+    }
+
+    FILE *fp;
+    fp = fopen("./performance/performance_data.csv", "a");
+    if (fp == NULL)
+        printf("Error: Failed to open file\n");
+
+    fprintf(fp, "instance: %d", j);
+    for (int i = 0; i < N_ALGORITHMS; i++)
+    {
+        double time = times[j * N_ALGORITHMS + i];
+        fprintf(fp, ", %f", time);
+        printf("instance %d written, times: %f, number in times : %d\n", j, time, j * N_ALGORITHMS + i);
+    }
+    
+    fprintf(fp, "\n");
+
+    // Close the CSV file
+    fclose(fp);
+}
