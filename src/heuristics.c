@@ -115,7 +115,7 @@ int tabuListContains(int n1, int tabuList[], int tabuListSize, int maxTabuSize)
 
 int stoppingCondition(int currentIteration)
 {
-    return currentIteration > 200; // TODO improve stopping condition
+    return currentIteration > 200; // TODO setup stopping condition
 }
 
 void tabu_search(const double *distance_matrix, int *path, int nnodes, double *tour_length, int maxTabuSize)
