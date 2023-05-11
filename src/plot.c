@@ -26,7 +26,7 @@ void plot(const int *path, const double *x, const double *y, const int nnodes, c
     for (int i = 0; i < nnodes; i++)
     {
         node = path[i];
-        if(node == starting_node)
+        if (node == starting_node)
             index_starting_node = i;
         fprintf(gnuplotPipe, "%d %d\n", (int)x[node], (int)y[node]);
     }
@@ -54,7 +54,6 @@ void plot(const int *path, const double *x, const double *y, const int nnodes, c
     // PDF
     // fprintf(gnuplotPipe, "set terminal pdf size 800,600 font 'Arial,12'\n");
     // fprintf(gnuplotPipe, "set output 'plot/%s.pdf'\n", title);
-//TODO remove gui plotting and let just save the plots if not required to show them
 
     fprintf(gnuplotPipe, "replot");
 

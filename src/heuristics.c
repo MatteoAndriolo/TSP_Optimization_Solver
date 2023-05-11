@@ -115,7 +115,7 @@ int tabuListContains(int n1, int tabuList[], int tabuListSize, int maxTabuSize)
 
 int stoppingCondition(int currentIteration)
 {
-    return currentIteration > 200; // TODO improve stopping condition
+    return currentIteration > 200;
 }
 
 void tabu_search(const double *distance_matrix, int *path, int nnodes, double *tour_length, int maxTabuSize)
@@ -137,7 +137,6 @@ void tabu_search(const double *distance_matrix, int *path, int nnodes, double *t
     int encumbment_path[nnodes];
     memcpy(encumbment_path, path, nnodes * sizeof(int));
     double encumbment_tour_length = *tour_length;
-    // TODO clean tabulist after many number of iterations
     while (!stoppingCondition(currentIteration))
     {
         currentIteration++;
@@ -147,7 +146,7 @@ void tabu_search(const double *distance_matrix, int *path, int nnodes, double *t
         pendingTourLenght = *tour_length;
         for (int i = 0; i < nnodes - 2; i++)
         {
-            for (int j = i + 1; j < nnodes; j++) // TODO do the same in two opt -> reach last node and use j+1 % nnodes
+            for (int j = i + 1; j < nnodes; j++)
             {
                 int j1 = (j + 1) % nnodes;
                 cost_old_edge = distance_matrix[path[i] * nnodes + path[i + 1]];
@@ -616,6 +615,7 @@ void genetic_algorithm(const double *distance_matrix, int *path, int nnodes, dou
             /*****************/
             /* Merge Parents */
             /*****************/
+            // TODO search a good crossover procedure
             // effort = genetic_merge_parents(&child, &population[indexParent1], &population[indexParent2], nnodes, prob_deletion);
             genetic_simple_merge(child.path, population[indexParent1].path, population[indexParent2].path, &nnodes);
             effort = nnodes * 4;
@@ -628,6 +628,7 @@ void genetic_algorithm(const double *distance_matrix, int *path, int nnodes, dou
             /**********/
             /* Repair */
             /**********/
+            // TODO we need to repair? how?
             // genetic_repair_child(&child, distance_matrix, nnodes, INFINITY);
 
 #ifdef VERBOSE
@@ -639,6 +640,7 @@ void genetic_algorithm(const double *distance_matrix, int *path, int nnodes, dou
             /*****************/
             /* Add mutations */
             /*****************/
+            // TODO we need to add mutation or we just take that kind of crossover as enough mutations
             // if(iter<iterations-1)
             // genetic_add_mutations(&child, nnodes, prob_mutation);
 
