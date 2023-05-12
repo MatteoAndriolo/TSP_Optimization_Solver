@@ -124,18 +124,10 @@ def main():
 		plt.savefig(opt.output)
 	else:
 		nb_colors = len(plt.rcParams['axes.prop_cycle'])
-		minima = data.min(axis=1)
 		ratio = data
 		for j in range(ncols):
-			ratio[:, j] = data[:, j] / minima 
-		# compute maxratio
-		if opt.maxratio == -1:
-			opt.maxratio = ratio.max()
-		# any time >= timelimit will count as maxratio + bigM (so that it does not show up in plots)
-		for i in range(nrows):
-			for j in range(ncols):
-				if data[i,j] >= opt.timelimit:
-					ratio[i,j] = opt.maxratio + 1e6
+			ratio[:, j] = data[:, j]
+			
 		for j in range(ncols):
 			options = dict(label=cnames[j],
 							linewidth=defLW, linestyle = dashes[j],

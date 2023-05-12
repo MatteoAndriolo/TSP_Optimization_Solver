@@ -2,8 +2,8 @@ import subprocess
 import csv
 import os
 # Define the command to be executed
-command = ['./bin/main', '-f', './data/att48.tsp', '-n', '18', '-m', 'nn.nng.em']
-s = 'nn.nng.em'
+s = 'nng.em.nn'
+command = ['./bin/main', '-f', './data/att48.tsp', '-n', '30', '-m', s]
 num_points = s.count('.') + 1
 if not os.path.exists('./performance/performance_data.csv'):
     with open('performance_data.csv', 'w', newline='') as file:

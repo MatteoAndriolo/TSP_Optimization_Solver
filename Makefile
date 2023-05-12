@@ -1,6 +1,6 @@
 
 CC = gcc
-CFLAGS = -Wall -Werror -pedantic -I./include
+CFLAGS = -Wall -Werror -pedantic -I./include -Werror=maybe-uninitialized -Wno-maybe-uninitialized -Werror=unused-result -Wno-unused-result
 CFLAGS += -g
 #CFLAGS += -O3
 LDFLAGS = -lm

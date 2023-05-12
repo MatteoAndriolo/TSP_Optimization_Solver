@@ -78,9 +78,15 @@ int main(int argc, char **argv)
 		for (int j = 0; j < n_passagges; j++)
 		{
 			INFO_COMMENT("main::main", "Generating instance");
+
 			if (strcmp(passagges[j], "nn") == 0)
 			{
 				double time = nearest_neighboor(distance_matrix, current_starting_path, instances[c_inst].nnodes, &instances[c_inst].tour_lenght);
+				times[n_times++] = time;
+			}
+			else if (strcmp(passagges[j], "em") == 0) // em
+			{
+				double time = extra_mileage(distance_matrix, current_starting_path, args.nnodes, &(instances[c_inst].tour_lenght));
 				times[n_times++] = time;
 			}
 			else if (strcmp(passagges[j], "nng") == 0) // nng
@@ -88,11 +94,6 @@ int main(int argc, char **argv)
 				// log_path(path, instances[c_inst].nnodes);
 				// parse_grasp_probabilities(args.grasp, instances[c_inst].grasp_probabilities, &instances[c_inst].grasp_n_probabilities);
 				double time = nearest_neighboor_grasp(distance_matrix, current_starting_path, instances[c_inst].nnodes, &(instances[c_inst].tour_lenght), instances[c_inst].grasp_probabilities, instances[c_inst].grasp_n_probabilities);
-				times[n_times++] = time;
-			}
-			else if (strcmp(passagges[j], "em") == 0) // em
-			{
-				double time = extra_mileage(distance_matrix, current_starting_path, args.nnodes, &(instances[c_inst].tour_lenght));
 				times[n_times++] = time;
 			}
 			else if (strcmp(passagges[j], "2opt") == 0)
