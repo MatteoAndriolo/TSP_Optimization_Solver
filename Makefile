@@ -1,12 +1,12 @@
 CPLEXDIR=/opt/ibm/ILOG/CPLEX_Studio2211
-CCDIR=/home/matteo/Documenti/OperationResearchLaboratory/concorde_build
+CCDIR=concorde_build
 
 CC = gcc
 CFLAGS += -Wall -Werror -pedantic -I./include
 CFLAGS += -I${CPLEXDIR}/cplex/include/ilcplex -I${CPLEXDIR}/concert/includes -I${CCDIR}
 #CFLAGS += -g
 
-LDFLAGS = -lm -L${CPLEXDIR}/cplex/lib/x86-64_linux/static_pic -L${CPLEXDIR}/concert/lib/x86-64_linux/static_pic -L${CCDIR} -lilocplex -lcplex -lconcert -lpthread -ldl -lconcorde
+LDFLAGS = -lm -L${CPLEXDIR}/cplex/lib/x86-64_linux/static_pic -L${CPLEXDIR}/concert/lib/x86-64_linux/static_pic -L${CCDIR} -lilocplex -lcplex -lconcert -lpthread -ldl -l:concorde.a
 
 SRC_DIR = ./src
 OBJ_DIR = ./obj

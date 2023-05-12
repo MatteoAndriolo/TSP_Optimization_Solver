@@ -91,3 +91,44 @@ void xstarToPath(Instance *inst, double *xstar, int dim_xstar, int *path)
 	free(tmp);
 #endif
 }
+
+void get_path_from_CPXIntSolution(const double *xstar, Instance *inst, int *succ, int *comp, int *ncomp)
+{
+
+	*ncomp = 0;
+	for (int i = 0; i < inst->nnodes; i++)
+	{
+		succ[i] = -1;
+		comp[i] = -1;
+	}
+
+	for (int start = 0; start < inst->nnodes; start++)
+	{
+		if (comp[start] >= 0)
+			continue; // node "start" was already visited, just skip it
+
+		// a new component is found
+		(*ncomp)++;
+		int i = start;
+		int done = 0;
+		while (!done) // go and visit the current component
+		{
+			comp[i] = *ncomp;
+			done = 1;
+			for (int j = 0; j < inst->nnodes; j++)
+			{
+				if (i != j && xstar[xpos(i, j, inst)] > 0.5 && comp[j] == -1) // the edge [i,j] is selected in xstar and j was not visited before
+				{
+					succ[i] = j;
+					i = j;
+					done = 0;
+					break;
+				}
+			}
+		}
+		succ[i] = start; // last arc to close the cycle
+						 // go to the next component...
+		DEBUG_COMMENT("tspcplex.c:build_sol", "succ: %s", getPath(succ, inst->nnodes));
+		DEBUG_COMMENT("tspcplex.c:build_sol", "comp: %s", getPath(comp, inst->nnodes));
+	}
+}

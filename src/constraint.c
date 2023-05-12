@@ -75,7 +75,7 @@ void add_subtour_constraints(Instance *inst, CPXENVptr env, CPXLPptr lp)
         int *succ = (int *)malloc(sizeof(int) * inst->nnodes);
         int *comp = (int *)malloc(sizeof(int) * inst->nnodes);
 
-        build_sol(xstar, inst, succ, comp, &ncomp);
+        get_path_from_CPXIntSolution(xstar, inst, succ, comp, &ncomp);
 
         if (ncomp == 1)
             break;
@@ -138,7 +138,7 @@ void add_subtour_constraints(Instance *inst, CPXENVptr env, CPXLPptr lp)
             CPXwriteprob(env, lp, "mipopt.lp", NULL);
             WARNING_COMMENT("constraint.c:add_subtour_constraints", "FREEING MEMORY, index, value, index1, cname[0], cname");
         }
-        build_sol(xstar, inst, succ, comp, &ncomp);
+        get_path_from_CPXIntSolution(xstar, inst, succ, comp, &ncomp);
         DEBUG_COMMENT("awdawd", " final ncomp %d ", ncomp);
         free(xstar);
         free(succ);

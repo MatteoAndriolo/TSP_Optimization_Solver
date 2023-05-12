@@ -24,5 +24,7 @@ int xpos(int i, int j, Instance *inst);
  */
 double dist(int i, int j, Instance *inst);
 
+void get_path_from_CPXIntSolution(const double *xstar, Instance *inst, int *succ, int *comp, int *ncomp);
+
 void xstarToPath(Instance *inst, double *xstar, int dim_xstar, int *path);
 #endif

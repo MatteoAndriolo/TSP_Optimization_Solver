@@ -236,6 +236,7 @@ poetry.toml
 
 # End of https://www.toptal.com/developers/gitignore/api/c,python,jupyternotebooks
 
+
 vgcore.*
 src/*.p
 plot/*
@@ -243,6 +244,9 @@ plot/*
 bin/main
 data/ALL_tsp.tar.gz
 
+**/*.old
+
+# Concorde
+co031219.tar
 concorde
 concorde_build
-**/*.old
