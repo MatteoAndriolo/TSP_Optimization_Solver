@@ -113,24 +113,35 @@ int tabuListContains(int n1, int tabuList[], int tabuListSize, int maxTabuSize)
     return 0; // Solution is not in the tabu list
 }
 
-int stoppingCondition(int currentIteration)
+int tabu_stoppingCondition(int currentIteration)
 {
     return currentIteration > 200; // TODO setup stopping condition
 }
 
+int tabu_getTabuListSize(int currentIteration, int nnodes)
+{
+    // return (int)(currentIteration < 10e3 ? currentIteration / 10 : currentIteration / 100);
+    return (int)(nnodes < 10e3 ? nnodes / 10 : nnodes / 100);
+}
+
 void tabu_search(const double *distance_matrix, int *path, int nnodes, double *tour_length, int maxTabuSize)
 {
-    maxTabuSize = (int)(nnodes < 10e3 ? nnodes / 10 : nnodes / 100);
+    INFO_COMMENT("heuristic.c:tabu_search", "Starting tabu search");
+    maxTabuSize = tabu_getTabuListSize;
     int tabuList[maxTabuSize]; // save only first node involved in operation
     int tabuListSize = 0;
 
+    // Set initial solution as best candidate
     int bestCandidate[nnodes];
-    memcpy(bestCandidate, path, nnodes * sizeof(int)); // Set initial solution as best candidate
+    memcpy(bestCandidate, path, nnodes * sizeof(int));
 
     int currentIteration = 0;
     int foundImprovement = 0;
+
     double min_increase = INFTY;
     int improvementOperation[2];
+
+    // search tabu move
     double pendingTourLenght;
     int tabuNodes[2] = {-1, -1};
     double cost_old_edge, cost_new_edge, cost_old_edge2, cost_new_edge2;
@@ -138,7 +149,7 @@ void tabu_search(const double *distance_matrix, int *path, int nnodes, double *t
     memcpy(encumbment_path, path, nnodes * sizeof(int));
     double encumbment_tour_length = *tour_length;
     // TODO clean tabulist after many number of iterations
-    while (!stoppingCondition(currentIteration))
+    while (!tabu_stoppingCondition(currentIteration))
     {
         currentIteration++;
         DEBUG_COMMENT("tabu_search", "iteration: %d", currentIteration);
@@ -216,6 +227,7 @@ void tabu_search(const double *distance_matrix, int *path, int nnodes, double *t
     }
     path = encumbment_path;
     *tour_length = encumbment_tour_length;
+    INFO_COMMENT("tabu_search", "end tabu search: %lf", *tour_length);
 }
 
 //---------------------------------------------------------------------------------------------
