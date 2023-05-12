@@ -5,6 +5,7 @@
 #include <math.h>
 #include <time.h>
 #include <cplex.h>
+#include <concorde.h>
 #include "vrp.h"
 #include "utilscplex.h"
 #include "logger.h"
