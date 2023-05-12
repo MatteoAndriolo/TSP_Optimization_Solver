@@ -35,14 +35,6 @@ void build_model(Instance *inst, CPXENVptr env, CPXLPptr lp)
   free(cname);
 }
 
-/**
- * @brief doit_fn_concorde
- *
- * @param cutval : value of the cut
- * @param cutcount : number of nodes in the cut
- * @param cut : array of members of cut
- * @param inparam : pass_param of CCcut_violated_cuts
- */
 int doit_fn_concorde(double cutval, int cutcount, int *cut, void *inparam)
 {
   Input *param = (Input *)inparam;
@@ -266,7 +258,7 @@ int doit_fn_concorde(double cutval, int cutcount, int *cut, void *inparam)
     return status;
   }
 
-  void TSPopt(Instance * inst, int *path, int callbacks)
+  void TSPopt(Instance * inst, int *path)
   {
     INFO_COMMENT("tspcplex.c:TSPopt", "Solving TSP with CPLEX");
     int error;
@@ -303,7 +295,7 @@ int doit_fn_concorde(double cutval, int cutcount, int *cut, void *inparam)
     DEBUG_COMMENT("tspcplex.c:TSPopt", "path = %s", tmp);
     free(tmp);
 #endif
-    // free and close cplex model
+    // ------------------------ free and close cplex model --------------------------------------------------------------
     CPXfreeprob(env, &lp);
     CPXcloseCPLEX(&env);
   }
