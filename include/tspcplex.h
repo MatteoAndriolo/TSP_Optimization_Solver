@@ -9,6 +9,7 @@
 #include "logger.h"
 #include "constraint.h"
 #include "utilscplex.h"
+#include "heuristics.h"
 #include <concorde.h>
 
 typedef struct
@@ -90,7 +91,17 @@ int branch_and_cut(Instance *inst, CPXENVptr env, CPXLPptr lp, CPXLONG contextid
  * @param env CPLEX environment
  * @param lp CPLEX problem
  * @param inst instance of the problem to be solved
+ * @param path solution vector
  */
-int solve_problem(CPXENVptr env, CPXLPptr lp, Instance *inst);
+int solve_problem(CPXENVptr env, CPXLPptr lp, Instance *inst, int *path);
+
+/**
+ * @brief hard_fixing
+ * @param inst instance of the problem to be solved
+ * @param env CPLEX environment
+ * @param lp CPLEX problem
+ * @param path solution vector
+ */
+int hard_fixing(CPXENVptr env, CPXLPptr lp, Instance *inst, int *path);
 
 #endif

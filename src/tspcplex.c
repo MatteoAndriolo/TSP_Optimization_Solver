@@ -231,12 +231,30 @@ int branch_and_cut(Instance *inst, CPXENVptr env, CPXLPptr lp, CPXLONG contextid
   return 0;
 }
 
-int solve_problem(CPXENVptr env, CPXLPptr lp, Instance *inst)
+int hard_fixing(CPXENVptr env, CPXLPptr lp, Instance *inst, int *path)
+{
+  double *xheu = (double *)calloc(inst->ncols, sizeof(double));
+  create_xheu(inst, xheu, path);
+
+  generate_mip_start(inst, env, lp, xheu);
+
+  free(xheu);
+
+  double *xstar = malloc(sizeof(double) * inst->ncols);
+
+  CPXmipopt(env, lp);
+  if (CPXgetx(env, lp, xstar, 0, inst->ncols - 1))
+    print_error("not alble to retrive the CPXgetx solution");
+  DEBUG_COMMENT("tspcplex.c:hard_fixing", "xstar = %s", getPathDBL(xstar, inst->ncols));
+  return 0;
+}
+
+int solve_problem(CPXENVptr env, CPXLPptr lp, Instance *inst, int *path)
 {
   int status;
   INFO_COMMENT("tspcplex.c:solve_problem", "Solving problem called here we are going to decide which solver to use");
-  inst->solver = 2;
-  CPXwriteprob(env, lp, "mipopt.lp", NULL);
+  inst->solver = 4;
+  // CPXwriteprob(env, lp, "mipopt.lp", NULL);
   if (inst->solver == 1)
   {
     status = add_subtour_constraints(inst, env, lp);
@@ -251,7 +269,7 @@ int solve_problem(CPXENVptr env, CPXLPptr lp, Instance *inst)
   }
   else if (inst->solver == 4)
   {
-    // implmenetation hard fixing here
+    status = hard_fixing(env, lp, inst, path);
   }
   else
   {
@@ -284,7 +302,7 @@ void TSPopt(Instance *inst, int *path)
   CPXsetintparam(env, CPX_PARAM_RANDOMSEED, 123456);
   CPXsetdblparam(env, CPX_PARAM_TILIM, inst->timelimit);
   //-----------------------------------------computing the solution---------------------------------------------------------------
-  int status = solve_problem(env, lp, inst);
+  int status = solve_problem(env, lp, inst, path);
   if (status)
     print_error("Execution FAILED");
     //-----------------------------------------getting the solution-----------------------------------------------------------------

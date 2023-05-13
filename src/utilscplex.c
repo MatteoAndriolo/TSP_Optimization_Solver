@@ -91,3 +91,24 @@ void xstarToPath(Instance *inst, double *xstar, int dim_xstar, int *path)
 	free(tmp);
 #endif
 }
+
+void create_xheu(Instance *inst, double *xheu, int *path)
+{
+	INFO_COMMENT("utilscplex.c:create_xheu", "Creating xheu");
+	for (int i = 0; i < inst->nnodes; i++)
+		xheu[xpos(path[i] + 1, path[i + 1] + 1, inst)] = 1.0;
+}
+
+void generate_mip_start(Instance *inst, CPXENVptr env, CPXLPptr lp, double *xheu)
+{
+	INFO_COMMENT("utilscplex.c:generate_mip_start", "Generating MIP start");
+	int effortlevel = CPX_MIPSTART_NOCHECK;
+	int beg = 0;
+	int *ind = (int *)calloc(inst->ncols, sizeof(int));
+	for (int j = 0; j < inst->ncols; j++)
+		ind[j] = j;
+	if (CPXaddmipstarts(env, lp, 1, inst->ncols, &beg, ind, xheu, &effortlevel, NULL))
+		print_error("CPXaddmipstarts() error");
+	free(ind);
+	INFO_COMMENT("utilscplex.c:generate_mip_start", "MIP start ENDED");
+}

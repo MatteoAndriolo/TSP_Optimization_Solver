@@ -106,6 +106,12 @@ int main(int argc, char **argv)
 			{
 				TSPopt(&instances[c_inst], path);
 			}
+			if (strcmp(passagges[j], "cplexheu") == 0)
+			{
+				two_opt(distance_matrix, args.nnodes, path, &(instances[c_inst].tour_lenght));
+				log_path(path, args.nnodes);
+				TSPopt(&instances[c_inst], path);
+			}
 			strcpy(title + strlen(title), passagges[j]);
 			// TODO fix title in all the different
 			//  like in grasp specify also the probabilities
