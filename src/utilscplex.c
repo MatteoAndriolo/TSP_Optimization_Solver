@@ -96,7 +96,7 @@ void create_xheu(Instance *inst, double *xheu, int *path)
 {
 	INFO_COMMENT("utilscplex.c:create_xheu", "Creating xheu");
 	for (int i = 0; i < inst->nnodes; i++)
-		xheu[xpos(path[i] + 1, path[i + 1] + 1, inst)] = 1.0;
+		xheu[xpos(path[i], path[i + 1], inst)] = 1.0;
 }
 
 void generate_mip_start(Instance *inst, CPXENVptr env, CPXLPptr lp, double *xheu)
