@@ -83,7 +83,7 @@ int CPXPUBLIC my_callback(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, void
  * @param lp CPLEX problem
  * @param contextid id of the context
  */
-int branch_and_cut(instance *inst, CPXENVptr env, CPXLPptr lp, CPXLONG contextid);
+int branch_and_cut(Instance *inst, CPXENVptr env, CPXLPptr lp, CPXLONG contextid);
 
 /**
  * @brief solve_problem
@@ -91,6 +91,6 @@ int branch_and_cut(instance *inst, CPXENVptr env, CPXLPptr lp, CPXLONG contextid
  * @param lp CPLEX problem
  * @param inst instance of the problem to be solved
  */
-int solve_problem(CPXENVptr env, CPXLPptr lp, instance *inst);
+int solve_problem(CPXENVptr env, CPXLPptr lp, Instance *inst);
 
 #endif

@@ -38,18 +38,18 @@ void build_model(Instance *inst, CPXENVptr env, CPXLPptr lp)
 int doit_fn_concorde(double cutval, int cutcount, int *cut, void *inparam)
 {
   Input *param = (Input *)inparam;
-  int ecount = nnodes * (nnodes - 1) / 2;
+  int ecount = param->inst->nnodes * (param->inst->nnodes - 1) / 2;
   double *value = (double *)calloc(ecount, sizeof(double));
   int *index = (int *)calloc(ecount, sizeof(int));
   char sense = 'L';
-  double rhs = nnodes - 1;
+  double rhs = param->inst->nnodes - 1;
   int purgeable = CPX_USECUT_FILTER;
   int local = 0;
   int izero = 0;
   int nnz = 0;
-  for (int i = 0; i < nnodes; ++i)
+  for (int i = 0; i < param->inst->nnodes; ++i)
   {
-    for (int j = i + 1; j < nnodes; ++j)
+    for (int j = i + 1; j < param->inst->nnodes; ++j)
     {
       if (cut[i] != cut[j])
       {
@@ -58,87 +58,88 @@ int doit_fn_concorde(double cutval, int cutcount, int *cut, void *inparam)
         nnz++;
       }
     }
-    if (CPXcallbackaddusercuts(param->context, 1, nnz, &rhs, &sense, &izero, index, value, &purgeable, &local))
-      ERROR_COMMENT("tspcplex.c:doit_fn_concorde", "CPXcallbackaddusercuts() error");
-    free(value);
-    free(index);
-    return 0;
   }
+  if (CPXcallbackaddusercuts(param->context, 1, nnz, &rhs, &sense, &izero, index, value, &purgeable, &local))
+    ERROR_COMMENT("tspcplex.c:doit_fn_concorde", "CPXcallbackaddusercuts() error");
+  free(value);
+  free(index);
+  return 0;
+}
 
-  int my_callback_relaxation(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, void *userhandle)
+int my_callback_relaxation(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, void *userhandle)
+{
+  INFO_COMMENT("tspcplex.c:my_callback_relaxation", "entering relaxation callbacks");
+  Instance *inst = (Instance *)userhandle;
+  double *xstar = (double *)malloc(sizeof(double) * inst->ncols);
+  double objval = CPX_INFBOUND;
+  int ncomp = 0;
+  int *comps = (int *)calloc(inst->nnodes, sizeof(int));      // edges pertaining to each component
+  int *compscount = (int *)calloc(inst->nnodes, sizeof(int)); // number of nodes in each component
+  int *elist = (int *)calloc(inst->ncols * 2, sizeof(int));   // list of edges
+  int loader = 0;
+  int ecount = 0;
+  for (int i = 0; i < inst->nnodes; i++)
   {
-    INFO_COMMENT("tspcplex.c:my_callback_relaxation", "entering relaxation callbacks");
-    Instance *inst = (Instance *)userhandle;
-    double *xstar = (double *)malloc(sizeof(double) * inst->ncols);
-    double objval = CPX_INFBOUND;
-    int ncomp = 0;
-    int *comps = (int *)calloc(inst->nnodes, sizeof(int));      // edges pertaining to each component
-    int *compscount = (int *)calloc(inst->nnodes, sizeof(int)); // number of nodes in each component
-    int *elist = (int *)calloc(inst->ncols * 2, sizeof(int));   // list of edges
-    int loader = 0;
-    int ecount = 0;
-    for (int i = 0; i < inst->nnodes; i++)
+    for (int j = i + 1; j < inst->nnodes; j++)
     {
-      for (int j = i + 1; j < inst->nnodes; j++)
-      {
-        elist[loader++] = i;
-        elist[loader++] = j;
-        ecount++;
-      }
+      elist[loader++] = i;
+      elist[loader++] = j;
+      ecount++;
     }
-    //----------------------check if the solution work and che some information--------------------------------
-    if (CPXcallbackgetrelaxationpoint(context, xstar, 0, inst->ncols - 1, &objval))
-      print_error("CPXcallbackgetcandidatepoint error");
-    int mythread = -1;
-    CPXcallbackgetinfoint(context, CPXCALLBACKINFO_THREADID, &mythread);
-    int mynode = -1;
-    CPXcallbackgetinfoint(context, CPXCALLBACKINFO_NODECOUNT, &mynode);
-    double incumbent = CPX_INFBOUND;
-    CPXcallbackgetinfodbl(context, CPXCALLBACKINFO_BEST_SOL, &incumbent);
-    //------------------------start using concorde------------------------------------------------------------
-    INFO_COMMENT("tspcplex.c:my_callback_relaxation", "calling CCcut_connect_components");
-    if (CCcut_connect_components(inst->nnodes, ecount, elist, xstar, &ncomp, &comps_count, &comps))
-      print_error("CCcut_connect_components error");
-
-    if (ncomp == 1)
-    {
-      DEBUG_COMMENT("tspcplex.c:my_callback_relaxation", "inside the if condition on the relaxation point, we are in cause the number of the connected component, ncomp = %d", ncomp);
-      Input params;
-      params.inst = inst;
-      params.context = context;
-
-    if (CCcut_violated_cuts(inst->nnodes, ecount, elist, xstar, 2.0 - EPSILON, doit_fn_concorde, &params)
-      print_error("CCcut_violated_cuts error");
-    }
-    free(xstar);
-    free(comps);
-    free(compscount);
-    free(elist);
-    return 0;
   }
-
-  int my_callback_candidate(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, void *userhandle)
-  {
-    Instance *inst = (Instance *)userhandle;
-    int *succ = (int *)malloc(sizeof(int) * inst->nnodes);
-    int *comp = (int *)malloc(sizeof(int) * inst->nnodes);
-    double *xstar = (double *)malloc(sizeof(double) * inst->ncols);
-    double objval = CPX_INFBOUND;
-    int ncomp;
-    //----------------------check if the solution work and che some information--------------------------------
-    if (CPXcallbackgetcandidatepoint(context, xstar, 0, inst->ncols - 1, &objval))
+  //----------------------check if the solution work and che some information--------------------------------
+  if (CPXcallbackgetrelaxationpoint(context, xstar, 0, inst->ncols - 1, &objval))
     print_error("CPXcallbackgetcandidatepoint error");
-    int mythread = -1;
-    CPXcallbackgetinfoint(context, CPXCALLBACKINFO_THREADID, &mythread);
-    int mynode = -1;
-    CPXcallbackgetinfoint(context, CPXCALLBACKINFO_NODECOUNT, &mynode);
-    double incumbent = CPX_INFBOUND;
-    CPXcallbackgetinfodbl(context, CPXCALLBACKINFO_BEST_SOL, &incumbent);
-    //-----------------------buil the solution-----------------------------------------------------------------
-    build_sol(xstar, inst, succ, comp, &ncomp);
-    //--------------------------------add the sec's cut--------------------------------------------------------
-    if (ncomp > 1)
-    {
+  int mythread = -1;
+  CPXcallbackgetinfoint(context, CPXCALLBACKINFO_THREADID, &mythread);
+  int mynode = -1;
+  CPXcallbackgetinfoint(context, CPXCALLBACKINFO_NODECOUNT, &mynode);
+  double incumbent = CPX_INFBOUND;
+  CPXcallbackgetinfodbl(context, CPXCALLBACKINFO_BEST_SOL, &incumbent);
+  //------------------------start using concorde------------------------------------------------------------
+  INFO_COMMENT("tspcplex.c:my_callback_relaxation", "calling CCcut_connect_components");
+  if (CCcut_connect_components(inst->nnodes, ecount, elist, xstar, &ncomp, &compscount, &comps))
+    print_error("CCcut_connect_components error");
+
+  if (ncomp == 1)
+  {
+    DEBUG_COMMENT("tspcplex.c:my_callback_relaxation", "inside the if condition on the relaxation point, we are in cause the number of the connected component, ncomp = %d", ncomp);
+    Input params;
+    params.inst = inst;
+    params.context = context;
+
+    if (CCcut_violated_cuts(inst->nnodes, ecount, elist, xstar, 2.0 - EPSILON, doit_fn_concorde, &params))
+      print_error("CCcut_violated_cuts error");
+  }
+  free(xstar);
+  free(comps);
+  free(compscount);
+  free(elist);
+  return 0;
+}
+
+int my_callback_candidate(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, void *userhandle)
+{
+  Instance *inst = (Instance *)userhandle;
+  int *succ = (int *)malloc(sizeof(int) * inst->nnodes);
+  int *comp = (int *)malloc(sizeof(int) * inst->nnodes);
+  double *xstar = (double *)malloc(sizeof(double) * inst->ncols);
+  double objval = CPX_INFBOUND;
+  int ncomp;
+  //----------------------check if the solution work and che some information--------------------------------
+  if (CPXcallbackgetcandidatepoint(context, xstar, 0, inst->ncols - 1, &objval))
+    print_error("CPXcallbackgetcandidatepoint error");
+  int mythread = -1;
+  CPXcallbackgetinfoint(context, CPXCALLBACKINFO_THREADID, &mythread);
+  int mynode = -1;
+  CPXcallbackgetinfoint(context, CPXCALLBACKINFO_NODECOUNT, &mynode);
+  double incumbent = CPX_INFBOUND;
+  CPXcallbackgetinfodbl(context, CPXCALLBACKINFO_BEST_SOL, &incumbent);
+  //-----------------------buil the solution-----------------------------------------------------------------
+  build_sol(xstar, inst, succ, comp, &ncomp);
+  //--------------------------------add the sec's cut--------------------------------------------------------
+  if (ncomp > 1)
+  {
     for (int cc = 1; cc <= ncomp; cc++)
     {
       int nncc = 0;
@@ -181,137 +182,141 @@ int doit_fn_concorde(double cutval, int cutcount, int *cut, void *inparam)
       free(index);
       free(value);
     }
-    }
-    free(succ);
-    free(comp);
-    free(xstar);
-    return 0;
   }
+  free(succ);
+  free(comp);
+  free(xstar);
+  return 0;
+}
 
-  //-----correspond to sec_callback---------
-  int CPXPUBLIC my_callback(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, void *userhandle)
-  {
-    INFO_COMMENT("tspcplex.c:my_callback", "entering callbacks function here we are going to decide ");
-    Instance *inst = (Instance *)userhandle;
+//-----correspond to sec_callback---------
+int CPXPUBLIC my_callback(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, void *userhandle)
+{
+  INFO_COMMENT("tspcplex.c:my_callback", "entering callbacks function here we are going to decide ");
+  Instance *inst = (Instance *)userhandle;
 
-    if (contextid == CPX_CALLBACKCONTEXT_RELAXATION)
-    return my_callback_relaxation(context, contextid, userhandle);
-    if (contextid == CPX_CALLBACKCONTEXT_CANDIDATE)
-    return my_callback_candidate(context, contextid, userhandle);
-  }
+  if (contextid == CPX_CALLBACKCONTEXT_RELAXATION)
+    return my_callback_relaxation(context, contextid, inst);
+  if (contextid == CPX_CALLBACKCONTEXT_CANDIDATE)
+    return my_callback_candidate(context, contextid, inst);
 
-  int branch_and_cut(instance * inst, CPXENVptr env, CPXLPptr lp, CPXLONG contextid)
-  {
-    if (CPXcallbacksetfunc(env, lp, contextid, my_callback, inst))
+  return 0;
+}
+
+int branch_and_cut(Instance *inst, CPXENVptr env, CPXLPptr lp, CPXLONG contextid)
+{
+  if (CPXcallbacksetfunc(env, lp, contextid, my_callback, inst))
     print_error("CPXcallbacksetfunc() error");
 
-    CPXmipopt(env, lp);
+  CPXmipopt(env, lp);
 
-    double *xstar = (double *)calloc(inst->ncols, sizeof(double));
-    CPXgetx(env, lp, xstar, 0, inst->ncols - 1);
+  double *xstar = (double *)calloc(inst->ncols, sizeof(double));
+  CPXgetx(env, lp, xstar, 0, inst->ncols - 1);
 
-    int *succ = (int *)calloc(inst->nnodes, sizeof(int));
-    int *comp = (int *)calloc(inst->nnodes, sizeof(int));
-    int ncomp;
+  int *succ = (int *)calloc(inst->nnodes, sizeof(int));
+  int *comp = (int *)calloc(inst->nnodes, sizeof(int));
+  int ncomp;
 
-    build_sol(xstar, inst, succ, comp, &ncomp);
+  build_sol(xstar, inst, succ, comp, &ncomp);
 
-    double z;
-    int error = CPXgetobjval(env, lp, &z);
-    if (error)
+  double z;
+  int error = CPXgetobjval(env, lp, &z);
+  if (error)
     print_error("CPXgetobjval() error\n");
 
-    update_solution(z, succ, inst);
+  free(comp);
+  free(succ);
+  free(xstar);
 
-    free(comp);
-    free(succ);
-    free(xstar);
+  return 0;
+}
 
-    return 0;
-  }
-
-  int solve_problem(CPXENVptr env, CPXLPptr lp, instance * inst)
+int solve_problem(CPXENVptr env, CPXLPptr lp, Instance *inst)
+{
+  int status;
+  INFO_COMMENT("tspcplex.c:solve_problem", "Solving problem called here we are going to decide which solver to use");
+  inst->solver = 2;
+  CPXwriteprob(env, lp, "mipopt.lp", NULL);
+  if (inst->solver == 1)
   {
-    int status;
-
-    if (inst->solver == 1)
-    {
     status = add_subtour_constraints(inst, env, lp);
-    }
-    else if (inst->solver == 2)
-    {
+  }
+  else if (inst->solver == 2)
+  {
     status = branch_and_cut(inst, env, lp, CPX_CALLBACKCONTEXT_CANDIDATE | CPX_CALLBACKCONTEXT_RELAXATION);
-    }
-    else if (inst->solver == 3)
-    {
+  }
+  else if (inst->solver == 3)
+  {
     status = branch_and_cut(inst, env, lp, CPX_CALLBACKCONTEXT_CANDIDATE);
-    }
-    else
-    {
+  }
+  else if (inst->solver == 4)
+  {
+    // implmenetation hard fixing here
+  }
+  else
+  {
     print_error("Invalid solver selected");
-    }
-
-    if (status)
-    print_error("Execution FAILED");
-    else if (status == 2)
-    print_error("Time out during execution");
-    return status;
   }
 
-  void TSPopt(Instance * inst, int *path)
-  {
-    INFO_COMMENT("tspcplex.c:TSPopt", "Solving TSP with CPLEX");
-    int error;
-    CPXENVptr env = CPXopenCPLEX(&error);
-    if (error)
+  if (status)
+    print_error("Execution FAILED");
+  else if (status == 2)
+    print_error("Time out during execution");
+  return status;
+}
+
+void TSPopt(Instance *inst, int *path)
+{
+  INFO_COMMENT("tspcplex.c:TSPopt", "Solving TSP with CPLEX");
+  int error;
+  CPXENVptr env = CPXopenCPLEX(&error);
+  if (error)
     print_error("CPXopenCPLEX() error");
-    CPXLPptr lp = CPXcreateprob(env, &error, "TSP model version 1");
-    if (error)
+  CPXLPptr lp = CPXcreateprob(env, &error, "TSP model version 1");
+  if (error)
     print_error("CPXcreateprob() error");
 
-    //------------------------------------------ Building the model----------------------------------------------------------------
-    build_model(inst, env, lp);
-    INFO_COMMENT("tspcplex.c:TSPopt", "Model built FINISHED");
-    //----------------------------------------- Cplex's parameter setting ---------------------------------------------------------
-    CPXsetintparam(env, CPX_PARAM_SCRIND, CPX_ON);
-    CPXsetintparam(env, CPX_PARAM_RANDOMSEED, 123456);
-    CPXsetdblparam(env, CPX_PARAM_CUTUP, inst->zbest - EPS);
-    CPXsetdblparam(env, CPX_PARAM_TILIM, inst->timelimit);
-    CPXsetintparam(env, CPX_PARAM_THREADS, 1);
-    //-----------------------------------------computing the solution---------------------------------------------------------------
-    int status = solve_problem(env, lp, inst);
-    if (status)
+  //------------------------------------------ Building the model----------------------------------------------------------------
+  build_model(inst, env, lp);
+  INFO_COMMENT("tspcplex.c:TSPopt", "Model built FINISHED");
+  //----------------------------------------- Cplex's parameter setting ---------------------------------------------------------
+  CPXsetintparam(env, CPX_PARAM_SCRIND, CPX_ON);
+  CPXsetintparam(env, CPX_PARAM_RANDOMSEED, 123456);
+  CPXsetdblparam(env, CPX_PARAM_TILIM, inst->timelimit);
+  //-----------------------------------------computing the solution---------------------------------------------------------------
+  int status = solve_problem(env, lp, inst);
+  if (status)
     print_error("Execution FAILED");
     //-----------------------------------------getting the solution-----------------------------------------------------------------
 #ifndef PRODUCTION
-    inst->ncols = CPXgetnumcols(env, lp);
-    double *xstar = (double *)calloc(inst->ncols, sizeof(double));
-    if (CPXgetx(env, lp, xstar, 0, inst->ncols - 1))
+  inst->ncols = CPXgetnumcols(env, lp);
+  double *xstar = (double *)calloc(inst->ncols, sizeof(double));
+  if (CPXgetx(env, lp, xstar, 0, inst->ncols - 1))
     print_error("CPXgetx() error");
-    xstarToPath(inst, xstar, pow((double)inst->nnodes, 2.0), path);
+  xstarToPath(inst, xstar, pow((double)inst->nnodes, 2.0), path);
 
-    char *tmp;
-    tmp = getPath(path, inst->nnodes);
-    DEBUG_COMMENT("tspcplex.c:TSPopt", "path = %s", tmp);
-    free(tmp);
+  char *tmp;
+  tmp = getPath(path, inst->nnodes);
+  DEBUG_COMMENT("tspcplex.c:TSPopt", "path = %s", tmp);
+  free(tmp);
 #endif
-    // ------------------------ free and close cplex model --------------------------------------------------------------
-    CPXfreeprob(env, &lp);
-    CPXcloseCPLEX(&env);
-  }
+  // ------------------------ free and close cplex model --------------------------------------------------------------
+  CPXfreeprob(env, &lp);
+  CPXcloseCPLEX(&env);
+}
 
-  void build_sol(const double *xstar, Instance *inst, int *succ, int *comp, int *ncomp)
+void build_sol(const double *xstar, Instance *inst, int *succ, int *comp, int *ncomp)
+{
+
+  *ncomp = 0;
+  for (int i = 0; i < inst->nnodes; i++)
   {
-
-    *ncomp = 0;
-    for (int i = 0; i < inst->nnodes; i++)
-    {
     succ[i] = -1;
     comp[i] = -1;
-    }
+  }
 
-    for (int start = 0; start < inst->nnodes; start++)
-    {
+  for (int start = 0; start < inst->nnodes; start++)
+  {
     if (comp[start] >= 0)
       continue; // node "start" was already visited, just skip it
 
@@ -338,5 +343,5 @@ int doit_fn_concorde(double cutval, int cutcount, int *cut, void *inparam)
                      // go to the next component...
     DEBUG_COMMENT("tspcplex.c:build_model", "succ: %s", getPath(succ, inst->nnodes));
     DEBUG_COMMENT("tspcplex.c:build_model", "comp: %s", getPath(comp, inst->nnodes));
-    }
   }
+}

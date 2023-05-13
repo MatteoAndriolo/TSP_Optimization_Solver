@@ -25,6 +25,6 @@ void add_degree_constraint(Instance *inst, CPXENVptr env, CPXLPptr lp);
  * @param env CPLEX environment
  * @param lp CPLEX model
  */
-void add_subtour_constraints(Instance *inst, CPXENVptr env, CPXLPptr lp);
+int add_subtour_constraints(Instance *inst, CPXENVptr env, CPXLPptr lp);
 
 #endif

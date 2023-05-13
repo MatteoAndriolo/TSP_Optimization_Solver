@@ -1,5 +1,6 @@
 CPLEXDIR=/opt/ibm/ILOG/CPLEX_Studio2211
-CCDIR=/home/matteo/Documenti/OperationResearchLaboratory/concorde_build
+#CCDIR=/home/matteo/Documenti/OperationResearchLaboratory/concorde_build
+CCDIR=/opt/concorde 
 
 CC = gcc
 CFLAGS += -Wall -Werror -pedantic -I./include

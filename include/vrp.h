@@ -59,7 +59,7 @@ typedef struct
 	// double cutoff; // cutoff (upper bound) for master
 
 	// grasp
-	int solver = 1;
+	int solver;
 	// global data
 	int ncols;
 	double tstart; // starting time
