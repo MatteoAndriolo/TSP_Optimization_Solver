@@ -113,3 +113,46 @@ void generate_mip_start(Instance *inst, CPXENVptr env, CPXLPptr lp, double *xheu
 	free(ind);
 	INFO_COMMENT("utilscplex.c:generate_mip_start", "MIP start ENDED");
 }
+
+void fix_edges(CPXENVptr env, CPXLPptr lp, Instance *inst, double *xheu)
+{
+	INFO_COMMENT("utilscplex.c:fix_edges", "Fixing edges");
+	int *ind = (int *)calloc(inst->nnodes, sizeof(int));
+	double *bd = (double *)calloc(inst->nnodes, sizeof(double));
+	for (int i = 0; i < inst->nnodes; i++)
+	{
+		for (int j = i + 1; j < inst->nnodes; j++)
+		{
+			if (xheu[xpos(i, j, inst)] > 0.5)
+			{
+				int random = rand() % 100;
+				if (random < 80)
+				{
+					ind[i] = xpos(i, j, inst);
+					bd[i] = 1.0;
+					if (CPXchgbds(env, lp, 1, &ind[i], "L", &bd[i]))
+						print_error("CPXchgbds() error");
+				}
+			}
+		}
+	}
+}
+void unfix_edges(CPXENVptr env, CPXLPptr lp, Instance *inst, double *xheu)
+{
+	INFO_COMMENT("utilscplex.c:fix_edges", "unfixing edges");
+	int *ind = (int *)calloc(inst->nnodes, sizeof(int));
+	double *bd = (double *)calloc(inst->nnodes, sizeof(double));
+	for (int i = 0; i < inst->nnodes; i++)
+	{
+		for (int j = i + 1; j < inst->nnodes; j++)
+		{
+			if (xheu[xpos(i, j, inst)] > 0.5)
+			{
+				ind[i] = xpos(i, j, inst);
+				bd[i] = 1.0;
+				if (CPXchgbds(env, lp, 0, &ind[i], "L", &bd[i]))
+					print_error("CPXchgbds() error");
+			}
+		}
+	}
+}

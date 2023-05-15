@@ -233,21 +233,50 @@ int branch_and_cut(Instance *inst, CPXENVptr env, CPXLPptr lp, CPXLONG contextid
 
 int hard_fixing(CPXENVptr env, CPXLPptr lp, Instance *inst, int *path)
 {
+  CPXsetdblparam(env, CPXPARAM_TimeLimit, 10);
   double *xheu = (double *)calloc(inst->ncols, sizeof(double));
   create_xheu(inst, xheu, path);
 
   generate_mip_start(inst, env, lp, xheu);
 
-  free(xheu);
-  CPXwriteprob(env, lp, "mipopt.lp", NULL);
-  double *xstar = malloc(sizeof(double) * inst->ncols);
-  if (add_subtour_constraints(inst, env, lp))
-    CPXmipopt(env, lp);
-  if (CPXgetx(env, lp, xstar, 0, inst->ncols - 1))
-    print_error("not alble to retrive the CPXgetx solution");
-  if (CPXsolwrite(env, lp, "stdout.sol"))
-    print_error("CPXsolwrite error()");
-  xstarToPath(inst, xstar, inst->ncols, path);
+  double best_solution = INFTY;
+  int no_improv = 0;
+  while (no_improv < 10)
+  {
+    // calling thr fix of the edges
+    fix_edges(env, lp, inst, xheu);
+#ifndef PRODUCTION
+    CPXwriteprob(env, lp, "mipopt.lp", NULL);
+#endif
+    // getchar();
+    //  solving the problem with cplex callbacks
+    int status = branch_and_cut(inst, env, lp, CPX_CALLBACKCONTEXT_CANDIDATE);
+    if (status)
+      print_error("Execution FAILED");
+
+    unfix_edges(env, lp, inst, xheu);
+    if (CPXgetx(env, lp, xheu, 0, inst->ncols - 1))
+      print_error("CPXgetx() error");
+
+    // getting the obj val
+    double actual_solution;
+    int error = CPXgetobjval(env, lp, &actual_solution);
+    if (error)
+      print_error("CPXgetobjval() error\n");
+
+    if (actual_solution >= best_solution)
+      no_improv++;
+    else
+    {
+      best_solution = actual_solution;
+      no_improv = 0;
+      xstarToPath(inst, xheu, inst->ncols, path);
+    }
+  }
+  branch_and_cut(inst, env, lp, CPX_CALLBACKCONTEXT_CANDIDATE);
+  if (CPXgetx(env, lp, xheu, 0, inst->ncols - 1))
+    print_error("CPXgetx() error");
+  xstarToPath(inst, xheu, inst->ncols, path);
 
   return 0;
 }

@@ -44,7 +44,7 @@ char *getPath(const int *path, int nnodes)
 
 char *getPathDBL(const double *path, int nnodes)
 {
-    char *path_str = (char *)malloc(sizeof(char) * nnodes * 5);
+    char *path_str = (char *)malloc(sizeof(char) * nnodes * 10);
     sprintf(path_str, "[");
     for (int i = 0; i < nnodes; i++)
     {

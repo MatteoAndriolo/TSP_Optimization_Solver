@@ -47,4 +47,20 @@ void create_xheu(Instance *inst, double *xheu, int *path);
  * @param lp CPLEX problem
  */
 void generate_mip_start(Instance *inst, CPXENVptr env, CPXLPptr lp, double *xheu);
+/**
+ * @brief generate the fix edfges set for hard fixing
+ * @param env CPLEX environment
+ * @param lp CPLX problem
+ * @param inst the instance of the problem to be solved
+ * @param xheu the solution vector
+ */
+void fix_edges(CPXENVptr env, CPXLPptr lp, Instance *inst, double *xheu);
+/**
+ * @brief generate the unfix edfges set for hard fixing
+ * @param env CPLEX environment
+ * @param lp CPLX problem
+ * @param inst the instance of the problem to be solved
+ * @param xheu the solution vector
+ */
+void unfix_edges(CPXENVptr env, CPXLPptr lp, Instance *inst, double *xheu);
 #endif
