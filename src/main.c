@@ -28,9 +28,6 @@ int main(int argc, char **argv)
 	INFO_COMMENT("main::main", "Generating distance matrix");
 	double *distance_matrix = (double *)malloc(sizeof(double) * args.nnodes * args.nnodes);
 	generate_distance_matrix(&distance_matrix, args.nnodes, args.x, args.y, args.integer_costs);
-#ifndef PRODUCTION
-	log_distancematrix(distance_matrix, args.nnodes);
-#endif
 	DEBUG_COMMENT("main::main", "Distance matrix generated");
 
 	// Parsing model ----------------------------------------------------------
@@ -86,9 +83,6 @@ int main(int argc, char **argv)
 			}
 			else if (strcmp(passagges[j], "nng") == 0)
 			{
-#ifndef PRODUCTION
-				log_path(path, instances[c_inst].nnodes);
-#endif
 				// parse_grasp_probabilities(args.grasp, instances[c_inst].grasp_probabilities, &instances[c_inst].grasp_n_probabilities);
 				nearest_neighboor_grasp(distance_matrix, path, instances[c_inst].nnodes, &(instances[c_inst].tour_lenght), instances[c_inst].grasp_probabilities, instances[c_inst].grasp_n_probabilities);
 			}
