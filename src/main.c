@@ -114,11 +114,7 @@ int main(int argc, char **argv)
 				{
 					FATAL_COMMENT("main::main", "Tabu search must be used with a starting point");
 				}
-				tabu_search(distance_matrix, path, instances[c_inst].nnodes, &instances[c_inst].tour_lenght, args.nnodes / 10);
-			}
-			else if (strcmp(passagges[j], "gen") == 0)
-			{
-				genetic_algorithm(distance_matrix, path, instances[c_inst].nnodes, &instances[c_inst].tour_lenght, 40000, 100);
+				tabu_search(distance_matrix, path, instances[c_inst].nnodes, &instances[c_inst].tour_lenght, args.nnodes / 10, 2);
 			}
 			else if (strcmp(passagges[j], "test") == 0)
 			{
