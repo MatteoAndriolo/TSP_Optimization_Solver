@@ -239,13 +239,16 @@ int hard_fixing(CPXENVptr env, CPXLPptr lp, Instance *inst, int *path)
   generate_mip_start(inst, env, lp, xheu);
 
   free(xheu);
-
+  CPXwriteprob(env, lp, "mipopt.lp", NULL);
   double *xstar = malloc(sizeof(double) * inst->ncols);
-
-  CPXmipopt(env, lp);
+  if (add_subtour_constraints(inst, env, lp))
+    CPXmipopt(env, lp);
   if (CPXgetx(env, lp, xstar, 0, inst->ncols - 1))
     print_error("not alble to retrive the CPXgetx solution");
-  DEBUG_COMMENT("tspcplex.c:hard_fixing", "xstar = %s", getPathDBL(xstar, inst->ncols));
+  if (CPXsolwrite(env, lp, "stdout.sol"))
+    print_error("CPXsolwrite error()");
+  xstarToPath(inst, xstar, inst->ncols, path);
+
   return 0;
 }
 
