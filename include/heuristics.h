@@ -46,7 +46,7 @@ int randomBetween(int lowerBound, int upperBound);
  * @param tour_length: tour length
  * @param maxTabuSize: maximum size of tabu list
  */
-void tabu_search(const double *distance_matrix, int *path, int nnodes, double *tour_length, int maxTabuSize);
+void tabu_search(const double *distance_matrix, int *path, int nnodes, double *tour_length, int maxTabuSize, time_t timelimit);
 
 /**
  * Genetic Algorithm

@@ -101,11 +101,11 @@ void kick_function(const double *distance_matrix, int *path, int nnodes, double 
 //-----------------------------------------------------------------------------------------------
 // Tabu search
 
-int tabuListContains(int n1, int tabuList[], int tabuListSize, int maxTabuSize)
+int tabuListContains(int n1, int n2, int tabuList[], int tabuListSize, int maxTabuSize)
 {
     for (int i = 0; i < (tabuListSize < maxTabuSize ? tabuListSize : maxTabuSize); i++)
     {
-        if (tabuList[i] == n1)
+        if (tabuList[i] == n1 || tabuList[i] == n2)
         {
             return 1; // Solution is in the tabu list
         }
@@ -113,9 +113,9 @@ int tabuListContains(int n1, int tabuList[], int tabuListSize, int maxTabuSize)
     return 0; // Solution is not in the tabu list
 }
 
-int tabu_stoppingCondition(int currentIteration)
+int tabu_stoppingCondition(int currentIteration, int nIterNotFoundImp, int nnodes)
 {
-    return currentIteration > 200; // TODO setup stopping condition
+    return currentIteration > nnodes * 10 || nIterNotFoundImp > nnodes / 10; // TODO setup stopping condition
 }
 
 int tabu_getTabuListSize(int currentIteration, int nnodes)
@@ -124,72 +124,98 @@ int tabu_getTabuListSize(int currentIteration, int nnodes)
     return (int)(nnodes < 10e3 ? nnodes / 10 : nnodes / 100);
 }
 
-void tabu_search(const double *distance_matrix, int *path, int nnodes, double *tour_length, int maxTabuSize)
+void tabu_search(const double *distance_matrix, int *path, int nnodes, double *tour_length, int maxTabuSize, time_t timelimit)
 {
+    time_t start_time = time(NULL);
     INFO_COMMENT("heuristic.c:tabu_search", "Starting tabu search");
-    maxTabuSize = tabu_getTabuListSize;
+    maxTabuSize = tabu_getTabuListSize(0, nnodes);
     int tabuList[maxTabuSize]; // save only first node involved in operation
     int tabuListSize = 0;
 
-    // Set initial solution as best candidate
+    // 1. Set initial solution as best candidate
     int bestCandidate[nnodes];
     memcpy(bestCandidate, path, nnodes * sizeof(int));
 
     int currentIteration = 0;
     int foundImprovement = 0;
+    int nIterNotFoundImp = 0;
+    int nIterNotFoundIncImp = 0;
 
     double min_increase = INFTY;
     int improvementOperation[2];
 
-    // search tabu move
-    double pendingTourLenght;
-    int tabuNodes[2] = {-1, -1};
+    // 1.1. Find local optima -- intensification
+    two_opt(distance_matrix, nnodes, path, tour_length, INFINITY);
+
+    // // current path
+    // *path
+    // *tour_length
+
+    // // current position tabu
     double cost_old_edge, cost_new_edge, cost_old_edge2, cost_new_edge2;
+    int tabuNodes[2] = {-1, -1};
+    double pendingTourLenght;
+    // // endumbment
     int encumbment_path[nnodes];
     memcpy(encumbment_path, path, nnodes * sizeof(int));
     double encumbment_tour_length = *tour_length;
+
     // TODO clean tabulist after many number of iterations
-    while (!tabu_stoppingCondition(currentIteration))
+    while (!tabu_stoppingCondition(currentIteration, nIterNotFoundImp, nnodes) || difftime(time(NULL), start_time) < timelimit)
     {
         currentIteration++;
         DEBUG_COMMENT("tabu_search", "iteration: %d", currentIteration);
+        // 2. Generate neighboors
         min_increase = INFTY;
-        foundImprovement = 0;
-        pendingTourLenght = *tour_length;
+        pendingTourLenght = INFTY;
         for (int i = 0; i < nnodes - 2; i++)
         {
-            for (int j = i + 1; j < nnodes; j++) // TODO do the same in two opt -> reach last node and use j+1 % nnodes
+            int k, k1;
+            // for (int j = 0; j < nnodes - 1; j++) // TODO do the same in two opt -> reach last node and use j+1 % nnodes
+            // {
+            //   // make 2opt move
+            //   int k=j;
+            for (int j = 0; j < nnodes / 3; j++) // TODO do the same in two opt -> reach last node and use j+1 % nnodes
             {
-                int j1 = (j + 1) % nnodes;
+                // make 2opt move
+                k = randomBetween(0, nnodes);
+                k1 = (k + 1) % nnodes;
                 cost_old_edge = distance_matrix[path[i] * nnodes + path[i + 1]];
-                cost_new_edge = distance_matrix[path[i] * nnodes + path[j]];
-                cost_old_edge2 = distance_matrix[path[j] * nnodes + path[j1]];
-                cost_new_edge2 = distance_matrix[path[i + 1] * nnodes + path[j1]];
+                cost_new_edge = distance_matrix[path[i] * nnodes + path[k]];
+                cost_old_edge2 = distance_matrix[path[k] * nnodes + path[k1]];
+                cost_new_edge2 = distance_matrix[path[i + 1] * nnodes + path[k1]];
                 double delta = (cost_new_edge + cost_new_edge2) - (cost_old_edge + cost_old_edge2);
 
-                if (*tour_length + delta < *tour_length)
+                // if (delta < 0) // new edges are better
+                if (*tour_length - delta < pendingTourLenght)
                 {
-                    // not sure about this logic
-                    foundImprovement = 1;
+                    pendingTourLenght = *tour_length - delta;
                     improvementOperation[0] = i;
-                    improvementOperation[1] = j;
-                    if (*tour_length + delta < encumbment_tour_length || (*tour_length + delta < pendingTourLenght && !tabuListContains(i, tabuList, tabuListSize, maxTabuSize) && !tabuListContains(j, tabuList, tabuListSize, maxTabuSize)))
+                    improvementOperation[1] = k;
+
+                    // not sure about this logic
+                    if (*tour_length + delta < encumbment_tour_length)
+                        nIterNotFoundIncImp = 0;
+
+                    nIterNotFoundImp = 0;
+                    if (*tour_length + delta < encumbment_tour_length || (*tour_length + delta < pendingTourLenght && !tabuListContains(i, k, tabuList, tabuListSize, maxTabuSize)))
                     {
                         foundImprovement = 1;
+
                         improvementOperation[0] = i;
-                        improvementOperation[1] = j;
+                        improvementOperation[1] = k;
                         pendingTourLenght = *tour_length + delta;
-                        // two_opt_move(path, i, j, nnodes);
+                        // two_opt_move(path, i, k, nnodes);
                         //*tour_length += delta;
                         DEBUG_COMMENT("tabu_search", "found improvement: %lf", pendingTourLenght);
                     }
                 }
-                // else if (delta < min_increase && delta>0 && !tabuListContains(i, tabuList, tabuListSize, maxTabuSize) && !tabuListContains(j, tabuList, tabuListSize, maxTabuSize))
-                else if (delta < min_increase && !tabuListContains(i, tabuList, tabuListSize, maxTabuSize) && !tabuListContains(j, tabuList, tabuListSize, maxTabuSize))
+                // else if (delta < min_increase && delta>0 && !tabuListContains(i, tabuList, tabuListSize, maxTabuSize) && !tabuListContains(k, tabuList, tabuListSize, maxTabuSize))
+                else if (delta < min_increase && !tabuListContains(i, k, tabuList, tabuListSize, maxTabuSize))
                 {
                     min_increase = delta;
                     tabuNodes[0] = i;
-                    tabuNodes[1] = j;
+                    tabuNodes[1] = k;
                     DEBUG_COMMENT("tabu_search", "found tabu:\t node %d\t increase %lf", tabuNodes[0], min_increase);
                 }
             }
