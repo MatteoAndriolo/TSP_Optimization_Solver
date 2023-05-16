@@ -6,9 +6,6 @@ void two_opt(const double *distance_matrix, int nnodes, int *path, double *tour_
 {
     INFO_COMMENT("refinement:2opt", "starting 2opt");
     int foundImprovement = 1;
-#ifndef PRODUCTION
-    log_path(path, nnodes);
-#endif
     double cost_old_edge, cost_new_edge, cost_new_edge2, cost_old_edge2;
     double c_iter = 0;
     while (c_iter < iterations && foundImprovement)
@@ -37,9 +34,6 @@ void two_opt(const double *distance_matrix, int nnodes, int *path, double *tour_
             }
         }
     }
-#ifndef PRODUCTION
-    log_path(path, nnodes);
-#endif
     *tour_length = get_tour_length(path, nnodes, distance_matrix);
     DEBUG_COMMENT("refinement:2opt", "attual tour length %lf", *tour_length);
 }
@@ -63,19 +57,20 @@ void two_opt_tabu(const double *distance_matrix, int nnodes, int *path, double *
                 cost_old_edge2 = distance_matrix[path[j] * nnodes + path[j1]];
                 cost_new_edge2 = distance_matrix[path[i + 1] * nnodes + path[j1]];
                 double delta = -(cost_old_edge + cost_old_edge2) + (cost_new_edge + cost_new_edge2);
-
                 if (delta < 0 && !(contains(tabuList, path[i]) || contains(tabuList, path[j]) || contains(tabuList, path[i + 1]) || contains(tabuList, path[j1])))
                 {
                     foundImprovement = 1;
                     two_opt_move(path, i, j, nnodes);
+                    if (!simpleCorrectness(path, nnodes))
+                    {
+                        FATAL_COMMENT("refinement:2opt_tabu", "simple correctness failed")
+                    }
                 }
                 c_iter++;
-                if (c_iter > iterations)
-                    return;
             }
         }
     }
-    assert_path(path, distance_matrix, nnodes, *tour_length);
+    // assert_path(path, distance_matrix, nnodes, *tour_length);
     *tour_length = get_tour_length(path, nnodes, distance_matrix);
     INFO_COMMENT("refinement:2opt_tabu", "finished - final tour length %lf", *tour_length);
 }

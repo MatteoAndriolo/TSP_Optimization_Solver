@@ -180,4 +180,11 @@ void generate_random_path(int *path, int nnodes);
  */
 int randomBetween(int lowerBound, int upperBound);
 
+/**
+ * Check path correctness
+ *
+ * @param path pointer to path
+ * @param nnodes The number of nodes in the graph.
+ */
+bool simpleCorrectness(int *path, int nnodes);
 #endif

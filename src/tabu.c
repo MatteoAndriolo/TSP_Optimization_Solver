@@ -132,6 +132,7 @@ void tabu_search(const double *distance_matrix, int *path, int nnodes, double *t
     time_t start_time = time(NULL);
     INFO_COMMENT("tabu.c:tabu_search", "Starting tabu search from path with tour length %lf", *tour_length);
     CircularBuffer tabuList;
+    maxTabuSize = 2 * maxTabuSize;
     initBuffer(&tabuList, maxTabuSize);
 
     // incumbment
@@ -153,13 +154,15 @@ void tabu_search(const double *distance_matrix, int *path, int nnodes, double *t
     // while (currentIteration > nnodes * 4 && nIterNotFoundImp > nnodes && difftime(start_time, time(NULL)) < timelimit)
     DEBUG_COMMENT("tabu.c:tabu_search", "starting tabu search");
     printBuffer(&tabuList);
-    while (currentIteration < nnodes)
+    while (currentIteration < 500)
     {
         currentIteration++;
         DEBUG_COMMENT("tabu.c:tabu_search", "iteration: %d", currentIteration);
 
         // reach local minima
-        two_opt_tabu(distance_matrix, nnodes, path, tour_length, INFINITY, &tabuList);
+        if (currentIteration % 4 == 0)
+            two_opt_tabu(distance_matrix, nnodes, path, tour_length, INFINITY, &tabuList);
+        DEBUG_COMMENT("tabu.c:tabu_search", "local minima: %lf", *tour_length);
         if (*tour_length < incumbment_tour_length)
         {
             DEBUG_COMMENT("tabu.c:tabu_search", "update incumbment: %lf", *tour_length);
@@ -195,11 +198,6 @@ void tabu_search(const double *distance_matrix, int *path, int nnodes, double *t
                 break;
             c++;
         }
-        if (c == nnodes - 1)
-            break;
-        if (c % 100 == 0)
-        {
-        }
 
         printf("iter %d\n", currentIteration);
 
@@ -207,10 +205,19 @@ void tabu_search(const double *distance_matrix, int *path, int nnodes, double *t
         two_opt_move(path, a, b, nnodes);
         *tour_length = get_tour_length(path, nnodes, distance_matrix);
 
+        if (currentIteration % 40 == 0)
+        {
+            DEBUG_COMMENT("tabu.c:tabu_search", "clear buffer");
+            clearBuffer(&tabuList);
+            initBuffer(&tabuList, maxTabuSize);
+            two_opt(distance_matrix, nnodes, path, tour_length, INFINITY);
+        }
         addValue(&tabuList, a);
+        addValue(&tabuList, b);
         DEBUG_COMMENT("tabu.c:tabu_search", "tabu list size: %d", tabuList.size);
         INFO_COMMENT("tabu.c:tabu_search", "end iteration: %d\t lenght %lf\t encumbment %lf", currentIteration, *tour_length, incumbment_tour_length);
     }
+    DEBUG_COMMENT("tabu.c:tabu_search", "exit main loop");
     two_opt(distance_matrix, nnodes, incumbment_path, tour_length, INFINITY);
     // CLOSE UP -  return best encumbment
 

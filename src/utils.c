@@ -161,6 +161,7 @@ void swap_array_piece(int *arr, int start1, int end1, int start2, int end2)
 
 void two_opt_move(int *path, int n1, int n2, int nnodes)
 {
+    // DEBUG_COMMENT("utils::two_opt_move", "Entering two_opt_move function %d %d", n1, n2);
     int t = (n1 + 1) % nnodes;
     for (int z = 0; z < (int)(n2 - n1 + 1) / 2; z++) // reverse order cells (n1+1,index_min)
     {
@@ -208,4 +209,25 @@ int randomBetween(int lowerBound, int upperBound)
 {
     int randomBetween = (rand() % (upperBound - lowerBound + 1)) + lowerBound;
     return randomBetween;
+}
+
+bool simpleCorrectness(int *path, int nnodes)
+{
+    int *check = malloc(nnodes * sizeof(int));
+    for (int i = 0; i < nnodes; i++)
+    {
+        check[i] = 0;
+    }
+    for (int i = 0; i < nnodes; i++)
+    {
+        check[path[i]]++;
+    }
+    for (int i = 0; i < nnodes; i++)
+    {
+        if (check[i] != 1)
+        {
+            return false;
+        }
+    }
+    return true;
 }
