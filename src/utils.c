@@ -186,3 +186,9 @@ void generate_random_path(int *path, int nnodes)
     }
     DEBUG_COMMENT("utils::generate_random_path", "Generated random path");
 }
+
+int randomBetween(int lowerBound, int upperBound)
+{
+    int randomBetween = (rand() % (upperBound - lowerBound + 1)) + lowerBound;
+    return randomBetween;
+}

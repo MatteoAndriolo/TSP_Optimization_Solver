@@ -1,5 +1,7 @@
 #ifndef GREEDY_H
 #define GREEDY_H
+#include <stdlib.h>
+#include <math.h>
 #include "vrp.h"
 #include "plot.h"
 #include "refinement.h"

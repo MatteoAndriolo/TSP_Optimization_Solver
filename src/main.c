@@ -7,6 +7,7 @@
 #include "utils.h"
 #include "heuristics.h"
 #include "metaheuristic.h"
+#include "tabu.h"
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -118,7 +119,7 @@ int main(int argc, char **argv)
 			}
 			else if (strcmp(passagges[j], "test") == 0)
 			{
-				continue;
+				test_buffer();
 			}
 			else
 			{
