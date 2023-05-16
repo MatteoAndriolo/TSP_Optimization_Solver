@@ -75,7 +75,7 @@ void two_opt_tabu(const double *distance_matrix, int nnodes, int *path, double *
             }
         }
     }
-
+    assert_path(path, distance_matrix, nnodes, *tour_length);
     *tour_length = get_tour_length(path, nnodes, distance_matrix);
     INFO_COMMENT("refinement:2opt_tabu", "finished - final tour length %lf", *tour_length);
 }

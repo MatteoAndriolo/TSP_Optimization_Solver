@@ -29,9 +29,6 @@ int main(int argc, char **argv)
 	INFO_COMMENT("main::main", "Generating distance matrix");
 	double *distance_matrix = (double *)malloc(sizeof(double) * args.nnodes * args.nnodes);
 	generate_distance_matrix(&distance_matrix, args.nnodes, args.x, args.y, args.integer_costs);
-#ifndef PRODUCTION
-	log_distancematrix(distance_matrix, args.nnodes);
-#endif
 	DEBUG_COMMENT("main::main", "Distance matrix generated");
 
 	// Parsing model ----------------------------------------------------------

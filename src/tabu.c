@@ -22,6 +22,7 @@ void clearBuffer(CircularBuffer *buf)
 // Add a value to the buffer
 void addValue(CircularBuffer *buf, int value)
 {
+    DEBUG_COMMENT("tabu.c:addValue", "adding value %d", value);
     buf->arr[buf->end] = value;
     buf->end = (buf->end + 1) % buf->size;
     buf->isEmpty = false;
@@ -41,7 +42,6 @@ void printBuffer(CircularBuffer *buf)
         i = (i + 1) % buf->size;
     }
     printf("\n");
-    DEBUG_COMMENT("tabu.c:printBuffer", "buffer size: %d", buf->size);
 }
 
 // Initialize an iterator for the buffer
@@ -52,13 +52,20 @@ void initIterator(BufferIterator *iter, CircularBuffer *buf)
     iter->hasStarted = false;
 }
 
-// Check if there are more elements to iterate over
 bool hasNext(BufferIterator *iter)
 {
-    return !iter->buf->isEmpty && (!iter->hasStarted || iter->current != iter->buf->end);
+    if (iter->buf->isEmpty)
+    {
+        return false;
+    }
+    if (!iter->hasStarted)
+    {
+        return true;
+    }
+    int nextIndex = (iter->current + 1) % iter->buf->size;
+    return nextIndex != iter->buf->end;
 }
 
-// Get the next element in the iteration
 int next(BufferIterator *iter)
 {
     if (!iter->hasStarted)
@@ -71,6 +78,26 @@ int next(BufferIterator *iter)
     }
     return iter->buf->arr[iter->current];
 }
+
+// // Check if there are more elements to iterate over
+// bool hasNext(BufferIterator *iter)
+// {
+//     return !iter->buf->isEmpty && (!iter->hasStarted || iter->current != iter->buf->end);
+// }
+
+// // Get the next element in the iteration
+// int next(BufferIterator *iter)
+// {
+//     if (!iter->hasStarted)
+//     {
+//         iter->hasStarted = true;
+//     }
+//     else
+//     {
+//         iter->current = (iter->current + 1) % iter->buf->size;
+//     }
+//     return iter->buf->arr[iter->current];
+// }
 
 // Check if the buffer contains a certain value
 bool contains(CircularBuffer *buf, int x)
@@ -126,20 +153,21 @@ void tabu_search(const double *distance_matrix, int *path, int nnodes, double *t
     // while (currentIteration > nnodes * 4 && nIterNotFoundImp > nnodes && difftime(start_time, time(NULL)) < timelimit)
     DEBUG_COMMENT("tabu.c:tabu_search", "starting tabu search");
     printBuffer(&tabuList);
-    while (currentIteration < nnodes * 4)
+    while (currentIteration < nnodes)
     {
         currentIteration++;
         DEBUG_COMMENT("tabu.c:tabu_search", "iteration: %d", currentIteration);
 
         // reach local minima
         two_opt_tabu(distance_matrix, nnodes, path, tour_length, INFINITY, &tabuList);
-
         if (*tour_length < incumbment_tour_length)
         {
+            DEBUG_COMMENT("tabu.c:tabu_search", "update incumbment: %lf", *tour_length);
             memcpy(incumbment_path, path, nnodes * sizeof(int));
             incumbment_tour_length = *tour_length;
             DEBUG_COMMENT("tabu.c:tabu_search", "update incumbment: %lf", incumbment_tour_length);
         }
+
         // FLAGS
         int incumb = 0;
         min_delta = INFTY;
@@ -169,16 +197,23 @@ void tabu_search(const double *distance_matrix, int *path, int nnodes, double *t
         }
         if (c == nnodes - 1)
             break;
+        if (c % 100 == 0)
+        {
+        }
 
+        printf("iter %d\n", currentIteration);
+
+        ffflush();
         two_opt_move(path, a, b, nnodes);
         *tour_length = get_tour_length(path, nnodes, distance_matrix);
 
         addValue(&tabuList, a);
-
+        DEBUG_COMMENT("tabu.c:tabu_search", "tabu list size: %d", tabuList.size);
         INFO_COMMENT("tabu.c:tabu_search", "end iteration: %d\t lenght %lf\t encumbment %lf", currentIteration, *tour_length, incumbment_tour_length);
     }
-
+    two_opt(distance_matrix, nnodes, incumbment_path, tour_length, INFINITY);
     // CLOSE UP -  return best encumbment
+
     path = incumbment_path;
     *tour_length = incumbment_tour_length;
     clearBuffer(&tabuList);
@@ -201,7 +236,7 @@ void test_buffer()
     }
     printf("\n\n");
 
-    for (int i = 0; i < 20; i++)
+    for (int i = 0; i < 30; i++)
     {
         addValue(&buf, i);
         printBuffer(&buf);
