@@ -149,10 +149,91 @@ void unfix_edges(CPXENVptr env, CPXLPptr lp, Instance *inst, double *xheu)
 			if (xheu[xpos(i, j, inst)] > 0.5)
 			{
 				ind[i] = xpos(i, j, inst);
-				bd[i] = 1.0;
+				bd[i] = 0.0;
 				if (CPXchgbds(env, lp, 0, &ind[i], "L", &bd[i]))
 					print_error("CPXchgbds() error");
 			}
+		}
+	}
+}
+
+void eliminate_radius_edges(CPXENVptr env, CPXLPptr lp, Instance *inst, double *xheu, int radious)
+{
+	INFO_COMMENT("utilscplex.c:eliminate_fix_edges", "eliminating fixed edges form xheu for local branching");
+	int sum_preserved_edges = 0;
+	int max_edge_find = 0;
+	int min_edge_find = 10000000;
+	double *xheu_copy = (double *)calloc(inst->ncols, sizeof(double));
+	for (int i = 0; i < inst->ncols; i++)
+		xheu_copy[i] = xheu[i];
+	for (int i = 0; i < inst->nnodes; i++)
+	{
+		for (int j = i + 1; j < inst->nnodes; j++)
+		{
+			if (xheu[xpos(i, j, inst)] > 0.5)
+			{
+				sum_preserved_edges++;
+				if (max_edge_find < dist(i, j, inst))
+					max_edge_find = dist(i, j, inst);
+				if (min_edge_find > dist(i, j, inst))
+					min_edge_find = dist(i, j, inst);
+			}
+		}
+	}
+	int K = sum_preserved_edges - radious;
+	DEBUG_COMMENT("utilscplex.c:eliminate_fix_edges", "sum_preserved_edges = %d, max_edge_find = %d, min_edge_find = %d, K = %d", sum_preserved_edges, max_edge_find, min_edge_find, K);
+	int count = 0;
+	int flag = 0;
+	while (count != sum_preserved_edges - K)
+	{
+		int *ind = (int *)calloc(inst->nnodes, sizeof(int));
+		double *bd = (double *)calloc(inst->nnodes, sizeof(double));
+		for (int i = 0; i < inst->nnodes; i++)
+		{
+			for (int j = i + 1; j < inst->nnodes; j++)
+			{
+				if (xheu_copy[xpos(i, j, inst)] > 0.5)
+				{
+					xheu_copy[xpos(i, j, inst)] = 0.0;
+					int distance_normalized = (dist(i, j, inst) - min_edge_find) * 100 / (max_edge_find - min_edge_find);
+					int random = rand() % (100 - count);
+					if (random < distance_normalized)
+					{
+						ind[i] = xpos(i, j, inst);
+						bd[i] = 0.0;
+						if (CPXchgbds(env, lp, 0, &ind[i], "U", &bd[i]))
+							print_error("CPXchgbds() error");
+						if (count == sum_preserved_edges - K)
+						{
+							flag = 1;
+							break;
+						}
+						count++;
+					}
+				}
+			}
+			if (flag == 1)
+				break;
+		}
+		if (flag == 1)
+			break;
+	}
+	free(xheu_copy);
+}
+
+void repristinate_radius_edges(CPXENVptr env, CPXLPptr lp, Instance *inst, double *xheu)
+{
+	INFO_COMMENT("utilscplex.c:repristinate_fix_edges", "repristinating fixed edges form xheu for local branching");
+	int *ind = (int *)calloc(inst->nnodes, sizeof(int));
+	double *bd = (double *)calloc(inst->nnodes, sizeof(double));
+	for (int i = 0; i < inst->nnodes; i++)
+	{
+		for (int j = i + 1; j < inst->nnodes; j++)
+		{
+			ind[i] = xpos(i, j, inst);
+			bd[i] = 1.0;
+			if (CPXchgbds(env, lp, 0, &ind[i], "U", &bd[i]))
+				print_error("CPXchgbds() error");
 		}
 	}
 }

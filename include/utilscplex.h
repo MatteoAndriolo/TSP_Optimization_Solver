@@ -63,4 +63,21 @@ void fix_edges(CPXENVptr env, CPXLPptr lp, Instance *inst, double *xheu);
  * @param xheu the solution vector
  */
 void unfix_edges(CPXENVptr env, CPXLPptr lp, Instance *inst, double *xheu);
+
+/**
+ * @brief generate the variables to be eliminate from the current solution
+ * @param env CPLEX environment
+ * @param lp CPLX problem
+ * @param inst the instance of the problem to be solved
+ */
+void eliminate_radius_edges(CPXENVptr env, CPXLPptr lp, Instance *inst, double *xheu, int radious);
+
+/**
+ * @brief generate the variables to be eliminate from the current solution
+ * @param env CPLEX environment
+ * @param lp CPLX problem
+ * @param inst the instance of the problem to be solved
+ * @param xheu the solution vector
+ */
+void repristinate_radius_edges(CPXENVptr env, CPXLPptr lp, Instance *inst, double *xheu);
 #endif

@@ -104,4 +104,13 @@ int solve_problem(CPXENVptr env, CPXLPptr lp, Instance *inst, int *path);
  */
 int hard_fixing(CPXENVptr env, CPXLPptr lp, Instance *inst, int *path);
 
+/**
+ * @brief local_branching
+ * @param inst instance of the problem to be solved
+ * @param env CPLEX environment
+ * @param lp CPLEX problem
+ * @param path solution vector
+ */
+int local_branching(CPXENVptr env, CPXLPptr lp, Instance *inst, int *path);
+
 #endif

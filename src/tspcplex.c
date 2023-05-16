@@ -233,32 +233,32 @@ int branch_and_cut(Instance *inst, CPXENVptr env, CPXLPptr lp, CPXLONG contextid
 
 int hard_fixing(CPXENVptr env, CPXLPptr lp, Instance *inst, int *path)
 {
+  //----------------------------------------- set the time limit to run cplex ---------------------------------------------------------
   CPXsetdblparam(env, CPXPARAM_TimeLimit, 10);
+  //----------------------------------------- create the xheuristic soltion from a warm start ----------------------------------------
   double *xheu = (double *)calloc(inst->ncols, sizeof(double));
   create_xheu(inst, xheu, path);
-
   generate_mip_start(inst, env, lp, xheu);
 
   double best_solution = INFTY;
   int no_improv = 0;
-  while (no_improv < 10)
+  while (no_improv < 5)
   {
-    // calling thr fix of the edges
+    //----------------------------------------- fixing some edges   ---------------------------------------------------------------
     fix_edges(env, lp, inst, xheu);
 #ifndef PRODUCTION
     CPXwriteprob(env, lp, "mipopt.lp", NULL);
 #endif
-    // getchar();
-    //  solving the problem with cplex callbacks
+    //--------------------------------- calling the branch and cut solution -------------------------------------------------------
     int status = branch_and_cut(inst, env, lp, CPX_CALLBACKCONTEXT_CANDIDATE);
     if (status)
       print_error("Execution FAILED");
-
+    //---------------------------------- Unfix the edges and calling thesolution ----------------------------------------------
     unfix_edges(env, lp, inst, xheu);
     if (CPXgetx(env, lp, xheu, 0, inst->ncols - 1))
       print_error("CPXgetx() error");
 
-    // getting the obj val
+    // ---------------------------------- check if the solution is better than the previous one ---------------------------------
     double actual_solution;
     int error = CPXgetobjval(env, lp, &actual_solution);
     if (error)
@@ -273,11 +273,60 @@ int hard_fixing(CPXENVptr env, CPXLPptr lp, Instance *inst, int *path)
       xstarToPath(inst, xheu, inst->ncols, path);
     }
   }
-  branch_and_cut(inst, env, lp, CPX_CALLBACKCONTEXT_CANDIDATE);
+  free(xheu);
+  return 0;
+}
+
+int local_branching(CPXENVptr env, CPXLPptr lp, Instance *inst, int *path)
+{
+  //----------------------------------------- set the time limit to run cplex ---------------------------------------------------------
+  CPXsetdblparam(env, CPXPARAM_TimeLimit, 10);
+  //----------------------------------------- create the xheuristic soltion from a warm start ----------------------------------------
+  double *xheu = (double *)calloc(inst->ncols, sizeof(double));
+  create_xheu(inst, xheu, path);
+  generate_mip_start(inst, env, lp, xheu);
+
+  double best_solution = INFTY;
+  int no_improv = 0;
+  while (no_improv < 5)
+  {
+    //------------------------------------------ take current solution and eliminate some solutions -------------------------------
+    eliminate_radius_edges(env, lp, inst, xheu, 10);
+#ifndef PRODUCTION
+    CPXwriteprob(env, lp, "mipopt.lp", NULL);
+#endif
+    //--------------------------------- calling the branch and cut solution -------------------------------------------------------
+    int status = branch_and_cut(inst, env, lp, CPX_CALLBACKCONTEXT_CANDIDATE);
+    if (status)
+      print_error("Execution FAILED");
+    //---------------------------------- Unfix the edges and calling thesolution --------------------------------------------------
+    repristinate_radius_edges(env, lp, inst, xheu);
+    if (CPXgetx(env, lp, xheu, 0, inst->ncols - 1))
+      print_error("CPXgetx() error");
+
+    // ---------------------------------- check if the solution is better than the previous one ---------------------------------
+    double actual_solution;
+    int error = CPXgetobjval(env, lp, &actual_solution);
+    if (error)
+      print_error("CPXgetobjval() error\n");
+
+    if (actual_solution >= best_solution)
+      no_improv++;
+    else
+    {
+      best_solution = actual_solution;
+      no_improv = 0;
+      xstarToPath(inst, xheu, inst->ncols, path);
+    }
+  }
+  //--------------------------------- calling the branch and cut solution -------------------------------------------------------
+  int status = branch_and_cut(inst, env, lp, CPX_CALLBACKCONTEXT_CANDIDATE);
+  if (status)
+    print_error("Execution FAILED");
   if (CPXgetx(env, lp, xheu, 0, inst->ncols - 1))
     print_error("CPXgetx() error");
   xstarToPath(inst, xheu, inst->ncols, path);
-
+  free(xheu);
   return 0;
 }
 
@@ -285,7 +334,7 @@ int solve_problem(CPXENVptr env, CPXLPptr lp, Instance *inst, int *path)
 {
   int status;
   INFO_COMMENT("tspcplex.c:solve_problem", "Solving problem called here we are going to decide which solver to use");
-  inst->solver = 4;
+  inst->solver = 5;
   // CPXwriteprob(env, lp, "mipopt.lp", NULL);
   if (inst->solver == 1)
   {
@@ -302,6 +351,10 @@ int solve_problem(CPXENVptr env, CPXLPptr lp, Instance *inst, int *path)
   else if (inst->solver == 4)
   {
     status = hard_fixing(env, lp, inst, path);
+  }
+  else if (inst->solver == 5)
+  {
+    status = local_branching(env, lp, inst, path);
   }
   else
   {
