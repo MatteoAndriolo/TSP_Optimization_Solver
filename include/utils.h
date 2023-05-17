@@ -15,7 +15,7 @@ typedef struct
     int start; // index of the oldest element
     int end;   // index at where the next element will be inserted
     int size;  // size of the buffer
-    bool isEmpty;
+    int tenure;
 } CircularBuffer;
 
 typedef struct

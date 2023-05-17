@@ -9,7 +9,7 @@ void initBuffer(CircularBuffer *buf, int size)
     buf->size = size;
     buf->start = 0;
     buf->end = 0;
-    buf->isEmpty = true;
+    buf->tenure = 0;
 }
 
 // Clear the buffer
@@ -25,7 +25,7 @@ void addValue(CircularBuffer *buf, int value)
     DEBUG_COMMENT("tabu.c:addValue", "adding value %d", value);
     buf->arr[buf->end] = value;
     buf->end = (buf->end + 1) % buf->size;
-    buf->isEmpty = false;
+    buf->tenure++;
     if (buf->end == buf->start)
     {                                              // The buffer is full
         buf->start = (buf->start + 1) % buf->size; // drop the oldest element
@@ -54,13 +54,9 @@ void initIterator(BufferIterator *iter, CircularBuffer *buf)
 
 bool hasNext(BufferIterator *iter)
 {
-    if (iter->buf->isEmpty)
+    if (!iter->buf->tenure || !iter->hasStarted)
     {
         return false;
-    }
-    if (!iter->hasStarted)
-    {
-        return true;
     }
     int nextIndex = (iter->current + 1) % iter->buf->size;
     return nextIndex != iter->buf->end;
@@ -116,6 +112,19 @@ bool contains(CircularBuffer *buf, int x)
     return false;
 }
 
+/**
+ * Decrease tenure size by n
+ */
+void decreseSizeTenure(CircularBuffer *buff, int n)
+{
+    if (buff->tenure == 0)
+    {
+        FATAL_COMMENT("tabu.c:decreaseSizeTenure", "buffer is empty")
+    }
+    buff->start = (buff->start + 1) % buff->size;
+    buff->tenure--;
+}
+
 int tabu_stoppingCondition(int currentIteration, int nIterNotFoundImp, int nnodes)
 {
     return currentIteration > nnodes * 10 || nIterNotFoundImp > nnodes / 10; // TODO setup stopping condition
@@ -132,7 +141,9 @@ void tabu_search(const double *distance_matrix, int *path, int nnodes, double *t
     time_t start_time = time(NULL);
     INFO_COMMENT("tabu.c:tabu_search", "Starting tabu search from path with tour length %lf", *tour_length);
     CircularBuffer tabuList;
-    maxTabuSize = 2 * maxTabuSize;
+    maxTabuSize = 2 * (int)(nnodes / 10);
+    // int maxTenure = 0;
+    // bool tenureIncreasing = true;
     initBuffer(&tabuList, maxTabuSize);
 
     // incumbment
@@ -141,28 +152,21 @@ void tabu_search(const double *distance_matrix, int *path, int nnodes, double *t
     double incumbment_tour_length = *tour_length;
 
     int currentIteration = 0;
-    int nIterNotFoundImp = 0;
-    int nIterNotFoundIncImp = 0;
-
-    double min_delta;
-    int operation[2];
-
-    // // current position tabu
-    double cost_old_edge, cost_new_edge, cost_old_edge2, cost_new_edge2;
 
     // TODO clean tabulist after many number of iterations
     // while (currentIteration > nnodes * 4 && nIterNotFoundImp > nnodes && difftime(start_time, time(NULL)) < timelimit)
     DEBUG_COMMENT("tabu.c:tabu_search", "starting tabu search");
     printBuffer(&tabuList);
-    while (currentIteration < 500)
+    while (currentIteration < 500 && difftime(start_time, time(NULL)) < timelimit)
     {
         currentIteration++;
         DEBUG_COMMENT("tabu.c:tabu_search", "iteration: %d", currentIteration);
 
-        // reach local minima
+        // REACH LOCAL MINIMA ------------------------------------------------------------------------------------
         if (currentIteration % 4 == 0)
             two_opt_tabu(distance_matrix, nnodes, path, tour_length, INFINITY, &tabuList);
         DEBUG_COMMENT("tabu.c:tabu_search", "local minima: %lf", *tour_length);
+
         if (*tour_length < incumbment_tour_length)
         {
             DEBUG_COMMENT("tabu.c:tabu_search", "update incumbment: %lf", *tour_length);
@@ -171,15 +175,11 @@ void tabu_search(const double *distance_matrix, int *path, int nnodes, double *t
             DEBUG_COMMENT("tabu.c:tabu_search", "update incumbment: %lf", incumbment_tour_length);
         }
 
-        // FLAGS
-        int incumb = 0;
-        min_delta = INFTY;
-
         // 2. Generate neighboors
         // -> if update encumb : update right away
         // -> if decrease found : move and do not insert in tabu
         // -> if increase found : move and insert in tabu
-        int a, b, a1, b1;
+        int a, b;
         int c = 0;
         while (true && c < nnodes)
         {
@@ -194,12 +194,12 @@ void tabu_search(const double *distance_matrix, int *path, int nnodes, double *t
             if (a == b || b == a + 1)
                 continue;
 
-            if (!(contains(&tabuList, a) || contains(&tabuList, b) || contains(&tabuList, a1) || contains(&tabuList, b1)))
+            if (!(contains(&tabuList, a) || contains(&tabuList, b) || contains(&tabuList, a + 1) || contains(&tabuList, b + 1)))
                 break;
             c++;
         }
 
-        printf("iter %d\n", currentIteration);
+        printf("iter %d tenure %d\n", currentIteration, tabuList.tenure);
 
         ffflush();
         two_opt_move(path, a, b, nnodes);
@@ -218,11 +218,9 @@ void tabu_search(const double *distance_matrix, int *path, int nnodes, double *t
         INFO_COMMENT("tabu.c:tabu_search", "end iteration: %d\t lenght %lf\t encumbment %lf", currentIteration, *tour_length, incumbment_tour_length);
     }
     DEBUG_COMMENT("tabu.c:tabu_search", "exit main loop");
-    two_opt(distance_matrix, nnodes, incumbment_path, tour_length, INFINITY);
     // CLOSE UP -  return best encumbment
-
     path = incumbment_path;
-    *tour_length = incumbment_tour_length;
+    two_opt(distance_matrix, nnodes, path, tour_length, INFINITY);
     clearBuffer(&tabuList);
     INFO_COMMENT("tabu.c:tabu_search", "end tabu search: %lf", *tour_length);
 }
