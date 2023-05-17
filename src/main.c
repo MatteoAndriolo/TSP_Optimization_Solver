@@ -112,10 +112,7 @@ int main(int argc, char **argv)
 				{
 					FATAL_COMMENT("main::main", "Tabu search must be used with a starting point");
 				}
-				tabu_search(distance_matrix, path, instances[c_inst].nnodes, &(instances[c_inst].tour_lenght), args.nnodes / 10, 2);
-				printf("tourlenght %lf\n", get_tour_length(path, args.nnodes, distance_matrix));
-				two_opt(distance_matrix, instances[c_inst].nnodes, path, &(instances[c_inst].tour_lenght), INFINITY);
-				printf("tourlenght %lf\n", get_tour_length(path, args.nnodes, distance_matrix));
+				tabu_search(distance_matrix, path, instances[c_inst].nnodes, &(instances[c_inst].tour_lenght), (int)(args.nnodes / 20), (int)(args.nnodes / 8), 2);
 			}
 			else if (strcmp(passagges[j], "test") == 0)
 			{

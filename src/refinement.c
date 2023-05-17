@@ -61,6 +61,7 @@ void two_opt_tabu(const double *distance_matrix, int nnodes, int *path, double *
                 {
                     foundImprovement = 1;
                     two_opt_move(path, i, j, nnodes);
+                    DEBUG_COMMENT("refinement:2opt_tabu", "two opt movement %d %d", i, j);
                     if (!simpleCorrectness(path, nnodes))
                     {
                         FATAL_COMMENT("refinement:2opt_tabu", "simple correctness failed")

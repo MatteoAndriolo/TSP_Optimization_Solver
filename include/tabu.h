@@ -29,8 +29,8 @@ int tabuListContains(int n1, int n2, int tabuList[], int tabuListSize, int maxTa
  * @param tour_length: tour length
  * @param maxTabuSize: maximum size of tabu list
  */
-// void tabu_search(const double *distance_matrix, int *path, int nnodes, double *tour_length, int minTabuSize, int maxTabuSize, time_t timelimit);
-void tabu_search(const double *distance_matrix, int *path, int nnodes, double *tour_length, int maxTabuSize, time_t timelimit);
+void tabu_search(const double *distance_matrix, int *path, int nnodes, double *tour_length, int minTabuSize, int maxTabuSize, time_t timelimit);
+// void tabu_search(const double *distance_matrix, int *path, int nnodes, double *tour_length, int maxTabuSize, time_t timelimit);
 
 /**
  * Test buffer

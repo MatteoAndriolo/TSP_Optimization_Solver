@@ -115,14 +115,17 @@ bool contains(CircularBuffer *buf, int x)
 /**
  * Decrease tenure size by n
  */
-void decreseSizeTenure(CircularBuffer *buff, int n)
+void decreaseSizeTenure(CircularBuffer *buff, int n)
 {
     if (buff->tenure == 0)
     {
         FATAL_COMMENT("tabu.c:decreaseSizeTenure", "buffer is empty")
     }
-    buff->start = (buff->start + 1) % buff->size;
-    buff->tenure--;
+    for (int i = 0; i < n; i++)
+    {
+        buff->start = (buff->start + 1) % buff->size;
+        buff->tenure--;
+    }
 }
 
 int tabu_stoppingCondition(int currentIteration, int nIterNotFoundImp, int nnodes)
@@ -136,18 +139,17 @@ int tabu_getTabuListSize(int currentIteration, int nnodes)
     return (int)(nnodes < 10e3 ? nnodes / 10 : nnodes / 100);
 }
 
-void tabu_search(const double *distance_matrix, int *path, int nnodes, double *tour_length, int maxTabuSize, time_t timelimit)
+void tabu_search(const double *distance_matrix, int *path, int nnodes, double *tour_length, int minTabuSize, int maxTabuSize, time_t timelimit)
 {
     time_t start_time = time(NULL);
     INFO_COMMENT("tabu.c:tabu_search", "Starting tabu search from path with tour length %lf", *tour_length);
     CircularBuffer tabuList;
-    maxTabuSize = 2 * (int)(nnodes / 10);
-    // int maxTenure = 0;
-    // bool tenureIncreasing = true;
+    bool tenureIncreasing = true;
+    int maxTenure = minTabuSize;
     initBuffer(&tabuList, maxTabuSize);
 
     // incumbment
-    int incumbment_path[nnodes];
+    int *incumbment_path = malloc(nnodes * sizeof(int));
     memcpy(incumbment_path, path, nnodes * sizeof(int));
     double incumbment_tour_length = *tour_length;
 
@@ -157,7 +159,7 @@ void tabu_search(const double *distance_matrix, int *path, int nnodes, double *t
     // while (currentIteration > nnodes * 4 && nIterNotFoundImp > nnodes && difftime(start_time, time(NULL)) < timelimit)
     DEBUG_COMMENT("tabu.c:tabu_search", "starting tabu search");
     printBuffer(&tabuList);
-    while (currentIteration < 500 && difftime(start_time, time(NULL)) < timelimit)
+    while (currentIteration < 600 && difftime(start_time, time(NULL)) < timelimit)
     {
         currentIteration++;
         DEBUG_COMMENT("tabu.c:tabu_search", "iteration: %d", currentIteration);
@@ -167,7 +169,7 @@ void tabu_search(const double *distance_matrix, int *path, int nnodes, double *t
             two_opt_tabu(distance_matrix, nnodes, path, tour_length, INFINITY, &tabuList);
         DEBUG_COMMENT("tabu.c:tabu_search", "local minima: %lf", *tour_length);
 
-        if (*tour_length < incumbment_tour_length)
+        if (*tour_length < incumbment_tour_length) // UPDATE INCUMBMENT
         {
             DEBUG_COMMENT("tabu.c:tabu_search", "update incumbment: %lf", *tour_length);
             memcpy(incumbment_path, path, nnodes * sizeof(int));
@@ -175,10 +177,7 @@ void tabu_search(const double *distance_matrix, int *path, int nnodes, double *t
             DEBUG_COMMENT("tabu.c:tabu_search", "update incumbment: %lf", incumbment_tour_length);
         }
 
-        // 2. Generate neighboors
-        // -> if update encumb : update right away
-        // -> if decrease found : move and do not insert in tabu
-        // -> if increase found : move and insert in tabu
+        // MAKE RANDOM MOVE --------------------------------------------------------------------------------------
         int a, b;
         int c = 0;
         while (true && c < nnodes)
@@ -199,29 +198,58 @@ void tabu_search(const double *distance_matrix, int *path, int nnodes, double *t
             c++;
         }
 
-        printf("iter %d tenure %d\n", currentIteration, tabuList.tenure);
-
-        ffflush();
         two_opt_move(path, a, b, nnodes);
-        *tour_length = get_tour_length(path, nnodes, distance_matrix);
 
-        if (currentIteration % 40 == 0)
+        //*tour_length = get_tour_length(path, nnodes, distance_matrix);
+
+        // MANAGE TABU LIST --------------------------------------------------------------------------------------
+
+        if (tenureIncreasing && maxTenure < maxTabuSize)
         {
-            DEBUG_COMMENT("tabu.c:tabu_search", "clear buffer");
-            clearBuffer(&tabuList);
-            initBuffer(&tabuList, maxTabuSize);
-            two_opt(distance_matrix, nnodes, path, tour_length, INFINITY);
+            maxTenure++;
         }
+        else if (!tenureIncreasing && maxTenure > minTabuSize)
+        {
+            maxTenure--;
+        }
+
         addValue(&tabuList, a);
         addValue(&tabuList, b);
+        if (!tenureIncreasing)
+        {
+            if (maxTenure - 4 < minTabuSize)
+            {
+                decreaseSizeTenure(&tabuList, maxTenure - minTabuSize);
+                tenureIncreasing = true;
+            }
+            else
+                decreaseSizeTenure(&tabuList, 4);
+        }
+
+        if (maxTenure >= maxTabuSize)
+            tenureIncreasing = false;
+        if (maxTenure <= minTabuSize)
+            tenureIncreasing = true;
+
+        // if (currentIteration % 40 == 0)
+        // {
+        //     DEBUG_COMMENT("tabu.c:tabu_search", "clear buffer");
+        //     clearBuffer(&tabuList);
+        //     initBuffer(&tabuList, maxTabuSize);
+        //     two_opt(distance_matrix, nnodes, path, tour_length, INFINITY);
+        // }
+        // DEBUG -------------------------------------------------------------------------------------------------
+        printf("iter %d tenure %d, %s\n", currentIteration, tabuList.tenure, tenureIncreasing ? "increasing" : "decreasing");
+        ffflush();
         DEBUG_COMMENT("tabu.c:tabu_search", "tabu list size: %d", tabuList.size);
         INFO_COMMENT("tabu.c:tabu_search", "end iteration: %d\t lenght %lf\t encumbment %lf", currentIteration, *tour_length, incumbment_tour_length);
     }
     DEBUG_COMMENT("tabu.c:tabu_search", "exit main loop");
     // CLOSE UP -  return best encumbment
-    path = incumbment_path;
+    memcpy(path, incumbment_path, nnodes * sizeof(int));
     two_opt(distance_matrix, nnodes, path, tour_length, INFINITY);
     clearBuffer(&tabuList);
+    FREE(incumbment_path);
     INFO_COMMENT("tabu.c:tabu_search", "end tabu search: %lf", *tour_length);
 }
 
