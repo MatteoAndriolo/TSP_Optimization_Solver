@@ -146,13 +146,10 @@ void unfix_edges(CPXENVptr env, CPXLPptr lp, Instance *inst, double *xheu)
 	{
 		for (int j = i + 1; j < inst->nnodes; j++)
 		{
-			if (xheu[xpos(i, j, inst)] > 0.5)
-			{
-				ind[i] = xpos(i, j, inst);
-				bd[i] = 0.0;
-				if (CPXchgbds(env, lp, 0, &ind[i], "L", &bd[i]))
-					print_error("CPXchgbds() error");
-			}
+			ind[i] = xpos(i, j, inst);
+			bd[i] = 0.0;
+			if (CPXchgbds(env, lp, 1, &ind[i], "L", &bd[i]))
+				print_error("CPXchgbds() error");
 		}
 	}
 }
@@ -166,6 +163,7 @@ void eliminate_radius_edges(CPXENVptr env, CPXLPptr lp, Instance *inst, double *
 	double *xheu_copy = (double *)calloc(inst->ncols, sizeof(double));
 	for (int i = 0; i < inst->ncols; i++)
 		xheu_copy[i] = xheu[i];
+
 	for (int i = 0; i < inst->nnodes; i++)
 	{
 		for (int j = i + 1; j < inst->nnodes; j++)
@@ -201,7 +199,7 @@ void eliminate_radius_edges(CPXENVptr env, CPXLPptr lp, Instance *inst, double *
 					{
 						ind[i] = xpos(i, j, inst);
 						bd[i] = 0.0;
-						if (CPXchgbds(env, lp, 0, &ind[i], "U", &bd[i]))
+						if (CPXchgbds(env, lp, 1, &ind[i], "U", &bd[i]))
 							print_error("CPXchgbds() error");
 						if (count == sum_preserved_edges - K)
 						{
@@ -232,7 +230,7 @@ void repristinate_radius_edges(CPXENVptr env, CPXLPptr lp, Instance *inst, doubl
 		{
 			ind[i] = xpos(i, j, inst);
 			bd[i] = 1.0;
-			if (CPXchgbds(env, lp, 0, &ind[i], "U", &bd[i]))
+			if (CPXchgbds(env, lp, 1, &ind[i], "U", &bd[i]))
 				print_error("CPXchgbds() error");
 		}
 	}
