@@ -44,15 +44,52 @@ char *getPath(const int *path, int nnodes)
 
 char *getPathDBL(const double *path, int nnodes)
 {
-    char *path_str = (char *)malloc(sizeof(char) * nnodes * 10);
-    sprintf(path_str, "[");
+    int initialSize = nnodes * 10;
+    int currentSize = initialSize;
+
+    char *path_str = (char *)malloc(sizeof(char) * initialSize);
+    if (path_str == NULL)
+    {
+        fprintf(stderr, "Memory allocation failed.\n");
+        return NULL;
+    }
+
+    strcpy(path_str, "[");
+    int remainingSize = currentSize - strlen(path_str);
+
     for (int i = 0; i < nnodes; i++)
     {
-        sprintf(path_str + strlen(path_str), "\t%lf,", path[i]);
+        int requiredSize = snprintf(NULL, 0, " %1.3lf, ", path[i]);
+        if (requiredSize > remainingSize)
+        {
+            currentSize += requiredSize;
+            path_str = (char *)realloc(path_str, sizeof(char) * currentSize);
+            if (path_str == NULL)
+            {
+                fprintf(stderr, "Memory reallocation failed.\n");
+                return NULL;
+            }
+            remainingSize = currentSize - strlen(path_str);
+        }
+        sprintf(path_str + strlen(path_str), " %1.3lf,", path[i]);
+        remainingSize = currentSize - strlen(path_str);
     }
-    sprintf(path_str + strlen(path_str), "]");
+
+    sprintf(path_str + strlen(path_str) - 1, "]");
     return path_str;
 }
+
+// char *getPathDBL(const double *path, int nnodes)
+// {
+//     char *path_str = (char *)malloc(sizeof(char) * nnodes * 10);
+//     sprintf(path_str, "[");
+//     for (int i = 0; i < nnodes; i++)
+//     {
+//         sprintf(path_str + strlen(path_str), "\t%lf,", path[i]);
+//     }
+//     sprintf(path_str + strlen(path_str), "]");
+//     return path_str;
+// }
 
 void log_distancematrix(const double *distance_matrix, int nnodes)
 {
