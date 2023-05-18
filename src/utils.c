@@ -226,7 +226,7 @@ bool simpleCorrectness(int *path, int nnodes)
     {
         if (check[i] != 1)
         {
-            ERROR_COMMENT("utils::simpleCorrectness", "Error in path: %d", path[i]);
+            ERROR_COMMENT("utils::simpleCorrectness", "Error in path: %d, index %d", path[i], i);
             return false;
         }
     }

@@ -1,7 +1,7 @@
 
 CC = gcc
 CFLAGS = -Wall -Werror -pedantic -I./include 
-CFLAGS += -Wno-maybe-uninitialized  -Wno-unused-but-set-variable -Wno-unused-variable -Wno-unused-function -Wno-uninitialized
+#CFLAGS += -Wno-maybe-uninitialized  -Wno-unused-but-set-variable -Wno-unused-variable -Wno-unused-function -Wno-uninitialized -Wno-stringop-overflow 
 CFLAGS += -g
 #CFLAGS += -O3
 LDFLAGS = -lm
