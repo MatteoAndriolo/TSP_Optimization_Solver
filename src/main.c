@@ -79,7 +79,6 @@ int main(int argc, char **argv)
 			}
 			if (strcmp(passagges[j], "nng") == 0)
 			{
-				log_path(path, args.nnodes);
 				int n_prob;
 				double *prob;
 				parse_grasp_probabilities(args.grasp, &prob, &n_prob);
@@ -108,6 +107,8 @@ int main(int argc, char **argv)
 			}
 			if (strcmp(passagges[j], "cplexheu") == 0)
 			{
+				instances[c_inst].percentageHF = 80; // TODO implement in cmd argument parsing
+				instances[c_inst].solver = 4;
 				two_opt(distance_matrix, args.nnodes, path, &(instances[c_inst].tour_lenght));
 				TSPopt(&instances[c_inst], path);
 			}

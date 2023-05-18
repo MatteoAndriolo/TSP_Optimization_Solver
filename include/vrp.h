@@ -58,10 +58,11 @@ typedef struct
 	// int max_nodes; // max n. of branching nodes in the final run (-1 unlimited)
 	// double cutoff; // cutoff (upper bound) for master
 
-	// grasp
+	// CPLEX
 	int solver;
 	// global data
 	int ncols;
+	int percentageHF;
 	double tstart; // starting time
 				   // double tbest;	  // time for the best sol. available
 				   // double best_lb;	  // best lower bound available

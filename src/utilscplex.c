@@ -96,7 +96,9 @@ void create_xheu(Instance *inst, double *xheu, int *path)
 {
 	INFO_COMMENT("utilscplex.c:create_xheu", "Creating xheu");
 	for (int i = 0; i < inst->nnodes - 1; i++)
+	{
 		xheu[xpos(path[i], path[i + 1], inst)] = 1.0;
+	}
 	xheu[xpos(path[inst->nnodes - 1], path[0], inst)] = 1.0;
 }
 
@@ -123,10 +125,10 @@ void fix_edges(CPXENVptr env, CPXLPptr lp, Instance *inst, double *xheu)
 	{
 		for (int j = i + 1; j < inst->nnodes; j++)
 		{
-			if (xheu[xpos(i, j, inst)] > 0.5)
+			if (xheu[xpos(i, j, inst)] > 0.5) // TODO check hyperparameter alpha 0.5 0.6 0.8
 			{
 				int random = rand() % 100;
-				if (random < 80)
+				if (random < inst->percentageHF)
 				{
 					ind[i] = xpos(i, j, inst);
 					bd[i] = 1.0;
