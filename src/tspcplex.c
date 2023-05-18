@@ -258,30 +258,30 @@ int hard_fixing(CPXENVptr env, CPXLPptr lp, Instance *inst, int *path)
     int status = solve_problem(env, lp, inst, path); // branch_and_cut(inst, env, lp, CPX_CALLBACKCONTEXT_CANDIDATE | CPX_CALLBACKCONTEXT_RELAXATION);
     if (status)
       print_error("Execution FAILED");
-    if (CPXgetx(env, lp, xheu, 0, inst->ncols - 1))
-      print_error("CPXgetx() error lalala");
     // ---------------------------------- check if the solution is better than the previous one ---------------------------------
     double actual_solution;
     int error = CPXgetobjval(env, lp, &actual_solution);
     if (error)
       print_error("CPXgetobjval() error\n");
 
-    unfix_edges(env, lp, inst, xheu);
-
-    if (actual_solution >= best_solution)
-      no_improv++;
-    else
+    if (actual_solution < best_solution)
     { // UPDATE path
+      if (CPXgetx(env, lp, xheu, 0, inst->ncols - 1))
+        print_error("CPXgetx() error");
       best_solution = actual_solution;
       xstarToPath(inst, xheu, inst->ncols, path);
     }
-    //---------------------------------- Unfix the edges and calling thesolution ----------------------------------------------
+    //----------------------------------------- unfixing  edges   ---------------------------------------------------------------
+    unfix_edges(env, lp, inst, xheu);
+
+    if (actual_solution >= best_solution)
+      break;
   }
-  // int status = branch_and_cut(inst, env, lp, CPX_CALLBACKCONTEXT_CANDIDATE);
-  //  if (status)
-  //    print_error("Execution FAILED");
-  //  if (CPXgetx(env, lp, xheu, 0, inst->ncols - 1))
-  //    print_error("CPXgetx() error");
+
+  inst->solver = 2;
+  solve_problem(env, lp, inst, path);
+  if (CPXgetx(env, lp, xheu, 0, inst->ncols - 1))
+    print_error("CPXgetx() error");
   xstarToPath(inst, xheu, inst->ncols, path);
 
   free(xheu);
@@ -348,7 +348,7 @@ int local_branching(CPXENVptr env, CPXLPptr lp, Instance *inst, int *path)
 int solve_problem(CPXENVptr env, CPXLPptr lp, Instance *inst, int *path)
 {
   DEBUG_COMMENT("tspcplex.c:solve_problem", "entering solve problem");
-  int status;
+  int status = -1;
   printf("/////////////////////////////////////////////////////////////////////////////////");
   printf("solver = %d\n", inst->solver);
   printf("/////////////////////////////////////////////////////////////////////////////////");
@@ -408,24 +408,24 @@ void TSPopt(Instance *inst, int *path)
   int status = solve_problem(env, lp, inst, path);
   if (status)
     print_error("Execution FAILED");
+  else
+    printf("status = %d-------------------------------------------s\n", status);
+
+#ifndef PRODUCTION
   //-----------------------------------------getting the solution-----------------------------------------------------------------
-  // #ifndef PRODUCTION
-  //   inst->ncols = CPXgetnumcols(env, lp);
-  //   double *xstar = (double *)calloc(inst->ncols, sizeof(double));
+  inst->ncols = CPXgetnumcols(env, lp);
+  double *xstar = (double *)calloc(inst->ncols, sizeof(double));
 
-  //   CPXwriteprob(env, lp, "mipopt.lp", NULL);
-  //   getchar();
-  //   // FIXME ERROR HERE
-  //   if (CPXgetx(env, lp, xstar, 0, inst->ncols - 1))
-  //     print_error("CPXgetx() error");
-  //   xstarToPath(inst, xstar, pow((double)inst->nnodes, 2.0), path);
+  if (CPXgetx(env, lp, xstar, 0, inst->ncols - 1))
+    print_error("CPXgetx() error");
+  xstarToPath(inst, xstar, pow((double)inst->nnodes, 2.0), path);
 
-  //   char *tmp;
-  //   tmp = getPath(path, inst->nnodes);
-  //   DEBUG_COMMENT("tspcplex.c:TSPopt", "path = %s", tmp);
-  //   free(tmp);
-  // #endif
-  // ------------------------ free and close cplex model --------------------------------------------------------------
+  char *tmp;
+  tmp = getPath(path, inst->nnodes);
+  DEBUG_COMMENT("tspcplex.c:TSPopt", "path = %s", tmp);
+  free(tmp);
+#endif
+  //------------------------ free and close cplex model --------------------------------------------------------------
   CPXfreeprob(env, &lp);
   CPXcloseCPLEX(&env);
 }
