@@ -303,7 +303,7 @@ int local_branching(CPXENVptr env, CPXLPptr lp, Instance *inst, int *path)
   while (no_improv < 1)
   {
     //------------------------------------------ take current solution and eliminate some solutions -------------------------------
-
+    // TODO random edges
     eliminate_radius_edges(env, lp, inst, xheu, 30);
 #ifndef PRODUCTION
     CPXwriteprob(env, lp, "mipopt.lp", NULL);
@@ -320,21 +320,20 @@ int local_branching(CPXENVptr env, CPXLPptr lp, Instance *inst, int *path)
     int error = CPXgetobjval(env, lp, &actual_solution);
     if (error)
       print_error("CPXgetobjval() error\n");
-    //---------------------------------- Unfix the edges and calling thesolution --------------------------------------------------
-    repristinate_radius_edges(env, lp, inst, xheu);
-    // CPXwriteprob(env, lp, "mipopt.lp", NULL);
 
     if (actual_solution >= best_solution)
-      no_improv++;
-    else
     {
       best_solution = actual_solution;
       no_improv = 0;
       xstarToPath(inst, xheu, inst->ncols, path);
     }
+    //---------------------------------- Unfix the edges and calling thesolution --------------------------------------------------
+    repristinate_radius_edges(env, lp, inst, xheu);
+    // CPXwriteprob(env, lp, "mipopt.lp", NULL);
+    if (actual_solution >= best_solution)
+      break;
   }
   //--------------------------------- calling the branch and cut solution -------------------------------------------------------
-  repristinate_radius_edges(env, lp, inst, xheu);
   int status = branch_and_cut(inst, env, lp, CPX_CALLBACKCONTEXT_CANDIDATE);
   if (status)
     print_error("Execution FAILED");
