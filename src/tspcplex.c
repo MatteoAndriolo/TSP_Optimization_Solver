@@ -235,6 +235,7 @@ int branch_and_cut(Instance *inst, CPXENVptr env, CPXLPptr lp, CPXLONG contextid
 
 int hard_fixing(CPXENVptr env, CPXLPptr lp, Instance *inst, int *path)
 {
+  DEBUG_COMMENT("tspcplex.c:hard_fixing", "entering hard fixing");
   //----------------------------------------- set the time limit to run cplex ---------------------------------------------------------
   // TODO: create a function set the param of cplex
   CPXsetdblparam(env, CPXPARAM_TimeLimit, 15);
@@ -258,28 +259,29 @@ int hard_fixing(CPXENVptr env, CPXLPptr lp, Instance *inst, int *path)
     if (status)
       print_error("Execution FAILED");
     if (CPXgetx(env, lp, xheu, 0, inst->ncols - 1))
-      print_error("CPXgetx() error");
+      print_error("CPXgetx() error lalala");
     // ---------------------------------- check if the solution is better than the previous one ---------------------------------
     double actual_solution;
     int error = CPXgetobjval(env, lp, &actual_solution);
     if (error)
       print_error("CPXgetobjval() error\n");
+
+    unfix_edges(env, lp, inst, xheu);
+
     if (actual_solution >= best_solution)
       no_improv++;
     else
-    {
+    { // UPDATE path
       best_solution = actual_solution;
-      no_improv = 0;
       xstarToPath(inst, xheu, inst->ncols, path);
     }
     //---------------------------------- Unfix the edges and calling thesolution ----------------------------------------------
-    unfix_edges(env, lp, inst, xheu);
   }
-  int status = branch_and_cut(inst, env, lp, CPX_CALLBACKCONTEXT_CANDIDATE);
-  if (status)
-    print_error("Execution FAILED");
-  if (CPXgetx(env, lp, xheu, 0, inst->ncols - 1))
-    print_error("CPXgetx() error");
+  // int status = branch_and_cut(inst, env, lp, CPX_CALLBACKCONTEXT_CANDIDATE);
+  //  if (status)
+  //    print_error("Execution FAILED");
+  //  if (CPXgetx(env, lp, xheu, 0, inst->ncols - 1))
+  //    print_error("CPXgetx() error");
   xstarToPath(inst, xheu, inst->ncols, path);
 
   free(xheu);
@@ -298,9 +300,10 @@ int local_branching(CPXENVptr env, CPXLPptr lp, Instance *inst, int *path)
 
   double best_solution = INFTY;
   int no_improv = 0;
-  while (no_improv < 3)
+  while (no_improv < 1)
   {
     //------------------------------------------ take current solution and eliminate some solutions -------------------------------
+
     eliminate_radius_edges(env, lp, inst, xheu, 30);
 #ifndef PRODUCTION
     CPXwriteprob(env, lp, "mipopt.lp", NULL);
@@ -344,8 +347,11 @@ int local_branching(CPXENVptr env, CPXLPptr lp, Instance *inst, int *path)
 
 int solve_problem(CPXENVptr env, CPXLPptr lp, Instance *inst, int *path)
 {
+  DEBUG_COMMENT("tspcplex.c:solve_problem", "entering solve problem");
   int status;
-  INFO_COMMENT("tspcplex.c:solve_problem", "Solving problem called here we are going to decide which solver to use");
+  printf("/////////////////////////////////////////////////////////////////////////////////");
+  printf("solver = %d\n", inst->solver);
+  printf("/////////////////////////////////////////////////////////////////////////////////");
   // TODO: fix the solver function cplexheu and cplex
   // CPXwriteprob(env, lp, "mipopt.lp", NULL);
   if (inst->solver == 1)
@@ -402,19 +408,23 @@ void TSPopt(Instance *inst, int *path)
   int status = solve_problem(env, lp, inst, path);
   if (status)
     print_error("Execution FAILED");
-    //-----------------------------------------getting the solution-----------------------------------------------------------------
-#ifndef PRODUCTION
-  inst->ncols = CPXgetnumcols(env, lp);
-  double *xstar = (double *)calloc(inst->ncols, sizeof(double));
-  if (CPXgetx(env, lp, xstar, 0, inst->ncols - 1))
-    print_error("CPXgetx() error");
-  xstarToPath(inst, xstar, pow((double)inst->nnodes, 2.0), path);
+  //-----------------------------------------getting the solution-----------------------------------------------------------------
+  // #ifndef PRODUCTION
+  //   inst->ncols = CPXgetnumcols(env, lp);
+  //   double *xstar = (double *)calloc(inst->ncols, sizeof(double));
 
-  char *tmp;
-  tmp = getPath(path, inst->nnodes);
-  DEBUG_COMMENT("tspcplex.c:TSPopt", "path = %s", tmp);
-  free(tmp);
-#endif
+  //   CPXwriteprob(env, lp, "mipopt.lp", NULL);
+  //   getchar();
+  //   // FIXME ERROR HERE
+  //   if (CPXgetx(env, lp, xstar, 0, inst->ncols - 1))
+  //     print_error("CPXgetx() error");
+  //   xstarToPath(inst, xstar, pow((double)inst->nnodes, 2.0), path);
+
+  //   char *tmp;
+  //   tmp = getPath(path, inst->nnodes);
+  //   DEBUG_COMMENT("tspcplex.c:TSPopt", "path = %s", tmp);
+  //   free(tmp);
+  // #endif
   // ------------------------ free and close cplex model --------------------------------------------------------------
   CPXfreeprob(env, &lp);
   CPXcloseCPLEX(&env);

@@ -31,6 +31,7 @@ int xpos(int i, int j, Instance *inst)
 
 void xstarToPath(Instance *inst, double *xstar, int dim_xstar, int *path)
 {
+	DEBUG_COMMENT("utilscplex.c:xstarToPath", "xstarToPath");
 	int *copy_path = (int *)calloc(inst->nnodes * 2, sizeof(int));
 	int count = 0;
 	for (int i = 0; i < inst->nnodes; i++)
@@ -118,7 +119,7 @@ void generate_mip_start(Instance *inst, CPXENVptr env, CPXLPptr lp, double *xheu
 
 void fix_edges(CPXENVptr env, CPXLPptr lp, Instance *inst, double *xheu)
 {
-	INFO_COMMENT("utilscplex.c:fix_edges", "Fixing edges");
+	DEBUG_COMMENT("utilscplex.c:fix_edges", "Fixing edges");
 	int *ind = (int *)calloc(inst->nnodes, sizeof(int));
 	double *bd = (double *)calloc(inst->nnodes, sizeof(double));
 	for (int i = 0; i < inst->nnodes; i++)
