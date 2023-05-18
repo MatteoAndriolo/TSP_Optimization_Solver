@@ -109,10 +109,7 @@ int main(int argc, char **argv)
 			if (strcmp(passagges[j], "cplexheu") == 0)
 			{
 				two_opt(distance_matrix, args.nnodes, path, &(instances[c_inst].tour_lenght));
-				log_path(path, args.nnodes);
 				TSPopt(&instances[c_inst], path);
-				plot(path, args.x, args.y, args.nnodes, "anal", instances[c_inst].node_start);
-				two_opt(distance_matrix, args.nnodes, path, &(instances[c_inst].tour_lenght));
 			}
 			strcpy(title + strlen(title), passagges[j]);
 			// TODO fix title in all the different
