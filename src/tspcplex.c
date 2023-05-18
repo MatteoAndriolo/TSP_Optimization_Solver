@@ -303,44 +303,41 @@ int local_branching(CPXENVptr env, CPXLPptr lp, Instance *inst, int *path)
   while (no_improv < 1)
   {
     //------------------------------------------ take current solution and eliminate some solutions -------------------------------
-    // TODO random edges
-    eliminate_radius_edges(env, lp, inst, xheu, 30);
+    eliminate_radius_edges(env, lp, inst, xheu, 0.90);
 #ifndef PRODUCTION
     CPXwriteprob(env, lp, "mipopt.lp", NULL);
 #endif
     //--------------------------------- calling the branch and cut solution -------------------------------------------------------
-    int status = branch_and_cut(inst, env, lp, CPX_CALLBACKCONTEXT_CANDIDATE);
+    inst->solver = 2;
+    int status = solve_problem(env, lp, inst, path); // branch_and_cut(inst, env, lp, CPX_CALLBACKCONTEXT_CANDIDATE | CPX_CALLBACKCONTEXT_RELAXATION);
     if (status)
       print_error("Execution FAILED");
-
-    if (CPXgetx(env, lp, xheu, 0, inst->ncols - 1))
-      print_error("CPXgetx() error");
     // ---------------------------------- check if the solution is better than the previous one ---------------------------------
     double actual_solution;
     int error = CPXgetobjval(env, lp, &actual_solution);
     if (error)
       print_error("CPXgetobjval() error\n");
 
-    if (actual_solution >= best_solution)
-    {
+    if (actual_solution < best_solution)
+    { // UPDATE path
+      if (CPXgetx(env, lp, xheu, 0, inst->ncols - 1))
+        print_error("CPXgetx() error");
       best_solution = actual_solution;
-      no_improv = 0;
       xstarToPath(inst, xheu, inst->ncols, path);
     }
     //---------------------------------- Unfix the edges and calling thesolution --------------------------------------------------
     repristinate_radius_edges(env, lp, inst, xheu);
-    // CPXwriteprob(env, lp, "mipopt.lp", NULL);
     if (actual_solution >= best_solution)
       break;
   }
   //--------------------------------- calling the branch and cut solution -------------------------------------------------------
-  int status = branch_and_cut(inst, env, lp, CPX_CALLBACKCONTEXT_CANDIDATE);
-  if (status)
-    print_error("Execution FAILED");
+  inst->solver = 2;
+  solve_problem(env, lp, inst, path);
   if (CPXgetx(env, lp, xheu, 0, inst->ncols - 1))
     print_error("CPXgetx() error");
   xstarToPath(inst, xheu, inst->ncols, path);
   free(xheu);
+
   return 0;
 }
 
