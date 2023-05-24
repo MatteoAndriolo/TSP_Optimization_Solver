@@ -102,7 +102,7 @@ int my_callback_relaxation(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, voi
   if (CCcut_connect_components(inst->nnodes, ecount, elist, xstar, &ncomp, &compscount, &comps))
     print_error("CCcut_connect_components error");
   printf("ncomp = %d\n", ncomp);
-  if (ncomp == 1)
+  if (ncomp == 1) // TODO separate components here
   {
     DEBUG_COMMENT("tspcplex.c:my_callback_relaxation", "inside the if condition on the relaxation point, we are in cause the number of the connected component, ncomp = %d", ncomp);
     Input params;
@@ -326,7 +326,7 @@ int local_branching(CPXENVptr env, CPXLPptr lp, Instance *inst, int *path)
       xstarToPath(inst, xheu, inst->ncols, path);
     }
     //---------------------------------- Unfix the edges and calling thesolution --------------------------------------------------
-    repristinate_radius_edges(env, lp, inst, xheu);
+    repristinate_radius_edges(env, lp, inst, xheu); // FIXME remove fixing the boundary and add a contraint row
     if (actual_solution >= best_solution)
       break;
   }
@@ -345,9 +345,9 @@ int solve_problem(CPXENVptr env, CPXLPptr lp, Instance *inst, int *path)
 {
   DEBUG_COMMENT("tspcplex.c:solve_problem", "entering solve problem");
   int status = -1;
-  printf("/////////////////////////////////////////////////////////////////////////////////");
+  printf("/////////////////////////////////////////////////////////////////////////////////\n");
   printf("solver = %d\n", inst->solver);
-  printf("/////////////////////////////////////////////////////////////////////////////////");
+  printf("/////////////////////////////////////////////////////////////////////////////////\n");
   // TODO: fix the solver function cplexheu and cplex
   // CPXwriteprob(env, lp, "mipopt.lp", NULL);
   if (inst->solver == 1)
