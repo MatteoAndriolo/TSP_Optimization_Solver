@@ -16,6 +16,7 @@ typedef struct
 {
     Instance *inst;
     CPXCALLBACKCONTEXTptr context;
+    double *xstar;
 } Input;
 
 /**

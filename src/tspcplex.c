@@ -34,9 +34,24 @@ void build_model(Instance *inst, CPXENVptr env, CPXLPptr lp)
   free(cname[0]);
   free(cname);
 }
+double cut_violation(double *xstar, int nnz, double rhs, char sense, int *index, double *value)
+{
+  double lhs = 0.0;
+  for (int i = 0; i < nnz; i++)
+  {
+    lhs += xstar[index[i]] * value[i];
+  }
+  if (sense == 'L')
+    return lhs - rhs;
+  else if (sense == 'G')
+    return rhs - lhs;
+  else
+    return fabs(lhs - rhs);
+}
 
 int doit_fn_concorde(double cutval, int cutcount, int *cut, void *inparam)
 {
+  printf("doit_fn_concorde\n");
   Input *param = (Input *)inparam;
   int ecount = param->inst->nnodes * (param->inst->nnodes - 1) / 2;
   double *value = (double *)calloc(ecount, sizeof(double));
@@ -57,9 +72,14 @@ int doit_fn_concorde(double cutval, int cutcount, int *cut, void *inparam)
     }
     // TODO: go single thread clone the model env(env2, lp2) put the poiters in the instance data structure when I am in a callback add subtour elimination constrain addrowsfunction and print the model
   }
+
+  double violation = cut_violation(param->xstar, nnz, rhs, sense, index, value);
+  printf("violation = %f, rhs = %f, nnz = %d, cutval = %f \n", violation, rhs, nnz, cutval);
+  if (fabs(violation - (2.0 - cutval) / 2.0) > EPSILON)
+    print_error("inconsistent violation");
+
   if (CPXcallbackaddusercuts(param->context, 1, nnz, &rhs, &sense, &izero, index, value, &purgeable, &local))
     ERROR_COMMENT("tspcplex.c:doit_fn_concorde", "CPXcallbackaddusercuts() error");
-  printf("rhs = %10.0f, nnz = %2d, cutcount = %d \n", rhs, nnz, cutcount);
   free(value);
   free(index);
   return 0;
@@ -101,15 +121,15 @@ int my_callback_relaxation(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, voi
   INFO_COMMENT("tspcplex.c:my_callback_relaxation", "calling CCcut_connect_components");
   if (CCcut_connect_components(inst->nnodes, ecount, elist, xstar, &ncomp, &compscount, &comps))
     print_error("CCcut_connect_components error");
-  printf("ncomp = %d\n", ncomp);
+  printf("number of connected components = %d \n", ncomp);
   if (ncomp == 1)
   {
     DEBUG_COMMENT("tspcplex.c:my_callback_relaxation", "inside the if condition on the relaxation point, we are in cause the number of the connected component, ncomp = %d", ncomp);
     Input params;
     params.inst = inst;
     params.context = context;
-
-    if (CCcut_violated_cuts(inst->nnodes, ecount, elist, xstar, 2.0 - EPSILON, doit_fn_concorde, &params))
+    params.xstar = xstar;
+    if (CCcut_violated_cuts(inst->nnodes, ecount, elist, xstar, 1.9, doit_fn_concorde, &params))
       print_error("CCcut_violated_cuts error");
   }
   // TODO: check fuction for != ncomp
@@ -229,7 +249,6 @@ int branch_and_cut(Instance *inst, CPXENVptr env, CPXLPptr lp, CPXLONG contextid
   free(comp);
   free(succ);
   free(xstar);
-
   return 0;
 }
 
@@ -350,6 +369,7 @@ int solve_problem(CPXENVptr env, CPXLPptr lp, Instance *inst, int *path)
   printf("/////////////////////////////////////////////////////////////////////////////////");
   // TODO: fix the solver function cplexheu and cplex
   // CPXwriteprob(env, lp, "mipopt.lp", NULL);
+  inst->solver = 1;
   if (inst->solver == 1)
   {
     status = add_subtour_constraints(inst, env, lp);
@@ -407,8 +427,6 @@ void TSPopt(Instance *inst, int *path)
   else
     printf("status = %d-------------------------------------------s\n", status);
 
-#ifndef PRODUCTION
-  //-----------------------------------------getting the solution-----------------------------------------------------------------
   inst->ncols = CPXgetnumcols(env, lp);
   double *xstar = (double *)calloc(inst->ncols, sizeof(double));
 
@@ -416,6 +434,7 @@ void TSPopt(Instance *inst, int *path)
     print_error("CPXgetx() error");
   xstarToPath(inst, xstar, pow((double)inst->nnodes, 2.0), path);
 
+#ifndef PRODUCTION
   char *tmp;
   tmp = getPath(path, inst->nnodes);
   DEBUG_COMMENT("tspcplex.c:TSPopt", "path = %s", tmp);
