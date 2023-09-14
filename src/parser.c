@@ -1,91 +1,54 @@
-#include "parser.h"
+#include "../include/parser.h"
 
-void read_input(Args *args) // simplified CVRP parser, not all SECTIONs detected
-{
-
-    DEBUG_COMMENT("parser::read_input", "Opening the TSP file in reading mode");
-
+void read_input(Args *args) {
     FILE *fin = fopen(args->input_file, "r");
-
-    if (fin == NULL)
-    {
-        ERROR_COMMENT("parser::read_input", "File not found/not exists");
-        exit(1);
+    if (fin == NULL) {
+        FATAL_COMMENT("parser::read_input", "File %s not found/not exists", args->input_file);
     }
 
-    DEBUG_COMMENT("parser::read_input", "inizialize the variables");
-    args->nnodes = -1;
-    char line[1024];
-    int number_nodes = 0;
-    int reading_nodes = 0;
-    double node_x, node_y;
-    int node_number;
+    int number_nodes = -1;
     int node_saved = 0;
 
-    while (fgets(line, 1024, fin))
-    {
-        // Strip trailing newline
+    char line[1024];
+    while (fgets(line, 1024, fin)) {
         int len = strlen(line);
-        if (line[len - 1] == '\n')
-        {
+        if (line[len - 1] == '\n') {
             line[len - 1] = '\0';
         }
 
-        if (sscanf(line, "DIMENSION : %d", &number_nodes) == 1) // add optional blank or non blank
-        {
-
+        int node_number;
+        double node_x, node_y;
+        if (sscanf(line, "DIMENSION : %d", &number_nodes) == 1) {
             DEBUG_COMMENT("parser::read_input", "Number of nodes in the field DIMENSION: %d", number_nodes);
             args->nnodes = number_nodes - 1;
             args->x = (double *)malloc(number_nodes * sizeof(double));
             args->y = (double *)malloc(number_nodes * sizeof(double));
-
             DEBUG_COMMENT("parser::read_input", "Memory for x and y allocated");
-        }
-
-        if (reading_nodes)
-        {
-            /*
-            From each line take the node_num, allocate after a fixed memory
-            with calloc of size of nom_nodes, store inside pair the 2 coordinates
-            */
-
-            if (sscanf(line, "%d %lf %lf", &node_number, &node_x, &node_y) == 3)
-            {
-                int nn = node_number - 1;
-                args->x[nn] = node_x;
-                args->y[nn] = node_y;
-                //DEBUG_COMMENT("parser::read_input", "[NodesIndex: ( x , y ) ] [%d: (%lf, %lf)]", nn, args->x[nn], args->y[nn]);
-                node_saved++;
-            }
-            else
-            {
-                DEBUG_COMMENT("parser::read_input", "Reached end of the file");
-                break;
-            }
-        }
-        else
-        {
-            if (strcmp(line, "NODE_COORD_SECTION") == 0)
-            {
-                DEBUG_COMMENT("parser::read_input", "Reading in the file the NODE_COORD_SECTION and start reading the node");
-                reading_nodes = 1;
-            }
-            else if (sscanf(line, "DIMENSION : %d", &number_nodes) == 1)
-            {
-                ERROR_COMMENT("parser::read_input", "The file does not contain any node");
+        } else if (strcmp(line, "NODE_COORD_SECTION") == 0) {
+            DEBUG_COMMENT("parser::read_input", "Reading in the file the NODE_COORD_SECTION and start reading the node");
+            while (fgets(line, 1024, fin)) {
+                if (sscanf(line, "%d %lf %lf", &node_number, &node_x, &node_y) == 3) {
+                    int nn = node_number - 1;
+                    args->x[nn] = node_x;
+                    args->y[nn] = node_y;
+                    node_saved++;
+                } else {
+                    DEBUG_COMMENT("parser::read_input", "Reached end of the file");
+                    break;
+                }
             }
         }
     }
 
-    if (number_nodes != node_saved)
-    {
-        WARNING_COMMENT("parser::read_input", "field DIMENTION != real number of nodes in the file");
+    fclose(fin);
+
+    if (number_nodes != node_saved) {
+        WARNING_COMMENT("parser::read_input", "field DIMENSION != real number of nodes in the file");
     }
 
     INFO_COMMENT("parser::read_input", "Reading is finished, close the file");
-
-    fclose(fin);
 }
+
 
 void print_arguments(const Args *args)
 {
@@ -93,7 +56,7 @@ void print_arguments(const Args *args)
     printf("-input %s\n", args->input_file);
     printf("-m %s\n", args->model_type);
     printf("--seed %d\n", args->randomseed);
-    printf("--num_instances %d\n", args->num_instances);
+    printf("--numinstances %d\n", args->num_instances);
     if (strcmp(args->grasp, "1") != 0)
         for (int i = 0; i < args->n_probabilities; i++)
             printf("--grasp %lf\n", args->grasp_probabilities[i]);
@@ -186,7 +149,7 @@ void parse_command_line(int argc, char **argv, Args *args)
             args->timelimit = atof(argv[++i]);
             continue;
         } // total time limit
-        if ((strcmp(argv[i], "-n") == 0) | (strcmp(argv[i], "--numinstnces") == 0))
+        if ((strcmp(argv[i], "-n") == 0) | (strcmp(argv[i], "--numinstances") == 0))
         {
             args->num_instances = atoi(argv[++i]);
         }
@@ -195,15 +158,11 @@ void parse_command_line(int argc, char **argv, Args *args)
             help = 1;
             continue;
         } // help
-        if ((strcmp(argv[i], "--plot") == 0) == 0)
+        if (strcmp(argv[i], "--plot") == 0 )
         {
             args->toplot = 1;
+            printf("PUTTING PLOTTING AT 1");
         }
-
-        // if ( strcmp(argv[i],"-memory") == 0 ) { inst->available_memory = atoi(argv[++i]); continue; }	// available memory (in MB)
-        // if ( strcmp(argv[i],"-node_file") == 0 ) { strcpy(inst->node_file,argv[++i]); conggtinue; }		// cplex's node file
-        // if ( strcmp(argv[i],"-max_nodes") == 0 ) { inst->max_nodes = atoi(argv[++i]); continue; } 		// max n. of nodes
-        // if ( strcmp(argv[i],"-cutoff") == 0 ) { inst->cutoff = atof(argv[++i]); continue; }				// master cutoff
     }
 
     if (help)
@@ -234,6 +193,7 @@ void parse_grasp_probabilities(char *grasp, double *probabilities, int *n_probab
         if (endptr == grasp + ind) {
             // conversion failed
             ERROR_COMMENT("parser::parser_grasp_probabilities","conversion failed");
+        exit(1);
             return;
         }
         ind = endptr - grasp;

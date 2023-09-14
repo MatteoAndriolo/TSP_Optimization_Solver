@@ -3,8 +3,8 @@
 
 #include <argp.h>
 #include <stdio.h>
-#include "vrp.h"
-#include "logger.h"
+#include "../include/vrp.h"
+#include "../include/logger.h"
 
 // Parse arguments
 typedef struct args
