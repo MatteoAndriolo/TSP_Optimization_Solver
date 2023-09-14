@@ -99,6 +99,7 @@ int feasiblePath(const int *path, const int nnodes)
 int assert_path(const int *path, const double *distance_matrix, const int nnodes, const double tour_length)
 {
     // all nodes used
+    DEBUG_COMMENT("assert_path", "Asserting path, %s nnodes, %lf tour_length", nnodes, tour_length);
     int check_nnodes = (nnodes * (nnodes - 1)) / 2;
     for (int i = 0; i < nnodes; check_nnodes -= path[i++])
         ;
@@ -115,7 +116,7 @@ int assert_path(const int *path, const double *distance_matrix, const int nnodes
     {
         ERROR_COMMENT("assert_path", "assert_path failed: check_nnodes=%d, check_tour_length=%lf, nnodes=%d, tour_length=%lf", check_nnodes, check_tour_length, nnodes, tour_length);
         log_path(path, nnodes);
-        return 0;
+        exit(-5);
     }
     DEBUG_COMMENT("assert_path", "assert_path passed: check_nnodes=%d, check_tour_length=%lf, nnodes=%d, tour_length=%lf", check_nnodes, check_tour_length, nnodes, tour_length);
     return 1;
@@ -157,8 +158,10 @@ void swap_array_piece(int *arr, int start1, int end1, int start2, int end2)
     memcpy(&arr[start1], &arr[start2], sizeof(int) * (end1 - start1 + 1)); // Copy the second piece to the first piece
     memcpy(&arr[start2], temp, sizeof(int) * (end1 - start1 + 1));         // Copy the temp array (first piece) to the second piece
 }
+
 void two_opt_move(int *path, int n1, int n2, int nnodes)
 {
+    // DEBUG_COMMENT("utils::two_opt_move", "Entering two_opt_move function %d %d", n1, n2);
     int t = (n1 + 1) % nnodes;
     for (int z = 0; z < (int)(n2 - n1 + 1) / 2; z++) // reverse order cells (n1+1,index_min)
     {
@@ -167,6 +170,21 @@ void two_opt_move(int *path, int n1, int n2, int nnodes)
         path[n2 - z] = temp;
     }
 }
+
+// void two_opt_move(int *path, int n1, int n2, int nnodes)
+// {
+//     DEBUG_COMMENT("utils::two_opt_move", "Entering two_opt_move function %d %d", n1, n2);
+//     int t = (n1 + 1) % nnodes;
+//     for (int z = 0; z < (int)(n2 - n1) / 2; z++) // reverse order cells (n1+1,index_min)
+//     {
+//         if (n2 - z < nnodes)
+//         {
+//             int temp = path[z + t];
+//             path[z + t] = path[n2 - z];
+//             path[n2 - z] = temp;
+//         }
+//     }
+// }
 
 void generate_random_path(int *path, int nnodes)
 {
@@ -185,4 +203,32 @@ void generate_random_path(int *path, int nnodes)
         path[j] = tmp;
     }
     DEBUG_COMMENT("utils::generate_random_path", "Generated random path");
+}
+
+int randomBetween(int lowerBound, int upperBound)
+{
+    int randomBetween = (rand() % (upperBound - lowerBound + 1)) + lowerBound;
+    return randomBetween;
+}
+
+bool simpleCorrectness(int *path, int nnodes)
+{
+    int *check = malloc(nnodes * sizeof(int));
+    for (int i = 0; i < nnodes; i++)
+    {
+        check[i] = 0;
+    }
+    for (int i = 0; i < nnodes; i++)
+    {
+        check[path[i]]++;
+    }
+    for (int i = 0; i < nnodes; i++)
+    {
+        if (check[i] != 1)
+        {
+            ERROR_COMMENT("utils::simpleCorrectness", "Error in path: %d, index %d", path[i], i);
+            return false;
+        }
+    }
+    return true;
 }

@@ -80,11 +80,6 @@ void log_path(const int *path, int nnodes);
 char *getPath(const int *path, int nnodes);
 
 /**
- *
- */
-void log_distancematrix(const double *distance_matrix, int nnodes);
-
-/**
  * Logs the output of the given instance, including the tour and the total tour length.
  *
  * @param inst a pointer to the instance to be logged

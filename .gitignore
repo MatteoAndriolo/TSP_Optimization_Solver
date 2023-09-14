@@ -243,4 +243,3 @@ bin/*
 concorde
 concorde_build
 **/*.old
-*.md

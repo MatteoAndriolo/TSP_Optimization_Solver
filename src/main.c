@@ -7,6 +7,7 @@
 #include "utils.h"
 #include "heuristics.h"
 #include "metaheuristic.h"
+#include "tabu.h"
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -28,9 +29,6 @@ int main(int argc, char **argv)
 	INFO_COMMENT("main::main", "Generating distance matrix");
 	double *distance_matrix = (double *)malloc(sizeof(double) * args.nnodes * args.nnodes);
 	generate_distance_matrix(&distance_matrix, args.nnodes, args.x, args.y, args.integer_costs);
-#ifndef PRODUCTION
-	log_distancematrix(distance_matrix, args.nnodes);
-#endif
 	DEBUG_COMMENT("main::main", "Distance matrix generated");
 
 	// Parsing model ----------------------------------------------------------
@@ -86,9 +84,6 @@ int main(int argc, char **argv)
 			}
 			else if (strcmp(passagges[j], "nng") == 0)
 			{
-#ifndef PRODUCTION
-				log_path(path, instances[c_inst].nnodes);
-#endif
 				// parse_grasp_probabilities(args.grasp, instances[c_inst].grasp_probabilities, &instances[c_inst].grasp_n_probabilities);
 				nearest_neighboor_grasp(distance_matrix, path, instances[c_inst].nnodes, &(instances[c_inst].tour_lenght), instances[c_inst].grasp_probabilities, instances[c_inst].grasp_n_probabilities);
 			}
@@ -114,24 +109,22 @@ int main(int argc, char **argv)
 				{
 					FATAL_COMMENT("main::main", "Tabu search must be used with a starting point");
 				}
-				tabu_search(distance_matrix, path, instances[c_inst].nnodes, &instances[c_inst].tour_lenght, args.nnodes / 10);
-			}
-			else if (strcmp(passagges[j], "gen") == 0)
-			{
-				genetic_algorithm(distance_matrix, path, instances[c_inst].nnodes, &instances[c_inst].tour_lenght, 40000, 100);
+				tabu_search(distance_matrix, path, instances[c_inst].nnodes, &(instances[c_inst].tour_lenght), (int)(args.nnodes / 20), (int)(args.nnodes / 8), 2);
 			}
 			else if (strcmp(passagges[j], "test") == 0)
 			{
-				continue;
+				test_buffer();
 			}
 			else
 			{
 				FATAL_COMMENT("main::main", "Model %s not recognized", passagges[j]);
 			}
-			printf("finished");
+			printf("finished\n");
 			ffflush();
 			strcpy(title + strlen(title), passagges[j]);
 			plot(path, args.x, args.y, args.nnodes, title, instances[c_inst].node_start);
+			printf("tourlenght %lf\n", get_tour_length(path, args.nnodes, distance_matrix));
+
 			if (j == n_passagges - 1)
 				strcpy(title, "\0");
 		}

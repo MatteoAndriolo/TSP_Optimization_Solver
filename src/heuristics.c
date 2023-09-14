@@ -1,10 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
 #include "heuristics.h"
-#include "greedy.h"
-#include <string.h>
-#include <math.h>
 
 void vnp_k(const double *distance_matrix, int *path, int nnodes, double *tour_length, int k, int duration)
 {
@@ -31,12 +25,6 @@ void vnp_k(const double *distance_matrix, int *path, int nnodes, double *tour_le
     path = best_path;
     INFO_COMMENT("heuristics.c:vnp_k", "finished the huristics loop for vnp_k, best path found= %lf", best_tour);
     log_path(path, nnodes);
-}
-
-int randomBetween(int lowerBound, int upperBound)
-{
-    int randomBetween = (rand() % (upperBound - lowerBound + 1)) + lowerBound;
-    return randomBetween;
 }
 
 void kick_function(const double *distance_matrix, int *path, int nnodes, double *tour_length, int k)
@@ -97,6 +85,7 @@ void kick_function(const double *distance_matrix, int *path, int nnodes, double 
     }
     *tour_length += distance_matrix[path[0] * nnodes + path[nnodes - 1]];
 }
+
 
 //-----------------------------------------------------------------------------------------------
 // Tabu search
