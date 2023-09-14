@@ -2,8 +2,28 @@
 #define UTILS_H
 #include <immintrin.h>
 #include <math.h>
+#include <stdbool.h>
 #include "logger.h"
 
+#define FREE(ptr) \
+    free(ptr);    \
+    ptr = NULL;
+
+typedef struct
+{
+    int *arr;
+    int start; // index of the oldest element
+    int end;   // index at where the next element will be inserted
+    int size;  // size of the buffer
+    int tenure;
+} CircularBuffer;
+
+typedef struct
+{
+    CircularBuffer *buf;
+    int current;
+    bool hasStarted;
+} BufferIterator;
 /**
  * Swaps two elements in an integer array.
  *
@@ -152,5 +172,19 @@ void two_opt_move(int *path, int n1, int n2, int nnodes);
  *
  */
 void generate_random_path(int *path, int nnodes);
+/**
+ * Generate random int
+ *
+ * @param lowerBound lower bound
+ * @param upperBound upper bound
+ */
+int randomBetween(int lowerBound, int upperBound);
 
+/**
+ * Check path correctness
+ *
+ * @param path pointer to path
+ * @param nnodes The number of nodes in the graph.
+ */
+bool simpleCorrectness(int *path, int nnodes);
 #endif

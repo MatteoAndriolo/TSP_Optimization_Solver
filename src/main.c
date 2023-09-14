@@ -7,6 +7,7 @@
 #include "utils.h"
 #include "heuristics.h"
 #include "metaheuristic.h"
+#include "tabu.h"
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -108,27 +109,22 @@ int main(int argc, char **argv)
 				{
 					FATAL_COMMENT("main::main", "Tabu search must be used with a starting point");
 				}
-				tabu_search(distance_matrix, path, instances[c_inst].nnodes, &instances[c_inst].tour_lenght, args.nnodes / 10);
-			}
-			else if (strcmp(passagges[j], "gen") == 0)
-			{
-				genetic_algorithm(distance_matrix, path, instances[c_inst].nnodes, &instances[c_inst].tour_lenght, 40000, 100);
+				tabu_search(distance_matrix, path, instances[c_inst].nnodes, &(instances[c_inst].tour_lenght), (int)(args.nnodes / 20), (int)(args.nnodes / 8), 2);
 			}
 			else if (strcmp(passagges[j], "test") == 0)
 			{
-				continue;
+				test_buffer();
 			}
 			else
 			{
 				FATAL_COMMENT("main::main", "Model %s not recognized", passagges[j]);
 			}
-			printf("finished");
+			printf("finished\n");
 			ffflush();
 			strcpy(title + strlen(title), passagges[j]);
-			// TODO fix title in all the different
-			//  like in grasp specify also the probabilities
-			//  put first name of model then the rest
 			plot(path, args.x, args.y, args.nnodes, title, instances[c_inst].node_start);
+			printf("tourlenght %lf\n", get_tour_length(path, args.nnodes, distance_matrix));
+
 			if (j == n_passagges - 1)
 				strcpy(title, "\0");
 		}

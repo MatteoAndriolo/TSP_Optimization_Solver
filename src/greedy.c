@@ -2,8 +2,6 @@
 #include "logger.h"
 #include "utils.h"
 #include "logger.h"
-#include <stdlib.h>
-#include <math.h>
 #include "refinement.h"
 
 void nearest_neighboor(const double *distance_matrix, int *path, int nnodes, double *tour_length)
@@ -89,9 +87,9 @@ void nearest_neighboor_grasp(const double *distance_matrix, int *path, const int
     }
     // complete the tour
     (*tour_length) += distance_matrix[path[0] * nnodes + path[nnodes - 1]];
-    #ifndef PRODUCTION
+#ifndef PRODUCTION
     log_path(path, nnodes);
-    #endif
+#endif
 }
 
 void extra_mileage(const double *distance_matrix, int *path, int nnodes, double *tour_length)
@@ -115,7 +113,7 @@ void extra_mileage(const double *distance_matrix, int *path, int nnodes, double 
     //--------------- START SEARCH -------------------------------------------
     *tour_length = 2 * max_distance;
     DEBUG_COMMENT("greedy::Extra_mileage", "initial tour length = %lf", tour_length);
-    int node_3[3]={-1, -1, -1};
+    int node_3[3] = {-1, -1, -1};
     double min = INFINITY;
 
     for (int i = 2; i < nnodes; i++) // starting with two path "visited"
