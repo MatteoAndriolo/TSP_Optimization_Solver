@@ -65,6 +65,7 @@ void print_arguments(const Args *args)
 
 void parse_model_name(char *model_type, char ***passagges, int *n_passagges)
 {
+    // given a string like "model1.model2.model3" it returns an array of strings
     (*n_passagges) = 0;
     int length = strlen(model_type);
     for (int i = 0; i < length; i++)

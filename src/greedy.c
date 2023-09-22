@@ -1,8 +1,8 @@
-#include "greedy.h"
+#include "../include/greedy.h"
 
-#include "logger.h"
-#include "refinement.h"
-#include "utils.h"
+#include "../include/logger.h"
+#include "../include/refinement.h"
+#include "../include/utils.h"
 
 void nearest_neighboor(const double *distance_matrix, int *path, int nnodes,
                        double *tour_length) {

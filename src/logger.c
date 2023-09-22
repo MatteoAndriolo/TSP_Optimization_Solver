@@ -1,4 +1,4 @@
-#include "logger.h"
+#include "../include/logger.h"
 
 static FILE *log_file;
 
@@ -24,24 +24,24 @@ void log_path(const int *path, int nnodes) {
   DEBUG_COMMENT("log_path", "%s,", str);
 }
 
-char *getPath(const int *path, int nnodes) {
-  char *path_str = (char *)malloc(sizeof(char) * nnodes * 5);
-  sprintf(path_str, "[");
-  for (int i = 0; i < nnodes; i++) {
-    sprintf(path_str + strlen(path_str), "\t%d,", path[i]);
-  }
-  sprintf(path_str + strlen(path_str), "]");
-  return path_str;
-}
+// char *getPath(const int *path, int nnodes) {
+//   char *path_str = (char *)malloc(sizeof(char) * nnodes * 5);
+//   sprintf(path_str, "[");
+//   for (int i = 0; i < nnodes; i++) {
+//     sprintf(path_str + strlen(path_str), "\t%d,", path[i]);
+//   }
+//   sprintf(path_str + strlen(path_str), "]");
+//   return path_str;
+// }
 
-void log_distancematrix(const double *distance_matrix, int nnodes) {
-  fprintf(log_file, "%lf;", distance_matrix[0]);
-  for (int i = 1; i < pow(nnodes, 2); i++) {
-    if (i % nnodes == 0) fprintf(log_file, "\n");
-    fprintf(log_file, "%lf;", distance_matrix[i]);
-  }
-  fprintf(log_file, "\n");
-}
+// void log_distancematrix(const double *distance_matrix, int nnodes) {
+//   fprintf(log_file, "%lf;", distance_matrix[0]);
+//   for (int i = 1; i < pow(nnodes, 2); i++) {
+//     if (i % nnodes == 0) fprintf(log_file, "\n");
+//     fprintf(log_file, "%lf;", distance_matrix[i]);
+//   }
+//   fprintf(log_file, "\n");
+// }
 
 void log_message(LogLevel level, const char *namefile_and_func,
                  const char *format, ...) {

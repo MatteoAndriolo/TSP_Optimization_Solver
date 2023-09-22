@@ -1,4 +1,4 @@
-#include "heuristics.h"
+#include "../include/heuristics.h"
 
 void vnp_k(const double *distance_matrix, int *path, int nnodes, double *tour_length, int k, int duration)
 {
@@ -11,7 +11,7 @@ void vnp_k(const double *distance_matrix, int *path, int nnodes, double *tour_le
     while (difftime(end_time, time(NULL)) > 0)
     {
         printf("Time left: %.0f seconds\n", difftime(end_time, time(NULL)));
-        two_opt(distance_matrix, nnodes, path, tour_length, INFINITY);
+        two_opt(distance_matrix, nnodes, path, tour_length, INFINITY, duration); //ODO fix dutarion
         kick_function(distance_matrix, path, nnodes, tour_length, k);
         if (best_tour > *tour_length)
         {

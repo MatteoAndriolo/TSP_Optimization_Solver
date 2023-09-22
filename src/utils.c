@@ -1,4 +1,4 @@
-#include "utils.h"
+#include "../include/utils.h"
 
 void swap(int *arr, int i, int j) {
   int temp = arr[i];
@@ -34,12 +34,12 @@ inline double distance_euclidean(double x1, double y1, double x2, double y2) {
   return sqrt(dx * dx + dy * dy);
 }
 
-inline double distance_euclidean_square(double x1, double y1, double x2,
-                                        double y2) {
-  double dx = x1 - x2;
-  double dy = y1 - y2;
-  return dx * dx + dy * dy;
-}
+// inline double distance_euclidean_square(double x1, double y1, double x2,
+//                                         double y2) {
+//   double dx = x1 - x2;
+//   double dy = y1 - y2;
+//   return dx * dx + dy * dy;
+// }
 
 void generate_distance_matrix(double **matrix, const int nnodes,
                               const double *x, const double *y, int r) {
@@ -129,13 +129,6 @@ void generate_random_starting_nodes(int *starting_nodes, int num_nodes,
   }
 }
 
-void generate_path(int *path, int starting_node, int num_nodes) {
-  for (int i = 0; i < num_nodes; i++) {
-    path[i] = i;
-  }
-  path[starting_node] = 0;
-  path[0] = starting_node;
-}
 
 void swap_array_piece(int *arr, int start1, int end1, int start2, int end2) {
   int temp[end1 - start1 +
@@ -152,6 +145,25 @@ void swap_array_piece(int *arr, int start1, int end1, int start2, int end2) {
               1));  // Copy the temp array (first piece) to the second piece
 }
 
+void generate_path(int *path, const int starting_node, const int num_nodes, const bool shuffle) {
+    for (int i = 0; i < num_nodes; i++) {
+        path[i] = i;
+    }
+    path[starting_node] = 0;
+    path[0] = starting_node;
+
+    if (shuffle) {
+        int j, tmp;
+        for (int i = 0; i < num_nodes; i++) {
+            j = rand() % num_nodes;
+            tmp = path[i];
+            path[i] = path[j];
+            path[j] = tmp;
+        }
+    }
+}
+
+
 void two_opt_move(int *path, int n1, int n2, int nnodes) {
   // DEBUG_COMMENT("utils::two_opt_move", "Entering two_opt_move function %d
   // %d", n1, n2);
@@ -165,22 +177,6 @@ void two_opt_move(int *path, int n1, int n2, int nnodes) {
   }
 }
 
-void generate_random_path(int *path, int nnodes) {
-  DEBUG_COMMENT("utils::generate_random_path",
-                "Entering generate_random_path function");
-  int j, tmp;
-  // path = malloc(nnodes * sizeof(int));
-  for (int i = 0; i < nnodes; i++) {
-    path[i] = i;
-  }
-  for (int i = 0; i < nnodes; i++) {
-    j = rand() % nnodes;
-    tmp = path[i];
-    path[i] = path[j];
-    path[j] = tmp;
-  }
-  DEBUG_COMMENT("utils::generate_random_path", "Generated random path");
-}
 
 int randomBetween(int lowerBound, int upperBound) {
   int randomBetween = (rand() % (upperBound - lowerBound + 1)) + lowerBound;

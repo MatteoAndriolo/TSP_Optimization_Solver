@@ -31,7 +31,7 @@
 #include <time.h>
 #include <unistd.h>
 
-#include "vrp.h"
+#include "../include/vrp.h"
 
 typedef enum {
   ERROR,

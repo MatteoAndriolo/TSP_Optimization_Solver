@@ -1,15 +1,8 @@
 #ifndef REFINEMENT_H
 #define REFINEMENT_H
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <time.h>
 
-#include "greedy.h"
-#include "logger.h"
-#include "tabu.h"
-#include "utils.h"
+#include "../include/utils.h"
 
 /**
  * Applies the 2-opt algorithm to a given distance matrix and node list (in

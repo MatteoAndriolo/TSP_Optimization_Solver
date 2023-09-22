@@ -243,3 +243,6 @@ bin/*
 concorde
 concorde_build
 **/*.old
+
+# coverage
+**/*.gcno
