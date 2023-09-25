@@ -1,9 +1,19 @@
-from argp import arpg
 from instance import Instance
+from pathlib import Path
+import argp
 import re
 
 
 def get_opt_solutions(filename="data/solutions.csv"):
+    """
+    Create dictionary containing all optimal solution for the instances in the solutions.csv file
+
+    Input:
+        filename (str): path to the solutions.csv file
+    Output:
+        solutions (dict): dictionary containing all optimal solutions
+            e.g. solutions["berlin52"] = 7542
+    """
     import csv
 
     solutions = {}
@@ -18,12 +28,25 @@ def get_opt_solutions(filename="data/solutions.csv"):
             # Assuming the first column is the instance name and the second column is the value
             instance = row[0]
             value = row[1]
-            solutions[instance] = value
+            solutions[instance] = float(value)
 
     return solutions
 
 
 def check_datafiles_and_solutions(solutions, data_dir="./data/tsp/", extension=".tsp"):
+    """
+    Check if all instances in the solutions.csv file are in the data/tsp folder and vice versa
+    If not, remove them from the solutions dictionary
+
+    Input:
+        solutions (dict): dictionary containing all optimal solutions
+            e.g. solutions["berlin52"] = 7542
+        data_dir (str): path to the data folder
+        extension (str): extension of the data files
+    Output:
+        solutions (dict): dictionary containing all optimal solutions with instances that all files exists
+
+    """
     import os.path
 
     remove = []
@@ -48,11 +71,14 @@ def check_datafiles_and_solutions(solutions, data_dir="./data/tsp/", extension="
     return solutions
 
 
-def analyze_run(solution, instance):
-    instance: Instance
-    solution: dict
+def analyze_run(solution, instance: Instance):
+    """
+    Analyze output of the run
 
-    with open(instance.sol_file, "r") as f:
+    Input:
+        instance (Instance): instance object
+    """
+    with open(instance.path_sol_file, "r") as f:
         lines = f.readlines()
         # match pattern "tourlenght 12345.12314" in lines and store values
         # if no match, return None
@@ -66,15 +92,25 @@ def analyze_run(solution, instance):
             print(
                 "mean is ", sum(matches) / len(matches), " over ", len(matches), " runs"
             )
+            # print mean and deviation, max minimum error
+            print(
+                "max error is %",
+                max([abs(m - solution[instance.name]) / m for m in matches]),
+            )
+            print(
+                "min error is %",
+                min([abs(m - solution[instance.name]) / m for m in matches]),
+            )
 
 
 if __name__ == "__main__":
     solutions = get_opt_solutions()
     solutions = check_datafiles_and_solutions(solutions)
 
-    args = arpg()
+    args = argp.argp()
 
     instance = Instance(
+        name=Path(args["input"]).stem,
         input=args["input"],
         model=args["model"],
         seed=args["seed"],
@@ -83,16 +119,22 @@ if __name__ == "__main__":
         numinstances=args["numinstances"],
         plot=args["plot"],
     )
+
     instance.open_file()
     if args["input"] == "test":
         for file in solutions.keys():
             instance.set_input(file)
+            print(f"gold tourlenght is {solutions[file]}")
             instance.run()
     else:
         instance.run()
     instance.close_file()
 
     # print solution for args["input"]
-    print("Solution for {}: {}".format(args["input"], solutions[args["input"]]))
+    print(
+        "Solution for {}: {}".format(
+            args["input"], solutions[args["input"][: args["input"].find(".")]]
+        )
+    )
 
     analyze_run(solutions, instance)

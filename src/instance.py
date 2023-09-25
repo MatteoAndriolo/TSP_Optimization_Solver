@@ -20,6 +20,7 @@ def check_input_file(input):
 class Instance:
     def __init__(
         self,
+        name,
         input,
         model,
         integer_costs=True,
@@ -31,6 +32,7 @@ class Instance:
         verbose=False,
     ):
         # check if file exists
+        self.name=name
         self.input = check_input_file(input)
 
         self.model = model

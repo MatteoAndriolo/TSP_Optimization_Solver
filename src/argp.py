@@ -37,13 +37,7 @@ def parse_arguments():
     return arg_dict
 
 
-# Example usage
-if __name__ == "__main__":
-    args_dict = parse_arguments()
-    print(args_dict)
-
-
-def arpg():
+def argp():
     args_dict = parse_arguments()
 
     if args_dict.get("verbose", False):
@@ -58,3 +52,9 @@ def arpg():
         print("\n\n")
 
     return args_dict
+
+
+# Example usage
+if __name__ == "__main__":
+    args_dict = parse_arguments()
+    print(args_dict)
