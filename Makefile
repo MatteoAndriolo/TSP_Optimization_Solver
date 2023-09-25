@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS_COMMON = -Wall -Werror -pedantic -I./include -g
+CFLAGS = -Wall -Werror -pedantic -I./include -g
 LDFLAGS = -lm
 SRC_DIR = ./src
 OBJ_DIR = ./obj
@@ -15,6 +15,7 @@ dir_guard=@mkdir -p $(@D)
 
 .PHONY: all clean production coverage
 
+#all: CFLAGS += -fprofile-arcs -ftest-coverage
 all: $(TARGET)
 	mkdir -p plot
 
@@ -24,7 +25,7 @@ $(TARGET): $(OBJ_FILES)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	$(dir_guard)
-	$(CC) $(CFLAGS_COMMON) -c -o $@ $<
+	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:
 	rm -rf $(OBJ_DIR)/*.o $(TARGET) script.p example.log
@@ -32,7 +33,10 @@ clean:
 production: CFLAGS += -DPRODUCTION -O3
 production: all
 
-#coverage: CFLAGS += --coverage  # Add coverage flags to CFLAGS
-#coverage: clean $(TARGET)
-#	lcov --capture --directory $(OBJ_DIR) --output-file $(COVERAGE_DIR)/coverage.info
-#	genhtml $(COVERAGE_DIR)/coverage.info --output-directory $(COVERAGE_DIR)/coverage_report
+coverage: CFLAGS += --coverage # Add coverage flags to CFLAGS
+coverage: clean $(TARGET)
+	mkdir -p $(COVERAGE_DIR)
+	lcov --capture --directory $(OBJ_DIR) --output-file ./coverage/coverage.info
+	genhtml $(COVERAGE_DIR)/coverage.info --output-directory ./coverage/coverage_report
+	#lcov --capture --directory $(OBJ_DIR) --output-file $(COVERAGE_DIR)/coverage.info
+	#genhtml $(COVERAGE_DIR)/coverage.info --output-directory $(COVERAGE_DIR)/coverage_report
