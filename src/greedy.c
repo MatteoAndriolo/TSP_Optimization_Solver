@@ -46,54 +46,6 @@ int nearest_neighboor(Instance *inst) {
     return SUCCESS;
 }
 
-int nearest_neighboor_grasp(Instance *inst) {
-//    INFO_COMMENT("greedy::nng", "start nearest neighboor");
-//
-//    // Nearest Neighboor -------------------------------------------
-//    int current_node;
-//    for (int j = 1; j < inst->nnodes; j++) {
-//        // find the best #inst->grasp_n_probabilities neighboors
-//        current_node = inst->path[j - 1];
-//        double min_distance = INFINITY;
-//        double dist = -1;
-//        for (int k = j; k < inst->nnodes; k++) {
-//            dist = inst->distance_matrix[current_node * inst->nnodes + inst->path[k]];
-//            if (dist < rankings_value[inst->grasp_n_probabilities - 1])
-//                replace_if_better(rankings_index, rankings_value, inst->grasp_n_probabilities, k, dist);
-//        }
-//
-//        // pick one of the bests
-//        int index = -1;
-//        double r = (double)rand() / (double)RAND_MAX;  // generate a random number between 1-100
-//        DEBUG_COMMENT("greedy::nng", "inst->grasp_probabilities %lf %lf %lf| r: %lf ",
-//                inst->grasp_probabilities[0], inst->grasp_probabilities[1], inst->grasp_probabilities[2], r);
-//        for (int i = 0; i < inst->grasp_n_probabilities; i++) {
-//            if (r <= inst->grasp_probabilities[i]) {
-//                index = i;
-//                break;
-//            }
-//        }
-//        DEBUG_COMMENT("greedy::nng", "%lf %lf %lf %lf -> %lf", r, rankings_value[0],
-//                rankings_value[1], rankings_value[2], rankings_value[index]);
-//        min_distance = rankings_value[index];
-//        swapPathPoints(inst, j, rankings_index[index]);
-//        addToTourLenght(inst,min_distance);
-//
-//        DEBUG_COMMENT("greedy::nng",
-//                "tour length, starting from %d, with %d nodes = %lf", inst->path[0],
-//                j, inst->tour_length);
-//    }
-//    // complete the tour
-//    //
-//    //(*inst->tour_length) += inst->distance_matrix[inst->path[0] * inst->nnodes + inst->path[inst->nnodes - 1]];
-//    calculateTourLength(inst);
-//#ifndef PRODUCTION
-//    log_path(inst->path, inst->nnodes);
-//#endif
-//    assertInst(inst);
-    return SUCCESS;
-}
-
 int extra_mileage(Instance *inst) {
     INFO_COMMENT("greedy::extra_mileage", "start extra mileage");
     //--------------- FIND DIAMETER -------------------------------------------

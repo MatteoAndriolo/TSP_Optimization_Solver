@@ -47,6 +47,9 @@ int main(int argc, char **argv) {
             INFO_COMMENT("main::main", "Generating instance %s", passagges[j]);
             printf("Generating instance %s\n", passagges[j]);
             if (strcmp(passagges[j], "em") == 0) {
+                if(inst->grasp->size>1){
+                    ERROR_COMMENT("main::main", "Extra mileage not implemented for grasp");
+                }
                 if(extra_mileage(&instances[c_inst])==FAILURE)
                 {
                     ERROR_COMMENT("main::main", "Extra mileage failed");

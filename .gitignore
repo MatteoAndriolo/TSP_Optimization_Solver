@@ -246,3 +246,5 @@ concorde_build
 
 # coverage
 **/*.gcno
+.vscode
+mipopt.lp
