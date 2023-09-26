@@ -72,8 +72,8 @@ int main(int argc, char **argv) {
                 ERROR_COMMENT("main::main", "Genetic algorithm not implemented yet");
             } else if (strcmp(passagges[j], "nn") == 0) {
                 nearest_neighboor(inst);
-            } else if (strcmp(passagges[j], "nng") == 0) {
-                nearest_neighboor_grasp(inst);
+            // } else if (strcmp(passagges[j], "nng") == 0) {
+            //     nearest_neighboor_grasp(inst);
             } else if (strcmp(passagges[j], "vpn") == 0) {
                 vnp_k(inst->distance_matrix, inst->path, instances[c_inst].nnodes,
                         &inst->tour_length, 5, 4);

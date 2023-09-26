@@ -1,5 +1,5 @@
 #include "../include/vrp.h"
-
+#include "../include/grasp.h"
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -78,10 +78,16 @@ void instance_initialize(Instance *inst, double max_time,
     pthread_mutex_init(&inst->mutex_path, NULL);
 
     // Initialize GRASP parameters
-    inst->grasp_n_probabilities = grasp_n_probabilities;
-    inst->grasp_probabilities = malloc(grasp_n_probabilities * sizeof(double));
-    memcpy(inst->grasp_probabilities, grasp_probabilities,
-            grasp_n_probabilities * sizeof(double));
+    inst->grasp = (GRASP_Framework*) malloc(sizeof(GRASP_Framework));
+    init_grasp(inst->grasp, grasp_probabilities, grasp_n_probabilities);
+
+
+    inst->grasp->size = grasp_n_probabilities;
+    inst->grasp->probabilities = grasp_probabilities;
+   // inst->grasp_n_probabilities = grasp_n_probabilities;
+   // inst->grasp_probabilities = malloc(grasp_n_probabilities * sizeof(double));
+   // memcpy(inst->grasp_probabilities, grasp_probabilities,
+   //         grasp_n_probabilities * sizeof(double));
 
     // Initialize file names
     strncpy(inst->input_file, input_file, sizeof(inst->input_file) - 1);
@@ -126,11 +132,11 @@ void instance_destroy(Instance *inst) {
         }
 
 
-        if (inst->grasp_probabilities) {
-            free(inst->grasp_probabilities);
-            inst->grasp_probabilities = NULL;
-            DEBUG_COMMENT("instance_destroy", "grasp_probabilities");
-        }
+        // if (inst->grasp_probabilities) {
+        //     free(inst->grasp_probabilities);
+        //     inst->grasp_probabilities = NULL;
+        //     DEBUG_COMMENT("instance_destroy", "grasp_probabilities");
+        // }
 
         // Destroy the mutex
         if (pthread_mutex_destroy(&inst->mutex_path) != 0) {

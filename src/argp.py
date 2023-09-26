@@ -10,7 +10,7 @@ def parse_arguments():
     addarg("-i", "--input", type=str, help="Input file")
     addarg("-m", "--model", type=str, help="Model type")
     addarg("--seed", type=int, default=1234, help="Random seed")
-    addarg("--grasp", type=float, nargs="+", help="Grasp probabilities")
+    addarg("--grasp", type=str, default="1", help="Grasp probabilities")
     addarg("--timelimit", type=float, default=3600.0, help="Total time limit")
     addarg("-n", "--numinstances", type=int, help="Number of instances")
     addarg("--integercosts", action="store_true", help="Use integer costs")
@@ -48,6 +48,8 @@ def argp():
         for key, value in args_dict.items():
             if value is not None:
                 print("{:<15} {:<15}".format(key, str(value)))
+        if args_dict.get("grasp", None) is not None:
+            print("{:<15} {:<15}".format("grasp", str(args_dict["grasp"])))
         print("-" * 30)
         print("\n\n")
 

@@ -104,6 +104,9 @@ class Instance:
             "--numinstances",
             str(self.numinstances),
             "--plot" if self.plot else "",
+            "--grasp",
+            str(self.grasp),
+
         ]
         if self.integer_costs:
             command.append("--int")

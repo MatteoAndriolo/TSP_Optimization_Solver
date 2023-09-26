@@ -1,4 +1,5 @@
 #include "../include/parser.h"
+#include <stdlib.h>
 
 void read_input(Args *args) {
     FILE *fin = fopen(args->input_file, "r");
@@ -32,7 +33,6 @@ void read_input(Args *args) {
                     args->x[nn] = node_x;
                     args->y[nn] = node_y;
                     node_saved++;
-                    INFO_COMMENT("parser::read_input", "Node %d saved, x=%lf, y=%lf", node_number, node_x, node_y);
                 } else {
                     DEBUG_COMMENT("parser::read_input", "Reached end of the file");
                     break;
@@ -97,8 +97,9 @@ void parse_command_line(int argc, char **argv, Args *args)
     args->randomseed = 1234;
     args->timelimit = 3600.0;
     args->toplot = 0;
-    args->n_probabilities = 0;
-    args->grasp_probabilities = malloc(10 * sizeof(double));
+    args->n_probabilities = 1;
+    args->grasp_probabilities=(double*)malloc(sizeof(double));
+    args->grasp_probabilities[0]=1;
     strcpy(args->input_file, "\0");
     strcpy(args->log_file, "\0");
     strcpy(args->grasp, "1");
@@ -132,6 +133,11 @@ void parse_command_line(int argc, char **argv, Args *args)
         } // input file
         if ((strcmp(argv[i], "--grasp") == 0) | (strcmp(argv[i], "-g") == 0))
         {
+            // clean default values
+            args->n_probabilities=0;
+            free(args->grasp_probabilities);
+            args->grasp_probabilities=(double*)calloc(10, sizeof(double));
+            // start parsing
             strcpy(args->grasp, argv[++i]);
             parse_grasp_probabilities(args->grasp, args->grasp_probabilities, &args->n_probabilities);
 
@@ -144,6 +150,7 @@ void parse_command_line(int argc, char **argv, Args *args)
                 else
                     sprintf(args->str_probabilities + strlen(args->str_probabilities), "%.1f_", args->grasp_probabilities[i] - args->grasp_probabilities[i - 1]);
             }
+
             continue;
         }
         if ((strcmp(argv[i], "--maxtime") == 0) | (strcmp(argv[i], "--time") == 0))
@@ -171,54 +178,18 @@ void parse_command_line(int argc, char **argv, Args *args)
         exit(1);
 }
 
-/*
-void parse_grasp_probabilities(char *grasp, double *probabilities, int *n_probabilities )
-{
-    char delimiter = '.';
-    (*n_probabilities) = 0;
-    int length = strlen(grasp);
-    for (int i = 0; i < length; i++)
-        if (grasp[i] == delimiter)
-        {
-            (*n_probabilities)++;
-            grasp[i] = '\0';
-        }
-    (*n_probabilities)++;
-
-    DEBUG_COMMENT("parser::parser_grasp_probabilities","n_probabilities=%d", *n_probabilities);
-    int ind = 0;
-    double sum = 0;
-    for (int i = 0; i < *n_probabilities; i++)
-    {
-        char *endptr;
-        probabilities[i] = strtod(grasp + ind, &endptr);
-        if (endptr == grasp + ind) {
-            // conversion failed
-            ERROR_COMMENT("parser::parser_grasp_probabilities","conversion failed");
-        exit(1);
-            return;
-        }
-        ind = endptr - grasp;
-        sum += probabilities[i];
-        DEBUG_COMMENT("parser::parser_grasp_probabilities","probabilities[%d]=%lf", i, probabilities[i]);
-    }
-
-    for (int i = 0; i < (*n_probabilities); i++)
-        probabilities[i] /= sum;
-    for (int i = 1; i < (*n_probabilities); i++)
-        probabilities[i] = probabilities[i - 1] + probabilities[i];
-
-    DEBUG_COMMENT("parser::parser_grasp_probabilities","probabilities=%lf,%lf,%lf", probabilities[0], probabilities[1], probabilities[2]);
-}*/
-
 void parse_grasp_probabilities(char *grasp, double *probabilities, int *n_probabilities)
 {
-    DEBUG_COMMENT("parser::parser_grasp_probabilities", "grasp=%s", grasp);
+    // clean default values
+    *n_probabilities=0;
+
+    //setup
     char delimiter = '.';
     *n_probabilities = 0;
     int length = strlen(grasp);
     int cur_ind=0;
     int i;
+    DEBUG_COMMENT("parser::parser_grasp_probabilities", "grasp=%s", grasp);
     for( i = 0; i < length; i++)
         if (grasp[i] == delimiter)
         {
@@ -250,37 +221,4 @@ void parse_grasp_probabilities(char *grasp, double *probabilities, int *n_probab
         probabilities[i] += probabilities[i - 1];
         DEBUG_COMMENT("parser::parser_grasp_probabilities", "probabilities[%d]=%lf", i, probabilities[i]);
     }
-
 }
-
-/*
-void parse_grasp_probabilities(char *grasp, double *probabilities, int *n_probabilities)
-{
-    char delimiter = '.';
-    (*n_probabilities) = 0;
-    int length = strlen(grasp);
-    for (int i = 0; i < length; i++)
-        if (grasp[i] == delimiter)
-        {
-            (*n_probabilities)++;
-            grasp[i] = '\0';
-        }
-    (*n_probabilities)++;
-
-    DEBUG_COMMENT("parser::parser_grasp_probabilities","n_probabilities=%d", *n_probabilities);
-    int ind = 0;
-    int sum = 0;
-    for (int i = 0; i < *n_probabilities; i++)
-    {
-        sscanf(grasp + ind, "%lf", probabilities+i);
-        ind += strlen(grasp + ind) + 1;
-        // p[i]=strtod(t, t+strlen(t));
-        sum += probabilities[i];
-    }
-
-    for (int i = 0; i < (*n_probabilities); i++)
-        probabilities[i] /= sum;
-    for (int i = 1; i < (*n_probabilities); i++)
-        probabilities[i] = probabilities[i - 1] + probabilities[i];
-}
-*/

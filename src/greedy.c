@@ -1,4 +1,5 @@
 #include "../include/greedy.h"
+#include "../include/grasp.h"
 
 #include "../include/errors.h"
 #include "../include/logger.h"
@@ -9,9 +10,9 @@
 int nearest_neighboor(Instance *inst) {
     INFO_COMMENT("nearest_neighboor", "start nearest neighboor");
     int current_node;
-    double min_distance;
-    int best_remaining = -1;
-
+    //double min_distance;
+    //int best_remaining = -1;
+    GRASP_Framework *grasp= inst->grasp;
     double dist;
     /*
      * 1. Find closest node to the current node
@@ -19,19 +20,21 @@ int nearest_neighboor(Instance *inst) {
      */
     for (int j = 1; j < inst->nnodes; j++) {
         current_node = inst->path[j - 1];
-        min_distance = INFINITY;
+        // min_distance = INFINITY;
         // find min
         for (int k = j; k < inst->nnodes; k++) {
             //dist = inst->distance_matrix[current_node * inst->nnodes + inst->path[k]];
             dist= getDistanceNodes(inst, current_node, inst->path[k]);
-            if (dist < min_distance) {
-                min_distance = dist;
-                best_remaining = k;
-            }
+            add_solution(grasp, k, dist);
+            //if (dist < min_distance) {
+            //    min_distance = dist;
+            //    best_remaining = k;
+            //}
         }
 
         //addToTourLenght(inst, min_distance);
-        swapPathPoints(inst, j, best_remaining);
+        swapPathPoints(inst, j, get_solution(grasp));
+        reset_solutions(grasp);
     }
     // complete the tour
     //addToTourLenght(inst,getDistance(inst,inst->path[0], inst->path[inst->nnodes-1]));
@@ -44,60 +47,50 @@ int nearest_neighboor(Instance *inst) {
 }
 
 int nearest_neighboor_grasp(Instance *inst) {
-    DEBUG_COMMENT("greedy::nng", "start nearest neighboor");
-
-    int rankings_index[inst->grasp_n_probabilities];
-    double rankings_value[inst->grasp_n_probabilities];
-
-    // Nearest Neighboor -------------------------------------------
-    int current_node;
-    for (int j = 1; j < inst->nnodes; j++) {
-        // initialize rankings
-        for (int i = 0; i < inst->grasp_n_probabilities; i++) {
-            rankings_index[i] =
-                -1;  // first component is the index of the element plus 1
-            rankings_value[i] =
-                INFINITY;  // second component is a random value between 0 and 1
-        }
-        // find the best #inst->grasp_n_probabilities neighboors
-        current_node = inst->path[j - 1];
-        double min_distance = INFINITY;
-        double dist = -1;
-        for (int k = j; k < inst->nnodes; k++) {
-            dist = inst->distance_matrix[current_node * inst->nnodes + inst->path[k]];
-            if (dist < rankings_value[inst->grasp_n_probabilities - 1])
-                replace_if_better(rankings_index, rankings_value, inst->grasp_n_probabilities, k, dist);
-        }
-
-        // pick one of the bests
-        int index = -1;
-        double r = (double)rand() / (double)RAND_MAX;  // generate a random number between 1-100
-        DEBUG_COMMENT("greedy::nng", "inst->grasp_probabilities %lf %lf %lf| r: %lf ",
-                inst->grasp_probabilities[0], inst->grasp_probabilities[1], inst->grasp_probabilities[2], r);
-        for (int i = 0; i < inst->grasp_n_probabilities; i++) {
-            if (r <= inst->grasp_probabilities[i]) {
-                index = i;
-                break;
-            }
-        }
-        DEBUG_COMMENT("greedy::nng", "%lf %lf %lf %lf -> %lf", r, rankings_value[0],
-                rankings_value[1], rankings_value[2], rankings_value[index]);
-        min_distance = rankings_value[index];
-        swapPathPoints(inst, j, rankings_index[index]);
-        addToTourLenght(inst,min_distance);
-
-        DEBUG_COMMENT("greedy::nng",
-                "tour length, starting from %d, with %d nodes = %lf", inst->path[0],
-                j, inst->tour_length);
-    }
-    // complete the tour
-    //
-    //(*inst->tour_length) += inst->distance_matrix[inst->path[0] * inst->nnodes + inst->path[inst->nnodes - 1]];
-    calculateTourLength(inst);
-#ifndef PRODUCTION
-    log_path(inst->path, inst->nnodes);
-#endif
-    assertInst(inst);
+//    INFO_COMMENT("greedy::nng", "start nearest neighboor");
+//
+//    // Nearest Neighboor -------------------------------------------
+//    int current_node;
+//    for (int j = 1; j < inst->nnodes; j++) {
+//        // find the best #inst->grasp_n_probabilities neighboors
+//        current_node = inst->path[j - 1];
+//        double min_distance = INFINITY;
+//        double dist = -1;
+//        for (int k = j; k < inst->nnodes; k++) {
+//            dist = inst->distance_matrix[current_node * inst->nnodes + inst->path[k]];
+//            if (dist < rankings_value[inst->grasp_n_probabilities - 1])
+//                replace_if_better(rankings_index, rankings_value, inst->grasp_n_probabilities, k, dist);
+//        }
+//
+//        // pick one of the bests
+//        int index = -1;
+//        double r = (double)rand() / (double)RAND_MAX;  // generate a random number between 1-100
+//        DEBUG_COMMENT("greedy::nng", "inst->grasp_probabilities %lf %lf %lf| r: %lf ",
+//                inst->grasp_probabilities[0], inst->grasp_probabilities[1], inst->grasp_probabilities[2], r);
+//        for (int i = 0; i < inst->grasp_n_probabilities; i++) {
+//            if (r <= inst->grasp_probabilities[i]) {
+//                index = i;
+//                break;
+//            }
+//        }
+//        DEBUG_COMMENT("greedy::nng", "%lf %lf %lf %lf -> %lf", r, rankings_value[0],
+//                rankings_value[1], rankings_value[2], rankings_value[index]);
+//        min_distance = rankings_value[index];
+//        swapPathPoints(inst, j, rankings_index[index]);
+//        addToTourLenght(inst,min_distance);
+//
+//        DEBUG_COMMENT("greedy::nng",
+//                "tour length, starting from %d, with %d nodes = %lf", inst->path[0],
+//                j, inst->tour_length);
+//    }
+//    // complete the tour
+//    //
+//    //(*inst->tour_length) += inst->distance_matrix[inst->path[0] * inst->nnodes + inst->path[inst->nnodes - 1]];
+//    calculateTourLength(inst);
+//#ifndef PRODUCTION
+//    log_path(inst->path, inst->nnodes);
+//#endif
+//    assertInst(inst);
     return SUCCESS;
 }
 

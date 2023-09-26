@@ -12,6 +12,7 @@
 #include <pthread.h>
 
 #include "errors.h"
+#include "grasp.h"
 #include "logger.h"
 
 // hard-wired parameters
@@ -46,11 +47,11 @@ typedef struct {
   double best_tl;  // best sol. available
 
   // GRASP parameters
-  int grasp_n_probabilities;
-  double *grasp_probabilities;
+  // int grasp_n_probabilities;
+  // double *grasp_probabilities;
+  GRASP_Framework *grasp;
 
   // global data
-
   char input_file[1000];  // input file
   char log_file[1000];    // output log file
 } Instance;
