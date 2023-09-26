@@ -7,6 +7,7 @@
 
 
 int nearest_neighboor(Instance *inst) {
+    INFO_COMMENT("nearest_neighboor", "start nearest neighboor");
     int current_node;
     double min_distance;
     int best_remaining = -1;

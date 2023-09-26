@@ -24,13 +24,12 @@
 
 typedef struct {
   // execution parameters
-  int randomseed;
-  double timelimit;       // overall time limit, in sec.s
-  char input_file[1000];  // input file
-  char log_file[1000];    // output log file
+  double max_time;  // overall time limit, in sec.s
+  time_t tstart;    // starting time
+  time_t tend;      // end time
+  pthread_mutex_t mutex_path;
 
   // MODEL
-  int model_type;
   int integer_costs;
 
   // Data
@@ -40,32 +39,27 @@ typedef struct {
   double *distance_matrix;
 
   // Paths
-  int node_start;
-  double tour_length;
+  int starting_node;
   int *path;
-  double zbest;  // best sol. available
-  int *path_best;
-  pthread_mutex_t mutex_path;
+  int *best_path;
+  double tour_length;
+  double best_tl;  // best sol. available
 
   // GRASP parameters
   int grasp_n_probabilities;
   double *grasp_probabilities;
 
   // global data
-  double tstart;  // starting time
-  double tend;    // end time
 
+  char input_file[1000];  // input file
+  char log_file[1000];    // output log file
 } Instance;
 
-void initializeInstance(Instance *inst, int randomseed, double timelimit,
-                        const char *input_file, const char *log_file,
-                        int model_type, int integer_costs, int nnodes,
-                        double *x, double *y, double *distance_matrix,
-                        int node_start, double tour_length, int *path,
-                        double zbest, int *path_best, int grasp_n_probabilities,
-                        double *grasp_probabilities, double tstart,
-                        double tend);
-
+void instance_initialize(Instance *inst, double max_time,
+                         int integer_costs, int nnodes,
+                         double *x,double *y, int grasp_n_probabilities,
+                         double *grasp_probabilities, char *input_file,
+                         char *log_file);
 /*
  * Get distance between nodes in position x and y of path
  */
@@ -77,12 +71,25 @@ double getDistancePos(Instance *inst, int x, int y);
 double getDistanceNodes(Instance *inst, int x, int y);
 
 double calculateTourLength(Instance *inst);
+
 void setTourLenght(Instance *inst, double newLength);
+
 void addToTourLenght(Instance *inst, double toAdd);
 
-void destroyInstance(Instance *inst);
+void instance_destroy(Instance *inst);
 
 void swapPathPoints(Instance *inst, int i, int j);
 
 int assertInst(Instance *inst);
+/**
+ * Generates a path for a set of nodes.
+ *
+ * @param path A pointer to an array that will store the path.
+ * @param starting_node The index of the node to start the path at.
+ * @param num_nodes The number of nodes in the graph.
+ */
+void instance_generate_path(Instance *inst);
+
+void instance_generate_distance_matrix(Instance *inst);
+
 #endif /* VRP_H_ */

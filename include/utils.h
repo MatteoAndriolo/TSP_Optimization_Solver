@@ -23,6 +23,7 @@ typedef struct {
   int current;
   bool hasStarted;
 } BufferIterator;
+
 /**
  * Swaps two elements in an integer array.
  *
@@ -75,31 +76,6 @@ double distance_euclidean(double x1, double y1, double x2, double y2);
  * @return The squared Euclidean distance between the two points.
  */
 double distance_euclidean_square(double x1, double y1, double x2, double y2);
-
-/**
- * Generates a distance matrix for a set of nodes based on their x-y
- * coordinates.
- *
- * @param matrix A pointer to an array that will store the distance matrix.
- * @param nnodes The number of nodes in the graph.
- * @param x An array of length nnodes containing the x-coordinates of the nodes.
- * @param y An array of length nnodes containing the y-coordinates of the nodes.
- * @param round A flag indicating whether to round the distances to the nearest
- * integer.
- *
- */
-void generate_distance_matrix(double **matrix, const int nnodes,
-                              const double *x, const double *y, int round);
-
-/**
- * Generates a path for a set of nodes.
- *
- * @param path A pointer to an array that will store the path.
- * @param starting_node The index of the node to start the path at.
- * @param num_nodes The number of nodes in the graph.
- * @param shuffle A flag indicating whether to shuffle the path.
- */
-void generate_path(int *path, int starting_node, int num_nodes, const bool shuffle);
 
 /**
  * Is path feasible?
@@ -173,14 +149,6 @@ double get_tour_length(const int *path, const int nnodes,
 void two_opt_move(int *path, int n1, int n2, int nnodes);
 
 /**
- * Generate a random path.
- *
- * @param path pointer to path
- * @param nnodes The number of nodes in the graph.
- *
- */
-void generate_random_path(int *path, int nnodes);
-/**
  * Generate random int
  *
  * @param lowerBound lower bound
@@ -195,4 +163,7 @@ int randomBetween(int lowerBound, int upperBound);
  * @param nnodes The number of nodes in the graph.
  */
 bool simpleCorrectness(int *path, int nnodes);
+
+void print_nodes(double* x, double* y, int nnodes);
+
 #endif

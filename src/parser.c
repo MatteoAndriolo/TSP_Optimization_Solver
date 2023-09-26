@@ -20,7 +20,7 @@ void read_input(Args *args) {
         double node_x, node_y;
         if (sscanf(line, "DIMENSION : %d", &number_nodes) == 1) {
             DEBUG_COMMENT("parser::read_input", "Number of nodes in the field DIMENSION: %d", number_nodes);
-            args->nnodes = number_nodes - 1;
+            args->nnodes = number_nodes ;
             args->x = (double *)malloc(number_nodes * sizeof(double));
             args->y = (double *)malloc(number_nodes * sizeof(double));
             DEBUG_COMMENT("parser::read_input", "Memory for x and y allocated");
@@ -32,6 +32,7 @@ void read_input(Args *args) {
                     args->x[nn] = node_x;
                     args->y[nn] = node_y;
                     node_saved++;
+                    INFO_COMMENT("parser::read_input", "Node %d saved, x=%lf, y=%lf", node_number, node_x, node_y);
                 } else {
                     DEBUG_COMMENT("parser::read_input", "Reached end of the file");
                     break;

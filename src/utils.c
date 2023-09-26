@@ -7,6 +7,12 @@ void swap(int *arr, int i, int j) {
     arr[j] = temp;
 }
 
+void print_nodes(double* x, double* y, int nnodes) {
+    for (int i = 0; i < nnodes; i++) {
+        INFO_COMMENT("print_nodes", "%d: (%lf, %lf)", i+1, x[i], y[i]);
+    }
+}
+
 void swap_and_shift(int *arr, int i, int j, int n) {
     int temp = arr[j];  // Save the value at position j in a temporary variable
     for (int k = j; k > i; k--) {
@@ -33,30 +39,6 @@ inline double distance_euclidean(double x1, double y1, double x2, double y2) {
     double dx = x1 - x2;
     double dy = y1 - y2;
     return sqrt(dx * dx + dy * dy);
-}
-
-// inline double distance_euclidean_square(double x1, double y1, double x2,
-//                                         double y2) {
-//   double dx = x1 - x2;
-//   double dy = y1 - y2;
-//   return dx * dx + dy * dy;
-// }
-
-void generate_distance_matrix(double **matrix, const int nnodes,
-        const double *x, const double *y, int r) {
-    DEBUG_COMMENT("greedy::generate_distance_matrix",
-            "Generating distance matrix");
-    for (int i = 0; i < nnodes; i++) {
-        for (int j = 0; j < nnodes; j++) {
-            (*matrix)[i * nnodes + j] =
-                round(distance_euclidean(x[i], y[i], x[j], y[j]));
-        }
-    }
-    for (int i = 0; i < nnodes; i++) {
-        (*matrix)[i * nnodes + i] = INFINITY;
-    }
-    DEBUG_COMMENT("greedy::generate_distance_*matrix",
-            "Finised generating distance *matrixrix");
 }
 
 void set_starting_node(int *path, int starting_node, int num_nodes) {
@@ -160,24 +142,6 @@ void swap_array_piece(int *arr, int start1, int end1, int start2, int end2) {
             sizeof(int) *
             (end1 - start1 +
              1));  // Copy the temp array (first piece) to the second piece
-}
-
-void generate_path(int *path, const int starting_node, const int num_nodes, const bool shuffle) {
-    for (int i = 0; i < num_nodes; i++) {
-        path[i] = i;
-    }
-    path[starting_node] = 0;
-    path[0] = starting_node;
-
-    if (shuffle) {
-        int j, tmp;
-        for (int i = 0; i < num_nodes; i++) {
-            j = rand() % num_nodes;
-            tmp = path[i];
-            path[i] = path[j];
-            path[j] = tmp;
-        }
-    }
 }
 
 
