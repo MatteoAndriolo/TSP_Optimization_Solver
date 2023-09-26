@@ -30,8 +30,7 @@ void instance_generate_distance_matrix(Instance *inst) {
     double* dm= malloc(inst->nnodes * inst->nnodes * sizeof(double));
     for (int i = 0; i < inst->nnodes; i++) {
         for (int j = 0; j < inst->nnodes; j++) {
-            dm[i * inst->nnodes + j] = round(
-                    distance_euclidean(inst->x[i], inst->y[i], inst->x[j], inst->y[j]));
+            dm[i * inst->nnodes + j] = distance_euclidean(inst->x[i], inst->y[i], inst->x[j], inst->y[j]);            // DEBUG_COMMENT("instance_generate_distance_matrix", "Distance from %d (%lf, %lf) to %d (%lf, %lf)  : %lf", i, j, inst->x[i], inst->y[i],inst->x[j], inst->y[j],dm[i * inst->nnodes + j]);
         }
     }
     for (int i = 0; i < inst->nnodes; i++) {
@@ -65,8 +64,8 @@ void instance_initialize(Instance *inst, double max_time,
     //memcpy x inside inst->x of dimension inst->nnodes
     inst->x = malloc(sizeof(double)*inst->nnodes);
     inst->y = malloc(sizeof(double)*inst->nnodes);
-    memcpy(inst->x,x,sizeof(int)*inst->nnodes);
-    memcpy(inst->y,y,sizeof(int)*inst->nnodes);
+    memcpy(inst->x,x,sizeof(double)*inst->nnodes);
+    memcpy(inst->y,y,sizeof(double)*inst->nnodes);
     /* generate distance matrix */
     instance_generate_distance_matrix(inst);
     /*

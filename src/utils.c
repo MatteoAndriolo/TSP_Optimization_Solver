@@ -9,7 +9,7 @@ void swap(int *arr, int i, int j) {
 
 void print_nodes(double* x, double* y, int nnodes) {
     for (int i = 0; i < nnodes; i++) {
-        INFO_COMMENT("print_nodes", "%d: (%lf, %lf)", i+1, x[i], y[i]);
+        INFO_COMMENT("print_nodes", "%d: (%lf, %lf)", i, x[i], y[i]);
     }
 }
 

@@ -102,7 +102,10 @@ int nearest_neighboor_grasp(Instance *inst) {
 
 int extra_mileage(Instance *inst) {
     //--------------- FIND DIAMETER -------------------------------------------
-    double max_distance = 0,tdist;
+    //TODO find diameter | farthest with lowest mean distance from other nodes
+    // print_nodes(inst->x, inst->y, inst->nnodes);
+    double max_distance = 0;
+    double tdist;
     int max_index = -1;
 
     for (int i = 1; i < inst->nnodes; i++) {
@@ -112,31 +115,42 @@ int extra_mileage(Instance *inst) {
             max_index = i;
         }
     }
-    DEBUG_COMMENT("greedy::Extra_mileage", "max distance = %lf, at index = %d",
-            max_distance, max_index);
+    tdist=getDistancePos(inst, 0, inst->nnodes-1);
+    if (tdist > max_distance && tdist != INFINITY) {
+        max_distance = tdist;
+        max_index = inst->nnodes-1;
+    }
+
+    DEBUG_COMMENT("greedy::Extra_mileage", "max_index = %d", max_index);
+    DEBUG_COMMENT("greedy::Extra_mileage", "node_1=0 -> node %d --> (x,y)=%lf, %lf",inst->path[0], inst->x[0], inst->y[0]);
+    DEBUG_COMMENT("greedy::Extra_mileage", "node_2=%d --> node %d --> (x,y)=%lf, %lf",max_index, inst->path[max_index], inst->x[inst->path[1]], inst->y[inst->path[1]]);
+    DEBUG_COMMENT("greedy::Extra_mileage", "diameter = %lf", max_distance);
     swapPathPoints(inst, 1, max_index);
+    setTourLenght(inst, 2 * max_distance);
+    DEBUG_COMMENT("greedy::Extra_mileage", "tour length = %lf", inst->tour_length);
+    //write nodes
 
     //--------------- START SEARCH -------------------------------------------
-    double tour_length = 2 * max_distance;
     DEBUG_COMMENT("greedy::Extra_mileage", "initial tour length = %lf",
-            tour_length);
+            inst->tour_length);
     int node_3[3] = {-1, -1, -1};
-    double min = INFINITY;
+    double min_nts = INFINITY;
 
-    for (int i = 2; i < inst->nnodes; i++)  // starting with two inst->path "visited"
+    // add all the remaining nodes -> starts from current number of nodes -> 2(diameter)
+    // check for all remaining node all the best possible positions in between the current nodes
+    for (int i = 2; i < inst->nnodes; i++)
     {
-        min = INFINITY;
+        min_nts = INFINITY;
         DEBUG_COMMENT("greedy::Extra_mileage", "start iteration %d", i);
         double new_triangular_sum;
-        int is_close_edge = 0;
+        bool is_close_edge = false;
 
         // Check from all the inst->path to the following one
-        for (int j = 0; j < i; j++) {
+        for (int j = 0; j < i-1; j++) {
             for (int k = i; k < inst->nnodes; k++) {
-
                 new_triangular_sum = getDistancePos(inst,j,k) + getDistancePos(inst, j + 1, k);
-                if (new_triangular_sum < min) {
-                    min = new_triangular_sum;
+                if (new_triangular_sum < min_nts) {
+                    min_nts = new_triangular_sum;
                     node_3[0] = j;
                     node_3[1] = j + 1;
                     node_3[2] = k;
@@ -146,29 +160,52 @@ int extra_mileage(Instance *inst) {
 
         for (int k = i; k < inst->nnodes; k++) {
             new_triangular_sum = getDistancePos(inst, 0, k) + getDistancePos(inst, i-1, k);
-
-            if (new_triangular_sum < min) {
-                min = new_triangular_sum;
+            if (new_triangular_sum < min_nts) {
+                min_nts = new_triangular_sum;
                 node_3[0] = 0;
                 node_3[1] = i - 1;
                 node_3[2] = k;
-                is_close_edge = 1;
+                is_close_edge = true;
             }
         }
+        double new_cost = min_nts - getDistancePos(inst, node_3[0], node_3[1]);
+
+        addToTourLenght(inst,new_cost);
 
         // FOUND BEST NODE
+        //print triangular sum calculation
+        DEBUG_COMMENT("greedy::Extra_mileage","--------------------------");
+        DEBUG_COMMENT("greedy::Extra_mileage", "nts = %lf + %lf", getDistancePos(inst, node_3[0], node_3[2]), getDistancePos(inst, node_3[1], node_3[2]));
+        DEBUG_COMMENT("greedy::Extra_mileage", "new_cost = nts - old | %lf = %lf - %lf",
+                new_cost, min_nts, getDistancePos(inst, node_3[0], node_3[1]));
         DEBUG_COMMENT("greedy::Extra_mileage",
-                "best value-->%f, best_triangle indices -->{%d,%d,%d}", min,
+                "best value-->%lf, best_triangle indices -->{%d,%d,%d}", min_nts,
+                node_3[0], node_3[1], node_3[2]);
+        DEBUG_COMMENT("greedy::Extra_mileage",
+                "best value-->%lf, best_triangle nodes -->{%d,%d,%d}", min_nts,
                 inst->path[node_3[0]], inst->path[node_3[1]], inst->path[node_3[2]]);
-        double new_cost = min - getDistancePos(inst, node_3[0], node_3[1]);
-        tour_length += new_cost;
+        DEBUG_COMMENT("greedy::Extra_mileage","best triangle nodes -->{%d,%d,%d}", node_3[0], node_3[1], node_3[2]);
+        DEBUG_COMMENT("greedy::Extra_mileage", "coordinates of nodes: ");
+        DEBUG_COMMENT("greedy::Extra_mileage", "node_3[0]=%d -> node %d --> (x,y)=%lf, %lf",node_3[0], inst->path[node_3[0]], inst->x[inst->path[node_3[0]]], inst->y[inst->path[node_3[0]]]);
+        DEBUG_COMMENT("greedy::Extra_mileage", "node_3[1]=%d -> node %d --> (x,y)=%lf, %lf",node_3[1], inst->path[node_3[1]], inst->x[inst->path[node_3[1]]], inst->y[inst->path[node_3[1]]]);
+        DEBUG_COMMENT("greedy::Extra_mileage", "node_3[2]=%d -> node %d --> (x,y)=%lf, %lf",node_3[2], inst->path[node_3[2]], inst->x[inst->path[node_3[2]]], inst->y[inst->path[node_3[2]]]);
+
+        if (new_cost < 0) {
+            ERROR_COMMENT("greedy::Extra_mileage", "new cost is negative");
+            return FAILURE;
+        }else if (new_cost == 0) {
+            DEBUG_COMMENT("greedy::Extra_mileage", "new cost is zero");
+        }
+
         DEBUG_COMMENT("greedy::Extra_mileage", "new cost-->%lf=%lf+%lf-%lf",
                 new_cost,
                 getDistancePos(inst, node_3[0], node_3[2]),
                 getDistancePos(inst, node_3[1], node_3[2]),
                 getDistancePos(inst, node_3[0], node_3[1])
         );
-        DEBUG_COMMENT("greedy::Extra_mileage", "tour length-->%lf", inst->tour_length);
+        //print coordinates of nodes
+
+        DEBUG_COMMENT("greedy::Extra_mileage", "last tour length-->%lf", inst->tour_length);
 
         // SWAP - ADJUST PATH ----------------------------------------------------
         // Save the value at position j in a temporary variable

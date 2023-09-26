@@ -46,10 +46,11 @@ int main(int argc, char **argv) {
         for (int j = 0; j < n_passagges; j++) {
             INFO_COMMENT("main::main", "Generating instance %s", passagges[j]);
             printf("Generating instance %s\n", passagges[j]);
-            // print strcmp(passagges[j], "nn");
-            printf("strcmp %d\n", strcmp(passagges[j], "nn"));
             if (strcmp(passagges[j], "em") == 0) {
-                extra_mileage(&instances[c_inst]);
+                if(extra_mileage(&instances[c_inst])==FAILURE)
+                {
+                    ERROR_COMMENT("main::main", "Extra mileage failed");
+                }
             } else if (strcmp(passagges[j], "2opt") == 0) {
                 two_opt(inst->distance_matrix, inst->nnodes, inst->path,
                         &(inst->tour_length), INFINITY,

@@ -89,6 +89,8 @@ def analyze_run(solution, instance: Instance):
             print("nothing")
             return None
         else:
+            print("max is ", max(matches))
+            print("min is ", min(matches))
             print(
                 "mean is ", sum(matches) / len(matches), " over ", len(matches), " runs"
             )
