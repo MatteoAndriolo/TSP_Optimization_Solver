@@ -120,6 +120,7 @@ if __name__ == "__main__":
         timelimit=args["timelimit"],
         numinstances=args["numinstances"],
         plot=args["plot"],
+        grasp=args["grasp"],
     )
 
     instance.open_file()
