@@ -1,5 +1,5 @@
 #ifndef METAHEURISTICS_H
-#define METAHEURISTICS_h
+#define METAHEURISTICS_H
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -20,15 +20,7 @@
  * @param k_max Maximum number of iterations
  * @param duration Duration
  */
-void simulate_anealling(const double *distance_matrix, int *path, int nnodes,
-                        double *tour_length, double k_max, int duration);
-
-/**
- * @brief Random number between two numbers
- * @param lowerBound Lower bound
- * @param upperBound Upper bound
- */
-double randomBetween_d(double lowerBound, double upperBound);
+void simulate_anealling(Instance *inst, double k_max);
 
 /**
  * @brief Energy probabilities
