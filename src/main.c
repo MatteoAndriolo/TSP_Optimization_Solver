@@ -1,4 +1,5 @@
 /* TOFO ggc -o3 or -o4 -o bin/main src/main && bin/main */
+#include <math.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -55,17 +56,16 @@ int main(int argc, char **argv) {
                     ERROR_COMMENT("main::main", "Extra mileage failed");
                 }
             } else if (strcmp(passagges[j], "2opt") == 0) {
-                two_opt(inst->distance_matrix, inst->nnodes, inst->path,
-                        &(inst->tour_length), INFINITY,
-                        inst->max_time);
+                two_opt(inst, INFINITY);
             } else if (strcmp(passagges[j], "tabu") == 0) {
                 if (j == 0) {
                     FATAL_COMMENT("main::main",
                             "Tabu search must be used with a starting point");
                 }
-                tabu_search(inst->distance_matrix, inst->path, instances[c_inst].nnodes,
-                        &(inst->tour_length), (int)(args.nnodes / 20),
-                        (int)(args.nnodes / 8), 2);
+                two_opt_tabu(inst,INFINITY,initializeTabuList(10,4));
+                //tabu_search(inst->distance_matrix, inst->path, instances[c_inst].nnodes,
+                //        &(inst->tour_length), (int)(args.nnodes / 20),
+                //        (int)(args.nnodes / 8), 2);
             } else if (strcmp(passagges[j], "vns") == 0) {
                 ERROR_COMMENT("main::main", "VNS not implemented yet");
             } else if (strcmp(passagges[j], "sa") == 0) {
@@ -78,10 +78,9 @@ int main(int argc, char **argv) {
             // } else if (strcmp(passagges[j], "nng") == 0) {
             //     nearest_neighboor_grasp(inst);
             } else if (strcmp(passagges[j], "vpn") == 0) {
-                vnp_k(inst->distance_matrix, inst->path, instances[c_inst].nnodes,
-                        &inst->tour_length, 5, 4);
+                vnp_k(inst, 4);
             } else if (strcmp(passagges[j], "test") == 0) {
-                test_buffer();
+                testTabuList();
             } else {
                 FATAL_COMMENT("main::main", "Model %s not recognized", passagges[j]);
             }
@@ -99,6 +98,7 @@ int main(int argc, char **argv) {
             // inst->distance_matrix));
 
             if (j == n_passagges - 1) strcpy(title, "\0");
+            INFO_COMMENT("main::main", "Passagge %s completed with tl %lf", passagges[j], inst->tour_length);
         }
         // print tourlenght model time
 

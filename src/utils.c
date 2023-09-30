@@ -145,22 +145,29 @@ void swap_array_piece(int *arr, int start1, int end1, int start2, int end2) {
 }
 
 
-void two_opt_move(int *path, int n1, int n2, int nnodes) {
+void two_opt_move(Instance *inst, int n1, int n2) {
     // DEBUG_COMMENT("utils::two_opt_move", "Entering two_opt_move function %d
     // %d", n1, n2);
-    int t = (n1 + 1) % nnodes;
+    int t = (n1 + 1) % inst->nnodes;
     for (int z = 0; z < (int)(n2 - n1 + 1) / 2;
             z++)  // reverse order cells (n1+1,index_min)
     {
-        double temp = path[z + t];
-        path[z + t] = path[n2 - z];
-        path[n2 - z] = temp;
+        swap(inst->path, t + z, n2 - z);
+        // double temp = path[z + t];
+        // path[z + t] = path[n2 - z];
+        // path[n2 - z] = temp;
     }
 }
 
 
 int randomBetween(int lowerBound, int upperBound) {
     int randomBetween = (rand() % (upperBound - lowerBound + 1)) + lowerBound;
+    return randomBetween;
+}
+
+double randomBetween_d(double lowerBound, double upperBound) {
+    double randomBetween = (double)rand() / RAND_MAX;
+    randomBetween = randomBetween * (upperBound - lowerBound) + lowerBound;
     return randomBetween;
 }
 

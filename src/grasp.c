@@ -63,7 +63,7 @@ int get_solution(GRASP_Framework* grasp) {
 
     for (int i = 0; i < grasp->count; i++) {
         if (random_value <= grasp->probabilities[i]) {
-            DEBUG_COMMENT("get_solution", "returned %d-th, prob %lf", i, random_value);
+            // DEBUG_COMMENT("get_solution", "returned %d-th, prob %lf", i, random_value);
             return grasp->solutions[i].solution;
         }
     }
