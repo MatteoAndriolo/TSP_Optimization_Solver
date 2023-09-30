@@ -1,247 +1,116 @@
 #include "../include/tabu.h"
+#include <stdlib.h>
+#include <stdio.h>
 
-//-----------------------------------------------------------------------------------------------
-// Tabu search
-// Initialize the circular buffer
-void initBuffer(CircularBuffer *buf, int size) {
-  buf->arr = malloc(size * sizeof(int));
-  buf->size = size;
-  buf->start = 0;
-  buf->end = 0;
-  buf->tenure = 0;
+
+TabuList* initializeTabuList(int size, int tenure) {
+    TabuList *list = (TabuList *) malloc(sizeof(TabuList));
+    list->entries = (TabuEntry *) malloc(sizeof(TabuEntry) * size);
+    list->size = size;
+    list->tenure = tenure;
+    list->head = 0;
+    list->tail = 0;
+
+    for (int i = 0; i < size; i++) {
+        list->entries[i].value = -1;
+        list->entries[i].age = 0;
+    }
+
+    return list;
 }
 
-// Clear the buffer
-void clearBuffer(CircularBuffer *buf) {
-  FREE(buf->arr);
-  buf->size = 0;
-}
-
-// Add a value to the buffer
-void addValue(CircularBuffer *buf, int value) {
-  DEBUG_COMMENT("tabu.c:addValue", "adding value %d", value);
-  buf->arr[buf->end] = value;
-  buf->end = (buf->end + 1) % buf->size;
-  buf->tenure++;
-  if (buf->end == buf->start) {                 // The buffer is full
-    buf->start = (buf->start + 1) % buf->size;  // drop the oldest element
-  }
-}
-
-// Print the buffer values
-void printBuffer(CircularBuffer *buf) {
-  int i = buf->start;
-  while (i != buf->end) {
-    printf("%d ", buf->arr[i]);
-    i = (i + 1) % buf->size;
-  }
-  printf("\n");
-}
-
-// Initialize an iterator for the buffer
-void initIterator(BufferIterator *iter, CircularBuffer *buf) {
-  iter->buf = buf;
-  iter->current = buf->start;
-  iter->hasStarted = false;
-}
-
-bool hasNext(BufferIterator *iter) {
-  if (!iter->buf->tenure || !iter->hasStarted) {
+bool isTabu(TabuList *list, int value) {
+    for (int i = 0; i < list->size; i++) {
+        if (list->entries[i].value == value) {
+            return true;
+        }
+    }
     return false;
-  }
-  int nextIndex = (iter->current + 1) % iter->buf->size;
-  return nextIndex != iter->buf->end;
 }
 
-int next(BufferIterator *iter) {
-  if (!iter->hasStarted) {
-    iter->hasStarted = true;
-  } else {
-    iter->current = (iter->current + 1) % iter->buf->size;
-  }
-  return iter->buf->arr[iter->current];
-}
+void addTabu(TabuList *list, int value) {
+    list->entries[list->tail].value = value;
+    list->entries[list->tail].age = 1;
 
-// Check if the buffer contains a certain value
-bool contains(CircularBuffer *buf, int x) {
-  BufferIterator iter;
-  initIterator(&iter, buf);
-
-  while (hasNext(&iter)) {
-    if (next(&iter) == x) {
-      return true;
+    list->tail = (list->tail + 1) % list->size;
+    if (list->tail == list->head) {
+        list->head = (list->head + 1) % list->size;
     }
-  }
-
-  return false;
 }
 
-/**
- * Decrease tenure size by n
- */
-void decreaseSizeTenure(CircularBuffer *buff, int n) {
-  if (buff->tenure == 0) {
-    FATAL_COMMENT("tabu.c:decreaseSizeTenure", "buffer is empty")
-  }
-  for (int i = 0; i < n; i++) {
-    buff->start = (buff->start + 1) % buff->size;
-    buff->tenure--;
-  }
+void updateTabuList(TabuList *list) {
+    int i = list->head;
+    while (true) {
+        if (list->entries[i].value != -1) {
+            list->entries[i].age++;
+            if (list->entries[i].age > list->tenure) {
+                list->entries[i].value = -1;
+                list->entries[i].age = 0;
+            }
+        }
+
+        if (i == list->tail) {
+            break;
+        }
+        i = (i + 1) % list->size;
+    }
 }
 
-int tabu_stoppingCondition(int currentIteration, int nIterNotFoundImp,
-                           int nnodes) {
-  return currentIteration > nnodes * 10 ||
-         nIterNotFoundImp > nnodes / 10;  // TODO setup stopping condition
+void freeTabuList(TabuList *list) {
+    free(list->entries);
+    free(list);
 }
 
-int tabu_getTabuListSize(int currentIteration, int nnodes) {
-  return (int)(nnodes < 10e3 ? nnodes / 10 : nnodes / 100);
+bool areAnyValuesTabu(TabuList *list, int v1, int v2, int v3, int v4) {
+    return isTabu(list, v1) || isTabu(list, v2) || isTabu(list, v3) || isTabu(list, v4);
 }
 
-void tabu_search(const double *distance_matrix, int *path, int nnodes,
-                 double *tour_length, int minTabuSize, int maxTabuSize,
-                 time_t timelimit) {
-  time_t start_time = time(NULL);
-  INFO_COMMENT("tabu.c:tabu_search",
-               "Starting tabu search from path with tour length %lf",
-               *tour_length);
-  CircularBuffer tabuList;
-  bool tenureIncreasing = true;
-  int maxTenure = minTabuSize;
-  initBuffer(&tabuList, maxTabuSize);
 
-  // incumbment
-  int *incumbment_path = malloc(nnodes * sizeof(int));
-  memcpy(incumbment_path, path, nnodes * sizeof(int));
-  double incumbment_tour_length = *tour_length;
+void testTabuList() {
+    printf("Testing Single-Integer Tabu List...\n");
 
-  int currentIteration = 0;
+    // Initialize Tabu List
+    TabuList *list = initializeTabuList(5, 3); // Size: 5, Tenure: 3
 
-  // TODO clean tabulist after many number of iterations
-  // while (currentIteration > nnodes * 4 && nIterNotFoundImp > nnodes &&
-  // difftime(start_time, time(NULL)) < timelimit)
-  DEBUG_COMMENT("tabu.c:tabu_search", "starting tabu search");
-  printBuffer(&tabuList);
-  while (currentIteration < 600 &&
-         difftime(start_time, time(NULL)) < timelimit) {
-    currentIteration++;
-    DEBUG_COMMENT("tabu.c:tabu_search", "iteration: %d", currentIteration);
-
-    // REACH LOCAL MINIMA
-    // ------------------------------------------------------------------------------------
-    if (currentIteration % 4 == 0)
-      two_opt_tabu(distance_matrix, nnodes, path, tour_length, INFINITY,
-                   &tabuList);
-    DEBUG_COMMENT("tabu.c:tabu_search", "local minima: %lf", *tour_length);
-
-    if (*tour_length < incumbment_tour_length)  // UPDATE INCUMBMENT
-    {
-      DEBUG_COMMENT("tabu.c:tabu_search", "update incumbment: %lf",
-                    *tour_length);
-      memcpy(incumbment_path, path, nnodes * sizeof(int));
-      incumbment_tour_length = *tour_length;
-      DEBUG_COMMENT("tabu.c:tabu_search", "update incumbment: %lf",
-                    incumbment_tour_length);
+    // Test 1: Adding and verifying presence
+    addTabu(list, 1);
+    if (isTabu(list, 1)) {
+        printf("Test 1 Passed!\n");
+    } else {
+        printf("Test 1 Failed!\n");
     }
 
-    // MAKE RANDOM MOVE
-    // --------------------------------------------------------------------------------------
-    int a, b;
-    int c = 0;
-    while (true && c < nnodes) {
-      a = randomBetween(0, nnodes);
-      b = randomBetween(0, nnodes);
-      if (a > b) {
-        int t = a;
-        a = b;
-        b = t;
-      }
-      if (a == b || b == a + 1) continue;
-
-      if (!(contains(&tabuList, a) || contains(&tabuList, b) ||
-            contains(&tabuList, a + 1) || contains(&tabuList, b + 1)))
-        break;
-      c++;
+    // Test 2: Testing age and tenure
+    addTabu(list, 2);
+    addTabu(list, 3);
+    updateTabuList(list); // Iteration 1
+    updateTabuList(list); // Iteration 2
+    updateTabuList(list); // Iteration 3
+    if (!isTabu(list, 1)) { // 1 should be removed due to tenure
+        printf("Test 2 Passed!\n");
+    } else {
+        printf("Test 2 Failed!\n");
     }
 
-    two_opt_move(path, a, b, nnodes);
-
-    //*tour_length = get_tour_length(path, nnodes, distance_matrix);
-
-    // MANAGE TABU LIST
-    // --------------------------------------------------------------------------------------
-
-    if (tenureIncreasing && maxTenure < maxTabuSize) {
-      maxTenure++;
-    } else if (!tenureIncreasing && maxTenure > minTabuSize) {
-      maxTenure--;
+    // Test 3: Overwriting oldest value
+    addTabu(list, 4);
+    addTabu(list, 5);
+    if (isTabu(list, 4) && !isTabu(list, 1)) { // 1 should be overwritten
+        printf("Test 3 Passed!\n");
+    } else {
+        printf("Test 3 Failed!\n");
     }
 
-    addValue(&tabuList, a);
-    addValue(&tabuList, b);
-    if (!tenureIncreasing) {
-      if (maxTenure - 4 < minTabuSize) {
-        decreaseSizeTenure(&tabuList, maxTenure - minTabuSize);
-        tenureIncreasing = true;
-      } else
-        decreaseSizeTenure(&tabuList, 4);
+    // Test 4: Checking multiple values for Tabu presence
+    if (areAnyValuesTabu(list, 2, 10, 11, 12) && !areAnyValuesTabu(list, 10, 11, 12, 13)) {
+        printf("Test 4 Passed!\n");
+    } else {
+        printf("Test 4 Failed!\n");
     }
 
-    if (maxTenure >= maxTabuSize) tenureIncreasing = false;
-    if (maxTenure <= minTabuSize) tenureIncreasing = true;
+    // Clean up
+    freeTabuList(list);
 
-    // if (currentIteration % 40 == 0)
-    // {
-    //     DEBUG_COMMENT("tabu.c:tabu_search", "clear buffer");
-    //     clearBuffer(&tabuList);
-    //     initBuffer(&tabuList, maxTabuSize);
-    //     two_opt(distance_matrix, nnodes, path, tour_length, INFINITY);
-    // }
-    // DEBUG
-    // -------------------------------------------------------------------------------------------------
-    printf("iter %d tenure %d, %s\n", currentIteration, tabuList.tenure,
-           tenureIncreasing ? "increasing" : "decreasing");
-    ffflush();
-    DEBUG_COMMENT("tabu.c:tabu_search", "tabu list size: %d", tabuList.size);
-    INFO_COMMENT("tabu.c:tabu_search",
-                 "end iteration: %d\t lenght %lf\t encumbment %lf",
-                 currentIteration, *tour_length, incumbment_tour_length);
-  }
-  DEBUG_COMMENT("tabu.c:tabu_search", "exit main loop");
-  // CLOSE UP -  return best encumbment
-  memcpy(path, incumbment_path, nnodes * sizeof(int));
-  two_opt(distance_matrix, nnodes, path, tour_length, INFINITY, timelimit);
-  clearBuffer(&tabuList);
-  FREE(incumbment_path);
-  INFO_COMMENT("tabu.c:tabu_search", "end tabu search: %lf", *tour_length);
-}
+    printf("Testing Completed!\n");
 
-void test_buffer() {
-  CircularBuffer buf;
-  initBuffer(&buf, 10);
-  printf("init:\n");
-  printBuffer(&buf);
-
-  printf("iterating: ");
-  BufferIterator iter;
-  initIterator(&iter, &buf);
-  while (hasNext(&iter)) {
-    printf("%d ", next(&iter));
-  }
-  printf("\n\n");
-
-  for (int i = 0; i < 30; i++) {
-    addValue(&buf, i);
-    printBuffer(&buf);
-    printf("iterating: ");
-    BufferIterator iter;
-    initIterator(&iter, &buf);
-    while (hasNext(&iter)) {
-      printf("%d ", next(&iter));
-    }
-    printf("\n\n");
-  }
-
-  clearBuffer(&buf);
 }
