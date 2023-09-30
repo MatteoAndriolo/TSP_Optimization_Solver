@@ -30,9 +30,11 @@ class Instance:
         plot=True,
         seed=12345,
         verbose=False,
+        tsize=0,
+        ttenure=0,
     ):
         # check if file exists
-        self.name=name
+        self.name = name
         self.input = check_input_file(input)
 
         self.model = model
@@ -44,6 +46,9 @@ class Instance:
         self.grasp = grasp
         self.verbose = verbose
         self.plot = plot
+
+        self.tsize = tsize
+        self.ttenure = ttenure
 
         # Global data
         self.tstart = None
@@ -106,7 +111,10 @@ class Instance:
             "--plot" if self.plot else "",
             "--grasp",
             str(self.grasp),
-
+            "--tsize" if self.tsize > 0 else "",
+            str(self.tsize) if self.tsize > 0 else "",
+            "--ttenure" if self.ttenure > 0 else "",
+            str(self.ttenure) if self.ttenure > 0 else "",
         ]
         if self.integer_costs:
             command.append("--int")

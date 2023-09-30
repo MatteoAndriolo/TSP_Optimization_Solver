@@ -61,14 +61,18 @@ void instance_initialize(Instance *inst, double max_time,
                          double *x,double *y, int grasp_n_probabilities,
                          double *grasp_probabilities, char *input_file,
                          char *log_file);
-/*
- * Get distance between nodes in position x and y of path
- */
+
+void instance_destroy(Instance *inst);
+
+void instance_generate_path(Instance *inst);
+
+void instance_generate_distance_matrix(Instance *inst);
+
+// ----------------------------------------------------------------------------
+// Distance related utils
+// ----------------------------------------------------------------------------
 double getDistancePos(Instance *inst, int x, int y);
 
-/*
- * Get distance between nodes x and y
- */
 double getDistanceNodes(Instance *inst, int x, int y);
 
 double calculateTourLength(Instance *inst);
@@ -77,23 +81,15 @@ void setTourLenght(Instance *inst, double newLength);
 
 void addToTourLenght(Instance *inst, double toAdd);
 
-void instance_destroy(Instance *inst);
+
+// ----------------------------------------------------------------------------
+// General instance related utils
+// ----------------------------------------------------------------------------
 
 void swapPathPoints(Instance *inst, int i, int j);
 
-int assertInst(Instance *inst);
-
-/**
- * Generates a path for a set of nodes.
- *
- * @param path A pointer to an array that will store the path.
- * @param starting_node The index of the node to start the path at.
- * @param num_nodes The number of nodes in the graph.
- */
-void instance_generate_path(Instance *inst);
-
-void instance_generate_distance_matrix(Instance *inst);
-
 void pathCheckpoint(Instance *inst);
+
+int assertInst(Instance *inst);
 
 #endif /* VRP_H_ */

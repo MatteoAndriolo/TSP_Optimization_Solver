@@ -69,8 +69,7 @@ int main(int argc, char **argv) {
             } else if (strcmp(passagges[j], "vns") == 0) {
                 ERROR_COMMENT("main::main", "VNS not implemented yet");
             } else if (strcmp(passagges[j], "sa") == 0) {
-                simulate_anealling(inst->distance_matrix, inst->path, instances[c_inst].nnodes,
-                        &inst->tour_length, 10000, 100);
+                simulate_anealling(inst, 10000);
             } else if (strcmp(passagges[j], "gen") == 0) {
                 ERROR_COMMENT("main::main", "Genetic algorithm not implemented yet");
             } else if (strcmp(passagges[j], "nn") == 0) {
