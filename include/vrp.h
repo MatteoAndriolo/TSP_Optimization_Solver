@@ -44,7 +44,7 @@ typedef struct {
   int *path;
   int *best_path;
   double tour_length;
-  double best_tl;  // best sol. available
+  double best_tourlength;  // best sol. available
 
   // GRASP parameters
   // int grasp_n_probabilities;
@@ -82,6 +82,7 @@ void instance_destroy(Instance *inst);
 void swapPathPoints(Instance *inst, int i, int j);
 
 int assertInst(Instance *inst);
+
 /**
  * Generates a path for a set of nodes.
  *
@@ -92,5 +93,7 @@ int assertInst(Instance *inst);
 void instance_generate_path(Instance *inst);
 
 void instance_generate_distance_matrix(Instance *inst);
+
+void pathCheckpoint(Instance *inst);
 
 #endif /* VRP_H_ */

@@ -1,33 +1,22 @@
 #include "../include/heuristics.h"
 
-void vnp_k(const double *distance_matrix, int *path, int nnodes, double *tour_length, int k, int duration)
+void vnp_k(Instance *inst, int k)
 {
-    time_t start_time = time(NULL);
-    time_t end_time = start_time + duration;
-    // while non finisce il tempo
-    double best_tour = INFINITY;
-    int *best_path = malloc(nnodes * sizeof(int));
     INFO_COMMENT("heuristics.c:vnp_k", "starting the huristics loop for vnp_k");
-    while (difftime(end_time, time(NULL)) > 0)
+    //TODO fix while loop
+    int c=0;
+    while (++c<1000)
     {
-        printf("Time left: %.0f seconds\n", difftime(end_time, time(NULL)));
-        two_opt(distance_matrix, nnodes, path, tour_length, INFINITY, duration); //ODO fix dutarion
-        kick_function(distance_matrix, path, nnodes, tour_length, k);
-        if (best_tour > *tour_length)
-        {
-            best_tour = *tour_length;
-            memcpy(best_path, path, nnodes * sizeof(int));
-            CRITICAL_COMMENT("heuristics.c:vnp_k", "found a better tour with length %lf", best_tour);
-            log_path(best_path, nnodes);
-        }
+        two_opt(inst, INFINITY);
+        kick_function(inst, k);
+        pathCheckpoint(inst);
     }
-    *tour_length = best_tour;
-    path = best_path;
-    INFO_COMMENT("heuristics.c:vnp_k", "finished the huristics loop for vnp_k, best path found= %lf", best_tour);
-    log_path(path, nnodes);
+    inst->path = inst->best_path;
+    inst->tour_length = inst->best_tourlength;
+    INFO_COMMENT("heuristics.c:vnp_k", "finished the huristics loop for vnp_k, best inst->path found= %lf", inst->tour_length);
 }
 
-void kick_function(const double *distance_matrix, int *path, int nnodes, double *tour_length, int k)
+void kick_function(Instance *inst, int k)
 {
     int found = 0;
     int index_0, index_1, index_2, index_3, index_4;
@@ -36,20 +25,20 @@ void kick_function(const double *distance_matrix, int *path, int nnodes, double 
         found = 0;
         index_0 = 1;
         found++;
-        index_1 = randomBetween(index_0 + 1, nnodes);
-        if (nnodes - index_1 > 6)
+        index_1 = randomBetween(index_0 + 1, inst->nnodes);
+        if (inst->nnodes - index_1 > 6)
         {
-            index_2 = randomBetween(index_1 + 2, nnodes);
+            index_2 = randomBetween(index_1 + 2, inst->nnodes);
             found++;
         }
-        if (nnodes - index_2 > 4)
+        if (inst->nnodes - index_2 > 4)
         {
-            index_3 = randomBetween(index_2 + 2, nnodes);
+            index_3 = randomBetween(index_2 + 2, inst->nnodes);
             found++;
         }
-        if (nnodes - index_3 > 2)
+        if (inst->nnodes - index_3 > 2)
         {
-            index_4 = randomBetween(index_3 + 2, nnodes);
+            index_4 = randomBetween(index_3 + 2, inst->nnodes);
             found++;
         }
         if (found == 4)
@@ -63,25 +52,18 @@ void kick_function(const double *distance_matrix, int *path, int nnodes, double 
         }
     }
     //---------------------------------------------------------------------------------------
-    int *final_path = malloc(nnodes * sizeof(int));
+    int *final_path = malloc(inst->nnodes * sizeof(int));
     int count = 0;
     for (int i = 0; i < index_1; i++)
-        final_path[count++] = path[i];
-    for (int i = index_4; i < nnodes; i++)
-        final_path[count++] = path[i];
+        final_path[count++] = inst->path[i];
+    for (int i = index_4; i < inst->nnodes; i++)
+        final_path[count++] = inst->path[i];
     for (int i = index_4 - 1; i >= index_3; i--)
-        final_path[count++] = path[i];
+        final_path[count++] = inst->path[i];
     for (int i = index_2; i < index_3; i++)
-        final_path[count++] = path[i];
+        final_path[count++] = inst->path[i];
     for (int i = index_2 - 1; i >= index_1; i--)
-        final_path[count++] = path[i];
-    //---------------------------------------------------------------------------------------
-    for (int i = 0; i < nnodes; i++)
-        path[i] = final_path[i];
-    *tour_length = 0;
-    for (int i = 1; i < nnodes; i++)
-    {
-        *tour_length += distance_matrix[path[i - 1] * nnodes + path[i]];
-    }
-    *tour_length += distance_matrix[path[0] * nnodes + path[nnodes - 1]];
+        final_path[count++] = inst->path[i];
+    free(inst->path);
+    inst->path = final_path;
 }

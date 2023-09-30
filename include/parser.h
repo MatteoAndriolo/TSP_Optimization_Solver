@@ -3,8 +3,8 @@
 
 #include <argp.h>
 #include <stdio.h>
-#include "../include/vrp.h"
-#include "../include/logger.h"
+#include "vrp.h"
+#include "logger.h"
 
 // Parse arguments
 typedef struct args
@@ -23,6 +23,8 @@ typedef struct args
     double *grasp_probabilities;
     char str_probabilities[20];
     int toplot;
+    int tabu_size;
+    int tabu_tenure;
 } Args;
 
 static const char delimiter = '.';

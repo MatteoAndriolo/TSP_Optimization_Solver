@@ -1,46 +1,31 @@
-#ifndef TABU_H
-#define TABU_H
-#include <math.h>
+#ifndef TABU_SEARCH_SINGLE_H
+#define TABU_SEARCH_SINGLE_H
+
 #include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
 
-#include "../include/logger.h"
-#include "../include/refinement.h"
-#include "../include/utils.h"
+// Structure for Tabu list entry
+typedef struct {
+    int value;
+    int age;
+} TabuEntry;
 
-/**
- * Check if value x is in the buffer
- *
- * @param buf: buffer
- * @param x: value to be checked
- * @return true if x is in the buffer, false otherwise
- */
-bool contains(CircularBuffer *buf, int x);
+// Structure for Tabu list
+typedef struct {
+    TabuEntry *entries;
+    int size;
+    int tenure;
+    int head;
+    int tail;
+} TabuList;
 
-int tabuListContains(int n1, int n2, int tabuList[], int tabuListSize,
-                     int maxTabuSize);
+// Function declarations
+TabuList* initializeTabuList(int size, int tenure);
+bool isTabu(TabuList *list, int value);
+void addTabu(TabuList *list, int value);
+void updateTabuList(TabuList *list);
+void freeTabuList(TabuList *list);
+bool areAnyValuesTabu(TabuList *list, int v1, int v2, int v3, int v4);
 
-/**
- * Tabu Search
- *
- * @param distance_matrix: distance matrix
- * @param path: path to be filled
- * @param nnodes: number of nodes
- * @param tour_length: tour length
- * @param maxTabuSize: maximum size of tabu list
- */
-void tabu_search(const double *distance_matrix, int *path, int nnodes,
-                 double *tour_length, int minTabuSize, int maxTabuSize,
-                 time_t timelimit);
-// void tabu_search(const double *distance_matrix, int *path, int nnodes, double
-// *tour_length, int maxTabuSize, time_t timelimit);
+void testTabuList();
 
-/**
- * Test buffer
- */
-void test_buffer();
-
-void printBuffer(CircularBuffer *buf);
-#endif
+#endif // TABU_SEARCH_SINGLE_H
