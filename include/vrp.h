@@ -81,6 +81,8 @@ void setTourLenght(Instance *inst, double newLength);
 
 void addToTourLenght(Instance *inst, double toAdd);
 
+void saveBestPath(Instance *inst);
+
 
 // ----------------------------------------------------------------------------
 // General instance related utils

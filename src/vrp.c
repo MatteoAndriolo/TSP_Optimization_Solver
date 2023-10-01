@@ -24,6 +24,8 @@ void instance_generate_path(Instance *inst) {
         inst->path[j] = tmp;
     }
     memcpy(inst->best_path, inst->path, inst->nnodes * sizeof(int));
+    inst->tour_length = calculateTourLength(inst);
+    inst->best_tourlength = inst->tour_length;
 }
 
 void instance_generate_distance_matrix(Instance *inst) {
@@ -151,15 +153,12 @@ void instance_destroy(Instance *inst) {
 }
 
 void swapPathPoints(Instance *inst, int i, int j) {
-    pthread_mutex_lock(&inst->mutex_path);
     int temp = inst->path[i];
     inst->path[i] = inst->path[j];
     inst->path[j] = temp;
-    pthread_mutex_unlock(&inst->mutex_path);
 }
 
 void swapAndShiftPath(Instance *inst, int i, int j) {
-    pthread_mutex_lock(&inst->mutex_path);
     int temp =
         inst->path[j];  // Save the value at position j in a temporary variable
     for (int k = j; k > i; k--) {
@@ -167,17 +166,14 @@ void swapAndShiftPath(Instance *inst, int i, int j) {
             inst->path[k - 1];  // Shift all elements to the right from j to i+1
     }
     inst->path[i] = temp;  // Put the saved value from position j into position i
-    pthread_mutex_unlock(&inst->mutex_path);
 }
 
 double calculateTourLength(Instance *inst) {
-    pthread_mutex_lock(&inst->mutex_path);
     double tour_length = getDistancePos(inst, 0, inst->nnodes - 1);
     for (int i = 0; i < inst->nnodes - 1; i++) {
         tour_length += getDistancePos(inst, i, i + 1);
     }
     inst->tour_length = tour_length;
-    pthread_mutex_unlock(&inst->mutex_path);
     return tour_length;
 }
 
@@ -190,9 +186,7 @@ double getDistanceNodes(Instance *inst, int x, int y) {
 }
 
 void setTourLenght(Instance *inst, double newLength) {
-    pthread_mutex_lock(&inst->mutex_path);
     inst->tour_length = newLength;
-    pthread_mutex_unlock(&inst->mutex_path);
 }
 
 void addToTourLenght(Instance *inst, double toAdd) {
@@ -205,6 +199,7 @@ int assertInst(Instance *inst) {
      * 1. All nodes are used
      * 2. The tour length is correct
      */
+    DEBUG_COMMENT("assertInst", "Checking instance");
 
     int check_nnodes = (inst->nnodes * (inst->nnodes - 1)) / 2;
     for (int i = 0; i < inst->nnodes; check_nnodes -= inst->path[i++])
@@ -219,17 +214,20 @@ int assertInst(Instance *inst) {
     if (check_tour_length != inst->tour_length) {
         return ERROR_TOUR_LENGTH;
     }
+    DEBUG_COMMENT("assertInst", "Instance is valid");
 
     return SUCCESS;
 }
 
 void pathCheckpoint(Instance *inst){
-    pthread_mutex_lock(&inst->mutex_path);
     calculateTourLength(inst);
     assertInst(inst);
     if(inst->tour_length < inst->best_tourlength){
         memcpy(inst->best_path, inst->path, inst->nnodes * sizeof(int));
         inst->best_tourlength = inst->tour_length;
     }
-    pthread_mutex_unlock(&inst->mutex_path);
+}
+
+void saveBestPath(Instance *inst) {
+    pathCheckpoint(inst);
 }

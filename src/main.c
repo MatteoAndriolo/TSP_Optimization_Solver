@@ -5,7 +5,6 @@
 #include <unistd.h>
 
 #include "../include/greedy.h"
-#include "../include/heuristics.h"
 #include "../include/logger.h"
 #include "../include/metaheuristic.h"
 #include "../include/parser.h"
@@ -67,22 +66,21 @@ int main(int argc, char **argv) {
                 //        &(inst->tour_length), (int)(args.nnodes / 20),
                 //        (int)(args.nnodes / 8), 2);
             } else if (strcmp(passagges[j], "vns") == 0) {
-                ERROR_COMMENT("main::main", "VNS not implemented yet");
+                vns_k(inst, 4);
             } else if (strcmp(passagges[j], "sa") == 0) {
-                simulate_anealling(inst, 10000);
+                simulate_anealling(inst, 1000);
             } else if (strcmp(passagges[j], "gen") == 0) {
                 ERROR_COMMENT("main::main", "Genetic algorithm not implemented yet");
             } else if (strcmp(passagges[j], "nn") == 0) {
                 nearest_neighboor(inst);
             // } else if (strcmp(passagges[j], "nng") == 0) {
             //     nearest_neighboor_grasp(inst);
-            } else if (strcmp(passagges[j], "vpn") == 0) {
-                vnp_k(inst, 4);
             } else if (strcmp(passagges[j], "test") == 0) {
                 testTabuList();
             } else {
                 FATAL_COMMENT("main::main", "Model %s not recognized", passagges[j]);
             }
+            saveBestPath(inst);
             ffflush();
             strcpy(title + strlen(title), passagges[j]);
 
@@ -92,17 +90,17 @@ int main(int argc, char **argv) {
                         inst->starting_node);
             }
             printf("tourlenght %lf , time elapsed %ld\n",
-                    inst->tour_length, time(NULL) - inst->tstart);
+                    inst->best_tourlength, time(NULL) - inst->tstart);
             // printf("tourlenght %lf\n", get_tour_length(inst->path, args.nnodes,
             // inst->distance_matrix));
 
             if (j == n_passagges - 1) strcpy(title, "\0");
-            INFO_COMMENT("main::main", "Passagge %s completed with tl %lf", passagges[j], inst->tour_length);
+            INFO_COMMENT("main::main", "Passagge %s completed with tl %lf", passagges[j], inst->best_tourlength);
         }
         // print tourlenght model time
 
         OUTPUT_COMMENT("main::main", "Tour lenght: %lf , time elapsed %ld",
-                inst->tour_length, time(NULL) - inst->tstart);
+                inst->best_tourlength, time(NULL) - inst->tstart);
         INFO_COMMENT("main::main", "Instance %d completed", c_inst);
         instance_destroy(inst);
         INFO_COMMENT("main::main", "Instance %d completed", c_inst);

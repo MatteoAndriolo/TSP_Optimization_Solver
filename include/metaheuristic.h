@@ -5,7 +5,6 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include "../include/heuristics.h"
 #include "../include/logger.h"
 #include "../include/refinement.h"
 #include "../include/utils.h"
@@ -31,4 +30,15 @@ void simulate_anealling(Instance *inst, double k_max);
 double energy_probabilities(double cost_current, double cost_new, double T,
                             double coefficient);
 
+// --------------------------- VNS ---------------------------
+void vns_k(Instance *inst, int k);
+
+/** Kick function
+ * @param distance_matrix: distance matrix
+ * @param path: path to be filled
+ * @param nnodes: number of nodes
+ * @param tour_length: tour length
+ * @param k: number of blocks
+ */
+void kick_function(Instance *inst, int k);
 #endif

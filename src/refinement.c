@@ -1,7 +1,6 @@
 #include <stdio.h>
 
 #include "../include/refinement.h"
-#include "../include/heuristics.h"
 #include "../include/tabu.h"
 
 void two_opt(Instance *inst, double iterations) {
@@ -25,15 +24,17 @@ void two_opt(Instance *inst, double iterations) {
                     foundImprovement = 1;
                     two_opt_move(inst, i, j);
                 }
-                c_iter++;
-                if (c_iter > iterations) return;
                 // DEBUG_COMMENT("refinement:2opt", "delta %lf, tl %lf", delta,
                 // tour_length);
+            }
+            c_iter++;
+            if (c_iter > iterations){
+                foundImprovement = false;
+                break;
             }
         }
         if (time(NULL) > inst->max_time) break;
     }
-    calculateTourLength(inst);
     DEBUG_COMMENT("refinement:2opt", "attual tour length %lf", inst->tour_length);
 }
 
@@ -70,10 +71,7 @@ void two_opt_tabu(Instance *inst,  double iterations, TabuList *tabuList) {
             }
         }
     }
-    // print info comment c_iter
-    INFO_COMMENT("refinement:2opt_tabu", "c_iter %lf", c_iter);
 
-    // assert_path(inst->path, distance_matrix, inst->nnodes, *tour_length);
     INFO_COMMENT("refinement:2opt_tabu", "finished - final tour length %lf",
             inst->tour_length);
 }

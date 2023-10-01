@@ -16,6 +16,8 @@ def parse_arguments():
     addarg("--integercosts", action="store_true", help="Use integer costs")
     addarg("-p", "--plot", action="store_true", help="Enable plotting")
     addarg("-v", "--verbose", action="store_true", help="Enable verbose output")
+    addarg("--ttenure", type=int, default=0, help="Tabu tenure")
+    addarg("--tsize", type=int, default=0, help="Tabu size")
 
     args = parser.parse_args()
 
