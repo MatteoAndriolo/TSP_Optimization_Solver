@@ -2,7 +2,8 @@
 #define GREEDY_H
 #include <math.h>
 #include <stdlib.h>
-#include "../include/vrp.h"
+#include "vrp.h"
+#include "errors.h"
 
 /**
  * Implements the nearest neighbor heuristic to solve the TSP for the given

@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 // #include <cplex.h>
 #include <pthread.h>
@@ -83,6 +84,15 @@ void addToTourLenght(Instance *inst, double toAdd);
 
 void saveBestPath(Instance *inst);
 
+int checkTime(Instance *inst, bool saveBest);
+
+#define CHECKTIME(inst, bool) \
+    do { \
+        ErrorCode err= checkTime((inst), (bool)); \
+        if( err != SUCCESS) { \
+            return err; \
+        } \
+    } while (0)
 
 // ----------------------------------------------------------------------------
 // General instance related utils
@@ -90,8 +100,12 @@ void saveBestPath(Instance *inst);
 
 void swapPathPoints(Instance *inst, int i, int j);
 
-void pathCheckpoint(Instance *inst);
+int pathCheckpoint(Instance *inst);
 
 int assertInst(Instance *inst);
+#define ASSERTINST(inst) \
+    do { \
+        RUN(assertInst(inst)); \
+    } while (0)
 
 #endif /* VRP_H_ */

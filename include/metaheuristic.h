@@ -19,7 +19,7 @@
  * @param k_max Maximum number of iterations
  * @param duration Duration
  */
-void simulate_anealling(Instance *inst, double k_max);
+int simulated_annealling(Instance *inst, double k_max);
 
 /**
  * @brief Energy probabilities
@@ -31,7 +31,7 @@ double energy_probabilities(double cost_current, double cost_new, double T,
                             double coefficient);
 
 // --------------------------- VNS ---------------------------
-void vns_k(Instance *inst, int k);
+int vns_k(Instance *inst, int k);
 
 /** Kick function
  * @param distance_matrix: distance matrix
@@ -40,5 +40,5 @@ void vns_k(Instance *inst, int k);
  * @param tour_length: tour length
  * @param k: number of blocks
  */
-void kick_function(Instance *inst, int k);
+int kick_function(Instance *inst, int k);
 #endif

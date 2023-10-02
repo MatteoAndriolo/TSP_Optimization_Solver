@@ -15,7 +15,7 @@
  * improvement is found)
  * @return void
  */
-void two_opt(Instance *inst, double iterations);
+int two_opt(Instance *inst, double iterations);
 
 /**
  * Applies the 2-opt algorithm to a given distance matrix and node list (in
@@ -25,5 +25,5 @@ void two_opt(Instance *inst, double iterations);
  * @param iterations The number of iterations to perform. (INFINITY: until no improvement is found)
  * @param tabuList A pointer to the tabu list.
  */
-void two_opt_tabu(Instance *inst, double iterations, TabuList *tabuList);
+int two_opt_tabu(Instance *inst, double iterations, TabuList *tabuList);
 #endif

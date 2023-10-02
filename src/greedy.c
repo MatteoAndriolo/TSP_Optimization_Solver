@@ -9,8 +9,6 @@
 int nearest_neighboor(Instance *inst) {
   INFO_COMMENT("nearest_neighboor", "start nearest neighboor");
   int current_node;
-  // double min_distance;
-  // int best_remaining = -1;
   GRASP_Framework *grasp = inst->grasp;
   double dist;
   /*
@@ -19,33 +17,17 @@ int nearest_neighboor(Instance *inst) {
    */
   for (int j = 1; j < inst->nnodes; j++) {
     current_node = inst->path[j - 1];
-    // min_distance = INFINITY;
-    // find min
     for (int k = j; k < inst->nnodes; k++) {
-      // dist = inst->distance_matrix[current_node * inst->nnodes +
-      // inst->path[k]];
       dist = getDistanceNodes(inst, current_node, inst->path[k]);
       add_solution(grasp, k, dist);
-      // if (dist < min_distance) {
-      //     min_distance = dist;
-      //     best_remaining = k;
-      // }
     }
 
-    // addToTourLenght(inst, min_distance);
     swapPathPoints(inst, j, get_solution(grasp));
     reset_solutions(grasp);
   }
-  // complete the tour
-  // addToTourLenght(inst,getDistance(inst,inst->path[0],
-  // inst->path[inst->nnodes-1])); inst->tour_length +=
-  // inst->distance_matrix[inst->path[0] * inst->nnodes +
-  // inst->path[inst->nnodes - 1]];
   calculateTourLength(inst);
 
-  // assert_path(inst->path, inst->distance_matrix, inst->nnodes,
-  // inst->tour_length);
-  assertInst(inst);
+  ASSERTINST(inst);
   return SUCCESS;
 }
 
@@ -53,7 +35,6 @@ int extra_mileage(Instance *inst) {
   INFO_COMMENT("greedy::extra_mileage", "start extra mileage");
   //--------------- FIND DIAMETER -------------------------------------------
   // TODO find diameter | farthest with lowest mean distance from other nodes
-  // print_nodes(inst->x, inst->y, inst->nnodes);
   double max_distance = 0;
   double tdist;
   int max_index = -1;
@@ -98,6 +79,7 @@ int extra_mileage(Instance *inst) {
           node_3[1] = j + 1;
           node_3[2] = k;
         }
+        CHECKTIME(inst, false);
       }
     }
 
@@ -111,6 +93,7 @@ int extra_mileage(Instance *inst) {
         node_3[2] = k;
         is_close_edge = true;
       }
+      CHECKTIME(inst, false);
     }
     double new_cost = min_nts - getDistancePos(inst, node_3[0], node_3[1]);
 
@@ -132,10 +115,10 @@ int extra_mileage(Instance *inst) {
       }
       inst->path[node_3[1]] = tmp;
     }
+
+    CHECKTIME(inst, false);
   }
 
-  // Put the saved value from position j into position i
-  assertInst(inst);
-
+  ASSERTINST(inst);
   return SUCCESS;
 }

@@ -19,7 +19,7 @@ void restoreInstState(Instance *inst, const int *path, const int tour_length) {
   inst->tour_length = tour_length;
 }
 
-void simulate_anealling(Instance *inst, double k_max) {
+int simulated_annealling(Instance *inst, double k_max) {
   INFO_COMMENT("metaheuristic.c:simulate_anealling",
                "Starting simulated annealing metaheuristic");
   double T, rand_val, energy;
@@ -34,8 +34,8 @@ void simulate_anealling(Instance *inst, double k_max) {
     T = 1 - ((double)k / k_max);
 
     // Modify and optimize current solution
-    kick_function(inst, 4);
-    two_opt(inst, INFINITY);
+    RUN(kick_function(inst, 4));
+    RUN(two_opt(inst, INFINITY));
 
     // Calculate acceptance probability and generate a rand_val number
     energy = energy_probabilities(tour_length, inst->tour_length, T, 0.8);
@@ -52,33 +52,37 @@ void simulate_anealling(Instance *inst, double k_max) {
       backupInstState(inst, path, &tour_length);
       pathCheckpoint(inst);
     }
+    CHECKTIME(inst, false);
   }
 
   free(path);
   INFO_COMMENT("metaheuristic.c:simulate_anealling",
                "Simulated annealing metaheuristic finished");
+  return SUCCESS;
 }
 
 // ----------------------------------------------------------------------------
 // VNS
 // ----------------------------------------------------------------------------
-void vns_k(Instance *inst, int k)
+int vns_k(Instance *inst, int k)
 {
     //TODO fix while loop
     int c=0;
     while (++c<1000)
     {
         INFO_COMMENT("heuristics.c:vnp_k", "starting the heuristics loop for vnp_k, iteration %d", c);
-        kick_function(inst, k);
-        two_opt_tabu(inst, 100, initializeTabuList(20,7));
+        RUN(kick_function(inst, k));
+        RUN(two_opt_tabu(inst, 100, initializeTabuList(20,7)));
         calculateTourLength(inst);
         pathCheckpoint(inst);
+        CHECKTIME(inst, false);
     }
     INFO_COMMENT("heuristics.c:vnp_k", "finished the huristics loop for vnp_k");
     DEBUG_COMMENT("heuristics.c:vnp_k", "best tourlength: %d", inst->best_tourlength);
+    return SUCCESS;
 }
 
-void kick_function(Instance *inst, int k)
+int kick_function(Instance *inst, int k)
 {
     int found = 0;
     int index_0, index_1, index_2, index_3, index_4;
@@ -112,6 +116,7 @@ void kick_function(Instance *inst, int k)
             index_4--;
             // DEBUG_COMMENT("heuristics.c:kick_function", "found 5 indexes{%d, %d, %d, %d, %d}", index_0, index_1, index_2, index_3, index_4);
         }
+        CHECKTIME(inst, false);
     }
     //---------------------------------------------------------------------------------------
     int *final_path = malloc(inst->nnodes * sizeof(int));
@@ -128,4 +133,7 @@ void kick_function(Instance *inst, int k)
         final_path[count++] = inst->path[i];
     free(inst->path);
     inst->path = final_path;
+    return SUCCESS;
 }
+
+

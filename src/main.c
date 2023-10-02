@@ -33,7 +33,7 @@ int main(int argc, char **argv) {
     srand(args.randomseed);                  // set random seed
     Instance instances[args.num_instances];  // array of instances
 
-    // RUN
+    // RUN_MAIN
     for (int c_inst = 0; c_inst < args.num_instances; c_inst++) {
         Instance *inst = &instances[c_inst];
         instance_initialize(&instances[c_inst], args.timelimit,
@@ -50,36 +50,29 @@ int main(int argc, char **argv) {
                 if(inst->grasp->size>1){
                     ERROR_COMMENT("main::main", "Extra mileage not implemented for grasp");
                 }
-                if(extra_mileage(&instances[c_inst])==FAILURE)
-                {
-                    ERROR_COMMENT("main::main", "Extra mileage failed");
-                }
+                RUN_MAIN(extra_mileage(&instances[c_inst]));
             } else if (strcmp(passagges[j], "2opt") == 0) {
-                two_opt(inst, INFINITY);
+                RUN_MAIN(two_opt(inst, INFINITY));
             } else if (strcmp(passagges[j], "tabu") == 0) {
                 if (j == 0) {
                     FATAL_COMMENT("main::main",
                             "Tabu search must be used with a starting point");
                 }
-                two_opt_tabu(inst,INFINITY,initializeTabuList(10,4));
-                //tabu_search(inst->distance_matrix, inst->path, instances[c_inst].nnodes,
-                //        &(inst->tour_length), (int)(args.nnodes / 20),
-                //        (int)(args.nnodes / 8), 2);
+                RUN_MAIN(two_opt_tabu(inst,INFINITY,initializeTabuList(10,4)));
             } else if (strcmp(passagges[j], "vns") == 0) {
-                vns_k(inst, 4);
+                RUN_MAIN(vns_k(inst, 4));
             } else if (strcmp(passagges[j], "sa") == 0) {
-                simulate_anealling(inst, 1000);
+                RUN_MAIN(simulated_annealling(inst, 1000));
             } else if (strcmp(passagges[j], "gen") == 0) {
                 ERROR_COMMENT("main::main", "Genetic algorithm not implemented yet");
             } else if (strcmp(passagges[j], "nn") == 0) {
-                nearest_neighboor(inst);
-            // } else if (strcmp(passagges[j], "nng") == 0) {
-            //     nearest_neighboor_grasp(inst);
+                RUN_MAIN(nearest_neighboor(inst));
             } else if (strcmp(passagges[j], "test") == 0) {
                 testTabuList();
             } else {
                 FATAL_COMMENT("main::main", "Model %s not recognized", passagges[j]);
             }
+
             saveBestPath(inst);
             ffflush();
             strcpy(title + strlen(title), passagges[j]);

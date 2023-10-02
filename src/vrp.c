@@ -219,15 +219,27 @@ int assertInst(Instance *inst) {
     return SUCCESS;
 }
 
-void pathCheckpoint(Instance *inst){
+int pathCheckpoint(Instance *inst){
     calculateTourLength(inst);
-    assertInst(inst);
+    ASSERTINST(inst);
     if(inst->tour_length < inst->best_tourlength){
         memcpy(inst->best_path, inst->path, inst->nnodes * sizeof(int));
         inst->best_tourlength = inst->tour_length;
     }
+    return SUCCESS;
 }
 
 void saveBestPath(Instance *inst) {
     pathCheckpoint(inst);
+}
+
+int checkTime(Instance *inst, bool saveBest) {
+    if (inst->tend < time(NULL)) {
+        if(saveBest){
+            saveBestPath(inst);
+        }
+        ERROR_COMMENT("vrp::checkTime", "Time limit reached");
+        return ERROR_TIME_LIMIT;
+    }
+    return OK;
 }
