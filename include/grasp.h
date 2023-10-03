@@ -1,5 +1,6 @@
 #ifndef GRASP_H
 #define GRASP_H
+#include <stdbool.h>
 
 typedef struct {
     int solution;
@@ -18,6 +19,7 @@ void add_solution(GRASP_Framework* grasp, int solution, double value);
 int get_solution(GRASP_Framework* grasp);
 void free_grasp(GRASP_Framework* grasp);
 void reset_solutions(GRASP_Framework* grasp);
+bool inGrasp(GRASP_Framework* grasp, int solution);
 
 #endif // GRASP_H
 

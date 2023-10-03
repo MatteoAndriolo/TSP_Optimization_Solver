@@ -6,6 +6,7 @@
 
 #include "../include/greedy.h"
 #include "../include/logger.h"
+#include "../include/heuristic.h"
 #include "../include/metaheuristic.h"
 #include "../include/parser.h"
 #include "../include/plot.h"
@@ -64,7 +65,7 @@ int main(int argc, char **argv) {
             } else if (strcmp(passagges[j], "sa") == 0) {
                 RUN_MAIN(simulated_annealling(inst, 1000));
             } else if (strcmp(passagges[j], "gen") == 0) {
-                ERROR_COMMENT("main::main", "Genetic algorithm not implemented yet");
+                RUN_MAIN(genetic_algorithm(inst));
             } else if (strcmp(passagges[j], "nn") == 0) {
                 RUN_MAIN(nearest_neighboor(inst));
             } else if (strcmp(passagges[j], "test") == 0) {

@@ -7,6 +7,7 @@
 
 #include "../include/utils.h"
 
+
 void instance_generate_path(Instance *inst) {
     inst->path = malloc(inst->nnodes * sizeof(int));
     inst->best_path = malloc(inst->nnodes * sizeof(int));
@@ -26,6 +27,12 @@ void instance_generate_path(Instance *inst) {
     memcpy(inst->best_path, inst->path, inst->nnodes * sizeof(int));
     inst->tour_length = calculateTourLength(inst);
     inst->best_tourlength = inst->tour_length;
+}
+
+Instance* temp_instance(Instance *inst, int *path){
+    Instance *I = malloc(sizeof(Instance));
+    instance_initialize(I, 0, inst->integer_costs, inst->nnodes, inst->x, inst->y, inst->grasp->size, inst->grasp->probabilities, inst->input_file, inst->log_file);
+    return I;
 }
 
 void instance_generate_distance_matrix(Instance *inst) {
@@ -177,6 +184,14 @@ double calculateTourLength(Instance *inst) {
     return tour_length;
 }
 
+double calculateTourLenghtPath(Instance *inst, int* path){
+    double tour_length = inst->distance_matrix[path[0] * inst->nnodes + path[inst->nnodes - 1]];
+    for (int i = 0; i < inst->nnodes - 1; i++) {
+        tour_length += inst->distance_matrix[path[i] * inst->nnodes + path[i + 1]];
+    }
+    return tour_length;
+}
+
 double getDistancePos(Instance *inst, int x, int y) {
     return inst->distance_matrix[inst->path[x] * inst->nnodes + inst->path[y]];
 }
@@ -242,4 +257,8 @@ int checkTime(Instance *inst, bool saveBest) {
         return ERROR_TIME_LIMIT;
     }
     return OK;
+}
+
+void setTime(Instance *inst, time_t duration){
+    inst->tend = time(NULL) + duration;
 }

@@ -1,28 +1,26 @@
-#ifndef VRP_H_
-#define VRP_H_
+#ifndef VRP_H
+#define VRP_H
 
 #include <getopt.h>
 #include <math.h>
 // #include <mutex>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <stdbool.h>
 
 // #include <cplex.h>
 #include <pthread.h>
 
 #include "errors.h"
+#include "genetic.h"
 #include "grasp.h"
 #include "logger.h"
-
 // hard-wired parameters
 #define XSMALL \
   1e-5  // 1e-4*	// tolerance used to decide ingerality of 0-1 var.s
 #define EPSILON 1e-9  // 1e-9		// very small numerical tolerance
 #define TICKS_PER_SECOND \
   1000.0  // cplex's ticks on Intel Core i7 quadcore @2.3GHZ
-#define INFTY 1e+30
 
 typedef struct {
   // execution parameters
@@ -52,6 +50,9 @@ typedef struct {
   // double *grasp_probabilities;
   GRASP_Framework *grasp;
 
+  // GENETIC parameters
+  GENETIC_SETUP genetic_setup;
+
   // global data
   char input_file[1000];  // input file
   char log_file[1000];    // output log file
@@ -62,6 +63,8 @@ void instance_initialize(Instance *inst, double max_time,
                          double *x,double *y, int grasp_n_probabilities,
                          double *grasp_probabilities, char *input_file,
                          char *log_file);
+
+Instance* temp_instance(Instance *inst, int* path);
 
 void instance_destroy(Instance *inst);
 
@@ -77,6 +80,9 @@ double getDistancePos(Instance *inst, int x, int y);
 double getDistanceNodes(Instance *inst, int x, int y);
 
 double calculateTourLength(Instance *inst);
+double calculateTourLenghtPath(Instance *inst, int* path);
+
+void setTime(Instance *inst,time_t time);
 
 void setTourLenght(Instance *inst, double newLength);
 
@@ -107,5 +113,7 @@ int assertInst(Instance *inst);
     do { \
         RUN(assertInst(inst)); \
     } while (0)
+
+
 
 #endif /* VRP_H_ */
