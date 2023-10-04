@@ -128,6 +128,24 @@ void generate_random_starting_nodes(int *starting_nodes, int num_nodes,
     }
 }
 
+double generate_random_path(Instance *inst, int *path) {
+    // copy of instance_generate_path
+    int random_start = rand() % inst->nnodes;
+    for (int i = 0; i < inst->nnodes; i++) {
+        path[i] = i;
+    }
+    path[random_start] = 0;
+    path[0] = random_start;
+
+    int j, tmp;
+    for (int i = 0; i < inst->nnodes; i++) {
+        j = rand() % inst->nnodes;
+        tmp = path[i];
+        path[i] = path[j];
+        path[j] = tmp;
+    }
+    return calculateTourLenghtPath(inst,path);
+}
 
 void swap_array_piece(int *arr, int start1, int end1, int start2, int end2) {
     int temp[end1 - start1 +

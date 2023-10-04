@@ -105,6 +105,7 @@ void set_starting_node(int *path, int starting_node, int num_nodes);
 void generate_random_starting_nodes(int *starting_nodes, int num_nodes,
         int num_instances, int seed);
 
+double generate_random_path(Instance *inst, int* path);
 /**
  * Generates a set of random starting nodes.
  * @param arr The array to shuffle.

@@ -11,6 +11,7 @@ typedef enum{
     ERROR_INVALID_PATH = -4,
     ERROR_NODES = -5,
     ERROR_TOUR_LENGTH = -6,
+    ERROR_ASSERT_INSTANCE = -7,
     ERROR_TIME_LIMIT = -99,
 } ErrorCode;
 
@@ -29,6 +30,7 @@ typedef enum{
                 case ERROR_NODES: printf("Node Error\n"); break; \
                 case ERROR_TOUR_LENGTH: printf("Tour Length Error\n"); break; \
                 case ERROR_TIME_LIMIT: printf("Time Limit Reached\n"); break; \
+                case ERROR_ASSERT_INSTANCE: printf("Instance Error\n"); exit(ERROR_ASSERT_INSTANCE);break; \
                 default: printf("Unknown Error\n"); break; \
             } \
             if(!ismain || err_code!=ERROR_TIME_LIMIT) \

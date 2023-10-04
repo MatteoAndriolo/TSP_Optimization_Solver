@@ -6,6 +6,7 @@
 #include <stdlib.h>
 
 #include "../include/errors.h"
+#include "../include/heuristic.h"
 #include "../include/logger.h"
 
 // Helper function to compare two solutions based on their values. Used for

@@ -6,11 +6,7 @@
 #include "vrp.h"
 #include <stdbool.h>
 
-
-
-
-
 int genetic_algorithm(Instance *inst);
 
-
 #endif // !HEURISTIC_H
+

@@ -51,7 +51,7 @@ typedef struct {
   GRASP_Framework *grasp;
 
   // GENETIC parameters
-  GENETIC_SETUP genetic_setup;
+  GENETIC_SETUP *genetic_setup;
 
   // global data
   char input_file[1000];  // input file

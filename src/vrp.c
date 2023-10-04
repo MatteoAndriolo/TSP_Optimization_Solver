@@ -31,7 +31,17 @@ void instance_generate_path(Instance *inst) {
 
 Instance* temp_instance(Instance *inst, int *path){
     Instance *I = malloc(sizeof(Instance));
-    instance_initialize(I, 0, inst->integer_costs, inst->nnodes, inst->x, inst->y, inst->grasp->size, inst->grasp->probabilities, inst->input_file, inst->log_file);
+    I->nnodes = inst->nnodes;
+    I->starting_node = inst->starting_node;
+    I->x = inst->x;
+    I->y = inst->y;
+    I->distance_matrix = inst->distance_matrix;
+    I->path = path;
+    I->tour_length = calculateTourLenghtPath(inst, path);
+    I->best_path = I->path;
+    I->best_tourlength = I->tour_length;
+    I->grasp = inst->grasp;
+
     return I;
 }
 
@@ -90,13 +100,13 @@ void instance_initialize(Instance *inst, double max_time,
     inst->grasp = (GRASP_Framework*) malloc(sizeof(GRASP_Framework));
     init_grasp(inst->grasp, grasp_probabilities, grasp_n_probabilities);
 
-
+    inst->genetic_setup = (GENETIC_SETUP*)malloc(sizeof(GENETIC_SETUP));
     inst->grasp->size = grasp_n_probabilities;
     inst->grasp->probabilities = grasp_probabilities;
-   // inst->grasp_n_probabilities = grasp_n_probabilities;
-   // inst->grasp_probabilities = malloc(grasp_n_probabilities * sizeof(double));
-   // memcpy(inst->grasp_probabilities, grasp_probabilities,
-   //         grasp_n_probabilities * sizeof(double));
+    // inst->grasp_n_probabilities = grasp_n_probabilities;
+    // inst->grasp_probabilities = malloc(grasp_n_probabilities * sizeof(double));
+    // memcpy(inst->grasp_probabilities, grasp_probabilities,
+    //         grasp_n_probabilities * sizeof(double));
 
     // Initialize file names
     strncpy(inst->input_file, input_file, sizeof(inst->input_file) - 1);
@@ -222,12 +232,12 @@ int assertInst(Instance *inst) {
 
     if (check_nnodes != 0) {
         ERROR_COMMENT("assertInst", "Not all nodes are used");
-        return ERROR_NODES;
+        return ERROR_ASSERT_INSTANCE;
     }
 
     double check_tour_length = calculateTourLength(inst);
     if (check_tour_length != inst->tour_length) {
-        return ERROR_TOUR_LENGTH;
+        return ERROR_ASSERT_INSTANCE;
     }
     DEBUG_COMMENT("assertInst", "Instance is valid");
 

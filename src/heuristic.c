@@ -3,65 +3,21 @@
 #include <math.h>
 
 
-int* generate_random_path(Instance *inst){
-    // copy of instance_generate_path
-    int *path = malloc(inst->nnodes * sizeof(int));
-    int random_start = rand() % inst->nnodes;
-    for (int i = 0; i < inst->nnodes; i++) {
-        path[i] = i;
-    }
-    path[random_start] = 0;
-    path[0] = random_start;
-
-    int j, tmp;
-    for (int i = 0; i < inst->nnodes; i++) {
-        j = rand() % inst->nnodes;
-        tmp = path[i];
-        path[i] = path[j];
-        path[j] = tmp;
-    }
-    return path;
-}
-
-void destroy_population(GENETIC_POPULATION *population){
-    for(int i=0; i < population->size; i++){
-        FREE(population->individual[i].chromosome);
-    }
-    free_grasp(population->grasp_individuals);
-    FREE(population->individual);
-    FREE(population);
-}
-
-void init_population(Instance *inst, GENETIC_POPULATION *population){
-    if (population->individual != NULL){
-        destroy_population(population);
-    }
-    population = (GENETIC_POPULATION*) malloc(sizeof(GENETIC_POPULATION));
-    population->best_fitness = 1.0/0.0; // INFINITY
-    population->best_individual = -1;
-    population->size = inst->genetic_setup.population_size;
-    population->individual = (GENETIC_INDIVIDUAL*) malloc(sizeof(GENETIC_INDIVIDUAL) * population->size);
-    for(int i=0; i<population->size ; i++){
-        GENETIC_INDIVIDUAL *ind = malloc(sizeof(GENETIC_INDIVIDUAL));
-        ind->chromosome = generate_random_path(inst);
-        ind->fitness = calculateTourLength(inst);
-        population->individual[i] = *ind;
-    }
-    init_grasp(population->grasp_individuals, inst->genetic_setup.grasp_probabilities, inst->genetic_setup.grasp_n_probabilities);
-}
 
 void refine_pop(Instance *inst, GENETIC_POPULATION *population, time_t duration){
-    for(int i=0; i < population->size; i++){
-        Instance *I = malloc(sizeof(Instance));
-        I->x = inst->x;
-        I->y = inst->y;
-        I->nnodes = inst->nnodes;
-        I->distance_matrix = inst->distance_matrix;
-        I->path = population->individual[i].chromosome;
-        I->tour_length = population->individual[i].fitness;
-        I->tstart = time(NULL);
-        I->tend = I->tstart + duration;
-        // I->max_time = I->tend;
+
+    for(int i=0; i < population->population_size; i++){
+        Instance *I = temp_instance(inst, population->individual[i].path);
+        // I->x = inst->x;
+        // I->y = inst->y;
+        // I->nnodes = inst->nnodes;
+        // I->distance_matrix = inst->distance_matrix;
+        // I->path = population->individual[i].path;
+        // I->tour_length = population->individual[i].fitness;
+        // I->tstart = time(NULL);
+        // I->tend = I->tstart + duration;
+        // // I->max_time = I->tend;
+        I->tend = time(NULL) + duration;
         two_opt(I, INFINITY);
 
 
@@ -90,9 +46,9 @@ int* matches(Instance *inst, GENETIC_INDIVIDUAL *ind1, GENETIC_INDIVIDUAL *ind2)
                 m=inst->nnodes+m;
             }
 
-            if (ind1->chromosome[i] == ind2->chromosome[p])
+            if (ind1->path[i] == ind2->path[p])
                 matches_fw[i] = 1;
-            else if(ind1->chromosome[i] == ind2->chromosome[m])
+            else if(ind1->path[i] == ind2->path[m])
                 matches_bw[i] = 1;
         }
     }
@@ -165,72 +121,121 @@ int allineate_paths(GENETIC_SETUP* gen, GENETIC_INDIVIDUAL *ind1, GENETIC_INDIVI
 }
 
 void crossover(Instance *inst, GENETIC_SETUP *gen){
-    // FIND CANDIDATES FOR EACH CHAMPION
-    // GRASP_Framework *candidates = malloc(sizeof(GRASP_Framework)*inst->grasp->size);
-    // double *probabilities = malloc(sizeof(double)*inst->grasp->size);
-    // for (int i=1; i <= gen->population_size; i++){
-    //     probabilities[i] =grasp 1/pow(2,i);
-    // }
-    // for (int i=0; i<inst->grasp->size; i++){
-    //     init_grasp(& candidates[i], probabilities, gen->population_size);
-    // }
-    gen->windows_size = (int) inst->nnodes/10;
+    DEBUG_COMMENT("heuristic::crossover", "Finding candidates");
 
     int rnd;
     for(int i=0; i<gen->population_size; i++){
-        const GENETIC_INDIVIDUAL* champion =(const GENETIC_INDIVIDUAL*) &gen->parents[get_solution(gen->parents->grasp_individuals)];
-        // get random from population not equal to any of the champions
+        int ch=get_solution(gen->parents->grasp_individuals);
+        GENETIC_INDIVIDUAL* champion = &gen->parents->individual[ch];
+        DEBUG_COMMENT("heuristic::crossover", "Finding candidates for champion %d -> %d", i, ch);
+
         do{
             rnd = rand() % gen->population_size;
-        }while(inGrasp(inst->grasp, rnd));
-        const GENETIC_INDIVIDUAL* chosen =(const GENETIC_INDIVIDUAL*) &gen->parents[rnd];
+        }while(inGrasp(gen->parents->grasp_individuals, rnd));
 
-        // find starting nnodes
+        GENETIC_INDIVIDUAL* chosen = &gen->parents->individual[rnd];
+        DEBUG_COMMENT("heuristic::crossover", "Chosen %d", rnd);
+
+        int s1=0, s2=0;
+        DEBUG_COMMENT("heuristic::crossover", "Finding starting nodes %d", inst->starting_node);
+        for(; champion->path[s1] != inst->starting_node; s1++);
+        for(; chosen->path[s2] != inst->starting_node; s2++);
+
+        DEBUG_COMMENT("heuristic::crossover", "Starting crossover");
+        double prob_cross[] = {0.65, 0.35};
+        int size = 0;
+        int *inserted = calloc(inst->nnodes, sizeof(int));
+
+        GENETIC_INDIVIDUAL child;
+        child.path = malloc(sizeof(int) * inst->nnodes);
+        child.fitness = 0;
+        child.nnodes = inst->nnodes;
+
         int i1=0, i2=0;
-        for(;chosen->chromosome[i1]!=inst->starting_node; i1++);
-        for(;champion->chromosome[i2]!=inst->starting_node; i2++);
+        int p1 = s1 + i1;
+        int p2 = s2 + i2;
+        child.path[size] = champion->path[p1];
+        inserted[champion->path[p1]] = 1;
+        i1++; i2++; size++;
+        p1 = (s1 + i1) % child.nnodes;
+        p2 = (s2 + i2) % child.nnodes;
 
-        double prob_cross[]={0.65, 0.35};
-        int size=0;
-        int *inserted=calloc(inst->nnodes, sizeof(int));
-        GENETIC_INDIVIDUAL *child = malloc(sizeof(GENETIC_INDIVIDUAL));
-        child->chromosome = malloc(sizeof(int)*inst->nnodes);
-        child->fitness = 0;
-        gen->children->individual[i] = *child;
-        while(size<inst->nnodes && i1<inst->nnodes &&i2<inst->nnodes){
-            for(;inserted[champion->chromosome[i1]]==1 && i1<inst->nnodes; i1++);
-            for(;inserted[chosen->chromosome[i2]]==1 && i2<inst->nnodes; i2++);
+        while(size < inst->nnodes && i1 < inst->nnodes && i2 < inst->nnodes){
+            for(; inserted[champion->path[p1]] == 1 && i1 < inst->nnodes; i1++) p1 = (s1 + i1) % child.nnodes;
+            for(; inserted[chosen->path[p2]] == 1 && i2 < inst->nnodes; i2++) p2 = (s2 + i2) % child.nnodes;
 
-            if (rand() % 100 < prob_cross[0]*100){
-                child->chromosome[size]=champion->chromosome[i1];
-                inserted[champion->chromosome[i1]]=1;
-                i1++;
-            }else{
-                child->chromosome[size]=chosen->chromosome[i2];
-                inserted[chosen->chromosome[i2]]=1;
-                i2++;
+            if (rand() % 100 < prob_cross[0] * 100){
+                child.path[size] = champion->path[p1];
+                inserted[champion->path[p1]] = 1;
+                i1++; p1 = (s1 + i1) % child.nnodes;
+            } else {
+                child.path[size] = chosen->path[p2];
+                inserted[chosen->path[p2]] = 1;
+                i2++; p2 = (s2 + i2) % child.nnodes;
             }
             size++;
         }
+        DEBUG_COMMENT("heuristic::crossover", "Exit first while");
+        DEBUG_COMMENT("heuristic::crossover", "Child generated");
+        DEBUG_COMMENT("heuristic::crossover", "size is %d", size);
+        DEBUG_COMMENT("heuristic::crossover", "i1 is %d", i1);
+        DEBUG_COMMENT("heuristic::crossover", "i2 is %d", i2);
+        DEBUG_COMMENT("heuristic::crossover", "nnodes are %d", inst->nnodes);
 
-        while(size<inst->nnodes && i1<inst->nnodes){
-            for(;inserted[champion->chromosome[i1]]==1 && i1<inst->nnodes; i1++);
-            child->chromosome[size]=champion->chromosome[i1];
-            inserted[champion->chromosome[i1]]=1;
-            i1++;
+        while(size < inst->nnodes && i1 < inst->nnodes){
+            for(; inserted[champion->path[p1]] == 1 && i1 < inst->nnodes; i1++) p1=(s1 + i1) % child.nnodes;
+            if (i1 > inst->nnodes)
+                break;
+            DEBUG_COMMENT("heuristic::crossover", "Inserting s1 %d,  i1 %d , p1=%d", s1, i1, p1);
+            child.path[size] = champion->path[p1];
+            inserted[champion->path[p1]] = 1;
+            i1++; p1 = (i1 + s1) % child.nnodes;
+            size++;
+        }
+        DEBUG_COMMENT("heuristic::crossover", "Exit second while");
+        DEBUG_COMMENT("heuristic::crossover", "Child generated");
+        DEBUG_COMMENT("heuristic::crossover", "size is %d", size);
+        DEBUG_COMMENT("heuristic::crossover", "i1 is %d", i1);
+        DEBUG_COMMENT("heuristic::crossover", "i2 is %d", i2);
+        DEBUG_COMMENT("heuristic::crossover", "nnodes are %d", inst->nnodes);
+
+        while(size < inst->nnodes && i2 < inst->nnodes){
+            for(; inserted[chosen->path[p2]] == 1 && i2 < inst->nnodes; i2++)p2=(s2 + i2) % child.nnodes;
+            if (i2 > inst->nnodes)
+                break;
+            child.path[size] = chosen->path[p2];
+            inserted[chosen->path[p2]] = 1;
+            i2++; p2 = (i2 + s2) % child.nnodes;
             size++;
         }
 
-        while(size<inst->nnodes && i2<inst->nnodes){
-            for(;inserted[chosen->chromosome[i2]]==1 && i2<inst->nnodes; i2++);
-            child->chromosome[size]=chosen->chromosome[i2];
-            inserted[chosen->chromosome[i2]]=1;
-            i2++;
-            size++;
+        DEBUG_COMMENT("heuristic::crossover", "Exit third while");
+
+
+        DEBUG_COMMENT("heuristic::crossover", "Child generated");
+        DEBUG_COMMENT("heuristic::crossover", "size is %d", size);
+        DEBUG_COMMENT("heuristic::crossover", "i1 is %d", i1);
+        DEBUG_COMMENT("heuristic::crossover", "i2 is %d", i2);
+        DEBUG_COMMENT("heuristic::crossover", "nnodes are %d", inst->nnodes);
+        if(size != inst->nnodes){
+            ERROR_COMMENT("heuristic::crossover", "size is not nnodes");
+            exit(-1);
+        }
+        if(i1 < inst->nnodes){
+            ERROR_COMMENT("heuristic::crossover", "i1 is not nnodes");
+            exit(-1);
+        }
+        if(i2 < inst->nnodes){
+            ERROR_COMMENT("heuristic::crossover", "i2 is not nnodes");
+            exit(-1);
         }
 
-        child->fitness = calculateTourLenghtPath(inst,child->chromosome);
-        add_solution(gen->children->grasp_individuals, i, child->fitness);
+        child.fitness = calculateTourLenghtPath(inst, child.path);
+        add_solution(gen->children->grasp_individuals, i, child.fitness);
+
+        // Copy the child to the population and free the allocated memory
+        gen->children->individual[i] = child;
+        free(inserted);
     }
 }
 
@@ -248,37 +253,81 @@ void crossover(Instance *inst, GENETIC_SETUP *gen){
  *  Refinement?
  */
 int genetic_algorithm(Instance *inst){
-    // initiate population
-    GENETIC_SETUP *gen = &inst->genetic_setup;
-    init_population(inst, gen->parents);
+    DEBUG_COMMENT("heuristic::genetic_algorithm", "Starting genetic algorithm");
 
-    double *probabilities = malloc(sizeof(double)*gen->population_size);
-    for (int i=1; i <= gen->population_size; i++){
-        probabilities[i] = 1/pow(2,i);
+    // BASIC SETUP
+    // grasp size 6
+    int n_prob=6;
+    double *temp_prob=malloc(sizeof(double)*n_prob);
+    for (int i=1; i <= n_prob; i++){
+        if (i==1)
+            temp_prob[i-1] = 0.5;
+        else
+            temp_prob[i-1] = (double)(1/pow(2,i))+temp_prob[i-2];
+        DEBUG_COMMENT("heuristic::genetic_algorithm", "Grasp %d: %f", i, temp_prob[i-1]);
     }
-    gen->grasp_probabilities = probabilities;
-    gen->grasp_n_probabilities = gen->population_size;
+    GENETIC_SETUP *gen = inst->genetic_setup;
+    genetic_setup(gen, 1000, 100, (int)(inst->nnodes / 10) , n_prob, temp_prob);
+    // set best individual
+    gen->best_individual=malloc(sizeof(GENETIC_INDIVIDUAL));
+    genetic_individual(gen->best_individual, inst->nnodes, NULL, INFINITY);
+    DEBUG_COMMENT("heuristic::genetic_algorithm", "Best individual set");
+    temp_prob=NULL;
 
-    init_grasp(gen->parents->grasp_individuals, gen->grasp_probabilities, gen->grasp_n_probabilities);
+    // INIT FIRST GENERATION
+    gen->parents=malloc(sizeof(GENETIC_POPULATION));
+    genetic_population(gen->parents, gen);
+    DEBUG_COMMENT("heuristic::genetic_algorithm", "Generating first population");
+    for(int i=0;i<gen->population_size;i++){
+        int *tpath = malloc(sizeof(int)*inst->nnodes);
+        double ttl = generate_random_path(inst, tpath);
+        genetic_individual(
+                &gen->parents->individual[i],
+                inst->nnodes,
+                tpath,
+                ttl
+        );
+        //add_solution(gen->parents->grasp_individuals, i, gen->parents->individual[i].fitness);
+    }
 
-    // quick Refinement
+    // QUICK REFINEMENT
+    DEBUG_COMMENT("heuristic::genetic_algorithm", "Refining population");
     refine_pop(inst, gen->parents, 3);
+    for (int i=0; i<gen->population_size; i++){
+        add_solution(gen->parents->grasp_individuals, i, gen->parents->individual[i].fitness);
+    }
+    // DEBUG COMMENT grasp
+    DEBUG_COMMENT("heuristic::genetic_algorithm", "GRAPPA");
+    for (int i=0; i<gen->grasp_n_probabilities; i++){
+        DEBUG_COMMENT("heuristic::genetic_algorithm", "Grasp %d - %d: %f", i,gen->parents->grasp_individuals->solutions[i].solution , gen->parents->grasp_individuals->solutions[i].value);
+    }
 
-    for(int iter=0; iter < gen->generations; iter++){
-        init_population(inst, gen->children);
-        // generate children
+    for(int iter=0; iter < gen->ngenerations; iter++){
+        DEBUG_COMMENT("heuristic::genetic_algorithm", "Starting generation %d", iter);
+        if(gen->children){
+            ERROR_COMMENT("heuristic::genetic_algorithm", "children is not NULL");
+            exit(-1);
+        }
+        gen->children = malloc(sizeof(GENETIC_POPULATION));
+        genetic_population(gen->children, gen);
+
+        // GENERATE CHILDRENS
+        DEBUG_COMMENT("heuristic::genetic_algorithm", "Crossover");
         crossover(inst, gen);
 
         // refine children
+        DEBUG_COMMENT("heuristic::genetic_algorithm", "Refining children");
         refine_pop(inst, gen->children, 3);
 
-        destroy_population(gen->parents);
+        DEBUG_COMMENT("heuristic::genetic_algorithm", "Selecting best children");
+        genetic_destroy_population(gen->parents);
 
         gen->parents = gen->children;
     }
 
+    DEBUG_COMMENT("heuristic::genetic_algorithm", "Selecting best solution");
 
-    destroy_population(gen->parents);
-    destroy_population(gen->children);
+    genetic_destroy_population(gen->parents);
+    genetic_destroy_population(gen->children);
     return SUCCESS;
 }
