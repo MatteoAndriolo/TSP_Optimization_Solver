@@ -240,4 +240,11 @@ vgcore.*
 src/*.p
 plot/*
 bin/*
+concorde
+concorde_build
+**/*.old
 
+# coverage
+**/*.gcno
+.vscode
+mipopt.lp

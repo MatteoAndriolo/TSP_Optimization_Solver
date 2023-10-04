@@ -1,4 +1,3 @@
-
 ```mermaid
 flowchart TD
     A[path, ] -->B{stop?}

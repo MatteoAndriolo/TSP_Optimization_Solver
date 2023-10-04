@@ -23,6 +23,8 @@ typedef struct args
     double *grasp_probabilities;
     char str_probabilities[20];
     int toplot;
+    int tabu_size;
+    int tabu_tenure;
 } Args;
 
 static const char delimiter = '.';

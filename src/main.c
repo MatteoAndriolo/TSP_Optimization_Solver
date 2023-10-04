@@ -1,126 +1,101 @@
 /* TOFO ggc -o3 or -o4 -o bin/main src/main && bin/main */
-#include "vrp.h"
-#include "greedy.h"
-#include "parser.h"
-#include "logger.h"
-#include "plot.h"
-#include "utils.h"
-#include "heuristics.h"
+#include <math.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
-int main(int argc, char **argv)
-{
-	logger_init("example.log");
+#include "../include/greedy.h"
+#include "../include/logger.h"
+#include "../include/metaheuristic.h"
+#include "../include/parser.h"
+#include "../include/plot.h"
+#include "../include/tabu.h"
+#include "../include/utils.h"
+#include "../include/vrp.h"
 
-	// Parsing Arguments ------------------------------------------------------
-	INFO_COMMENT("main::parse_command_line", "Parsing arguments");
-	Args args;
-	parse_command_line(argc, argv, &args);
+int main(int argc, char **argv) {
+    logger_init("example.log");
 
-	// Read TLP library -------------------------------------------------------
-	INFO_COMMENT("main::main", "Reading input");
-	read_input(&args);
-	DEBUG_COMMENT("main::main", "Input read, nnodes= %d", args.nnodes);
+    // Parsing Arguments ------------------------------------------------------
+    Args args;
+    parse_command_line(argc, argv, &args);
 
-	// Generate distance matrix -----------------------------------------------
-	INFO_COMMENT("main::main", "Generating distance matrix");
-	double *distance_matrix = (double *)malloc(sizeof(double) * args.nnodes * args.nnodes);
-	generate_distance_matrix(&distance_matrix, args.nnodes, args.x, args.y, args.integer_costs);
-	log_distancematrix(distance_matrix, args.nnodes);
-	DEBUG_COMMENT("main::main", "Distance matrix generated");
+    // Read TLP library -------------------------------------------------------
+    read_input(&args);
 
-	// Parsing model ----------------------------------------------------------
-	int n_passagges;
-	char **passagges;
-	parse_model_name(args.model_type, &passagges, &n_passagges);
+    // Parsing model ----------------------------------------------------------
+    int n_passagges;
+    char **passagges;
+    parse_model_name(args.model_type, &passagges, &n_passagges);
 
-	// Generate instance ------------------------------------------------------
-	INFO_COMMENT("main::main", "Generating instance");
-	// Instance inst[args.num_instances];
+    // Manage model selection -------------------------------------------------
+    print_arguments(&args);
+    srand(args.randomseed);                  // set random seed
+    Instance instances[args.num_instances];  // array of instances
 
-	// Generate starting points -----------------------------------------------
-	INFO_COMMENT("main::main", "Generating starting points");
-	int *starting_points = (int *)malloc(sizeof(int) * args.num_instances);
-	generate_random_starting_nodes(starting_points, args.nnodes, args.num_instances, args.randomseed);
-	for (int i = 0; i < args.num_instances; i++)
-	{
-		DEBUG_COMMENT("main::main", "Starting point %d: %d", i, starting_points[i]);
-	}
+    // RUN_MAIN
+    for (int c_inst = 0; c_inst < args.num_instances; c_inst++) {
+        Instance *inst = &instances[c_inst];
+        instance_initialize(&instances[c_inst], args.timelimit,
+                args.integer_costs, args.nnodes, args.x, args.y,
+                args.n_probabilities, args.grasp_probabilities,
+                args.input_file, args.log_file);
 
-	// Manage model selection -------------------------------------------------
-	print_arguments(&args);
-	Instance instances[args.num_instances];
-	for (int c_inst = 0; c_inst < args.num_instances; c_inst++)
-	{
-		instances[c_inst].nnodes = args.nnodes;
-		instances[c_inst].x = args.x;
-		instances[c_inst].y = args.y;
-		instances[c_inst].node_start = starting_points[c_inst];
-		instances[c_inst].integer_costs = args.integer_costs;
-		instances[c_inst].randomseed = args.randomseed;
-		instances[c_inst].timelimit = args.timelimit;
-		instances[c_inst].tour_lenght = 0;
-		instances[c_inst].grasp_n_probabilities = args.n_probabilities;
-		instances[c_inst].grasp_probabilities = args.grasp_probabilities;
-		strcpy(instances[c_inst].input_file, args.input_file);
+        char title[40] = "\0";
 
-		int *path = malloc(sizeof(int) * args.nnodes);
-		generate_path(path, starting_points[c_inst], args.nnodes);
+        for (int j = 0; j < n_passagges; j++) {
+            INFO_COMMENT("main::main", "Generating instance %s", passagges[j]);
+            printf("Generating instance %s\n", passagges[j]);
+            if (strcmp(passagges[j], "em") == 0) {
+                if(inst->grasp->size>1){
+                    ERROR_COMMENT("main::main", "Extra mileage not implemented for grasp");
+                }
+                RUN_MAIN(extra_mileage(&instances[c_inst]));
+            } else if (strcmp(passagges[j], "2opt") == 0) {
+                RUN_MAIN(two_opt(inst, INFINITY));
+            } else if (strcmp(passagges[j], "tabu") == 0) {
+                if (j == 0) {
+                    FATAL_COMMENT("main::main",
+                            "Tabu search must be used with a starting point");
+                }
+                RUN_MAIN(two_opt_tabu(inst,INFINITY,initializeTabuList(10,4)));
+            } else if (strcmp(passagges[j], "vns") == 0) {
+                RUN_MAIN(vns_k(inst, 4));
+            } else if (strcmp(passagges[j], "sa") == 0) {
+                RUN_MAIN(simulated_annealling(inst, 1000));
+            } else if (strcmp(passagges[j], "gen") == 0) {
+                ERROR_COMMENT("main::main", "Genetic algorithm not implemented yet");
+            } else if (strcmp(passagges[j], "nn") == 0) {
+                RUN_MAIN(nearest_neighboor(inst));
+            } else if (strcmp(passagges[j], "test") == 0) {
+                testTabuList();
+            } else {
+                FATAL_COMMENT("main::main", "Model %s not recognized", passagges[j]);
+            }
 
-		char str_startingNode[20];
-		sprintf(str_startingNode, "%d-", starting_points[c_inst]);
+            saveBestPath(inst);
+            ffflush();
+            strcpy(title + strlen(title), passagges[j]);
 
-		char title[40] = "\0";
+            if (args.toplot) {
+                // print args toplot value
+                plot(inst->path, args.x, args.y, args.nnodes, title,
+                        inst->starting_node);
+            }
+            printf("tourlenght %lf , time elapsed %ld\n",
+                    inst->best_tourlength, time(NULL) - inst->tstart);
+            // printf("tourlenght %lf\n", get_tour_length(inst->path, args.nnodes,
+            // inst->distance_matrix));
 
-		for (int j = 0; j < n_passagges; j++)
-		{
-			INFO_COMMENT("main::main", "Generating instance");
-			if (strcmp(passagges[j], "nn") == 0)
-			{
-				nearest_neighboor(distance_matrix, path, instances[c_inst].nnodes, &instances[c_inst].tour_lenght);
-			}
-			else if (strcmp(passagges[j], "nng") == 0)
-			{
-				log_path(path, instances[c_inst].nnodes);
-				//parse_grasp_probabilities(args.grasp, instances[c_inst].grasp_probabilities, &instances[c_inst].grasp_n_probabilities);
-				nearest_neighboor_grasp(distance_matrix, path, instances[c_inst].nnodes, &(instances[c_inst].tour_lenght), instances[c_inst].grasp_probabilities, instances[c_inst].grasp_n_probabilities);
-			}
-			else if (strcmp(passagges[j], "em") == 0)
-			{
-				two_opt(distance_matrix, args.nnodes, path, &(instances[c_inst].tour_lenght), INFINITY);
-			}
-			else if (strcmp(passagges[j], "2opt") == 0)
-			{
-				two_opt(distance_matrix, instances[c_inst].nnodes, path, &(instances[c_inst].tour_lenght), INFINITY);
-			}
-			else if (strcmp(passagges[j], "vpn") == 0)
-			{
-				vnp_k(distance_matrix, path, instances[c_inst].nnodes, &instances[c_inst].tour_lenght, 5, 4);
-			}
+            if (j == n_passagges - 1) strcpy(title, "\0");
+            INFO_COMMENT("main::main", "Passagge %s completed with tl %lf", passagges[j], inst->best_tourlength);
+        }
+        // print tourlenght model time
 
-			if (strcmp(passagges[j], "tabu")==0)
-			{
-				if(j==0){
-					FATAL_COMMENT("main::main", "Tabu search must be used with a starting point");
-				} 
-				tabu_search(distance_matrix, path, instances[c_inst].nnodes,&instances[c_inst].tour_lenght, args.nnodes/10 );
-			}
-
-			strcpy(title+strlen(title), passagges[j]);	
-			//TODO fix title in all the different 
-			// like in grasp specify also the probabilities
-			// put first name of model then the rest
-			plot(path, args.x,args.y, args.nnodes, title, instances[c_inst].node_start); 
-			if(j==n_passagges-1) strcpy(title,"\0");
-
-		}
-		//sprintf(title + strlen(title), str_startingNode);
-		free(path);
-	}
-	free(distance_matrix);
-
-	OUTPUT_COMMENT("main", "End of the program");
-	logger_close();
-	return 0;
+        OUTPUT_COMMENT("main::main", "Tour lenght: %lf , time elapsed %ld",
+                inst->best_tourlength, time(NULL) - inst->tstart);
+        INFO_COMMENT("main::main", "Instance %d completed", c_inst);
+        instance_destroy(inst);
+        INFO_COMMENT("main::main", "Instance %d completed", c_inst);
+    }
 }
