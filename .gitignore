@@ -242,7 +242,8 @@ plot/*
 .vscode/
 bin/main
 data/ALL_tsp.tar.gz
-
+plot/*
+bin/*
 concorde
 concorde_build
 **/*.old

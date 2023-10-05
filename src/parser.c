@@ -1,91 +1,55 @@
-#include "parser.h"
+#include "../include/parser.h"
+#include <stdlib.h>
 
-void read_input(Args *args) // simplified CVRP parser, not all SECTIONs detected
-{
-
-    DEBUG_COMMENT("parser::read_input", "Opening the TSP file in reading mode");
-
+void read_input(Args *args) {
     FILE *fin = fopen(args->input_file, "r");
-
-    if (fin == NULL)
-    {
-        ERROR_COMMENT("parser::read_input", "File not found/not exists");
-        exit(1);
+    if (fin == NULL) {
+        FATAL_COMMENT("parser::read_input", "File %s not found/not exists", args->input_file);
     }
 
-    DEBUG_COMMENT("parser::read_input", "inizialize the variables");
-    args->nnodes = -1;
-    char line[1024];
-    int number_nodes = 0;
-    int reading_nodes = 0;
-    double node_x, node_y;
-    int node_number;
+    int number_nodes = -1;
     int node_saved = 0;
 
-    while (fgets(line, 1024, fin))
-    {
-        // Strip trailing newline
+    char line[1024];
+    while (fgets(line, 1024, fin)) {
         int len = strlen(line);
-        if (line[len - 1] == '\n')
-        {
+        if (line[len - 1] == '\n') {
             line[len - 1] = '\0';
         }
 
-        if (sscanf(line, "DIMENSION : %d", &number_nodes) == 1) // add optional blank or non blank
-        {
-
+        int node_number;
+        double node_x, node_y;
+        if (sscanf(line, "DIMENSION : %d", &number_nodes) == 1) {
             DEBUG_COMMENT("parser::read_input", "Number of nodes in the field DIMENSION: %d", number_nodes);
-            args->nnodes = number_nodes - 1;
+            args->nnodes = number_nodes ;
             args->x = (double *)malloc(number_nodes * sizeof(double));
             args->y = (double *)malloc(number_nodes * sizeof(double));
-
             DEBUG_COMMENT("parser::read_input", "Memory for x and y allocated");
-        }
-
-        if (reading_nodes)
-        {
-            /*
-            From each line take the node_num, allocate after a fixed memory
-            with calloc of size of nom_nodes, store inside pair the 2 coordinates
-            */
-
-            if (sscanf(line, "%d %lf %lf", &node_number, &node_x, &node_y) == 3)
-            {
-                int nn = node_number - 1;
-                args->x[nn] = node_x;
-                args->y[nn] = node_y;
-                DEBUG_COMMENT("parser::read_input", "[NodesIndex: ( x , y ) ] [%d: (%lf, %lf)]", nn, args->x[nn], args->y[nn]);
-                node_saved++;
-            }
-            else
-            {
-                DEBUG_COMMENT("parser::read_input", "Reached end of the file");
-                break;
-            }
-        }
-        else
-        {
-            if (strcmp(line, "NODE_COORD_SECTION") == 0)
-            {
-                DEBUG_COMMENT("parser::read_input", "Reading in the file the NODE_COORD_SECTION and start reading the node");
-                reading_nodes = 1;
-            }
-            else if (sscanf(line, "DIMENSION : %d", &number_nodes) == 1)
-            {
-                ERROR_COMMENT("parser::read_input", "The file does not contain any node");
+        } else if (strcmp(line, "NODE_COORD_SECTION") == 0) {
+            DEBUG_COMMENT("parser::read_input", "Reading in the file the NODE_COORD_SECTION and start reading the node");
+            while (fgets(line, 1024, fin)) {
+                if (sscanf(line, "%d %lf %lf", &node_number, &node_x, &node_y) == 3) {
+                    int nn = node_number - 1;
+                    args->x[nn] = node_x;
+                    args->y[nn] = node_y;
+                    node_saved++;
+                } else {
+                    DEBUG_COMMENT("parser::read_input", "Reached end of the file");
+                    break;
+                }
             }
         }
     }
 
-    if (number_nodes != node_saved)
-    {
-        WARNING_COMMENT("parser::read_input", "field DIMENTION != real number of nodes in the file");
+    fclose(fin);
+
+    if (number_nodes != node_saved) {
+        WARNING_COMMENT("parser::read_input", "field DIMENSION != real number of nodes in the file");
     }
 
     INFO_COMMENT("parser::read_input", "Reading is finished, close the file");
-
-    fclose(fin);
 }
+
 
 void print_arguments(const Args *args)
 {
@@ -93,15 +57,17 @@ void print_arguments(const Args *args)
     printf("-input %s\n", args->input_file);
     printf("-m %s\n", args->model_type);
     printf("--seed %d\n", args->randomseed);
-    printf("--num_instances %d\n", args->num_instances);
+    printf("--numinstances %d\n", args->num_instances);
     if (strcmp(args->grasp, "1") != 0)
-        printf("--grasp %s\n", args->grasp);
+        for (int i = 0; i < args->n_probabilities; i++)
+            printf("--grasp %lf\n", args->grasp_probabilities[i]);
     printf("----------------------------------------------------------------------------------------------\n\n");
     ffflush();
 }
 
 void parse_model_name(char *model_type, char ***passagges, int *n_passagges)
 {
+    // given a string like "model1.model2.model3" it returns an array of strings
     (*n_passagges) = 0;
     int length = strlen(model_type);
     for (int i = 0; i < length; i++)
@@ -131,6 +97,10 @@ void parse_command_line(int argc, char **argv, Args *args)
     args->integer_costs = 0;
     args->randomseed = 1234;
     args->timelimit = 3600.0;
+    args->toplot = 0;
+    args->n_probabilities = 1;
+    args->grasp_probabilities=(double*)malloc(sizeof(double));
+    args->grasp_probabilities[0]=1;
     strcpy(args->input_file, "\0");
     strcpy(args->log_file, "\0");
     strcpy(args->grasp, "1");
@@ -156,7 +126,6 @@ void parse_command_line(int argc, char **argv, Args *args)
             args->randomseed = abs(atoi(argv[++i]));
             continue;
         } // random seed
-          // input file
         if ((strcmp(argv[i], "-file") == 0) | (strcmp(argv[i], "-input") == 0) | (strcmp(argv[i], "-f") == 0))
         {
             strcpy(args->input_file, argv[++i]);
@@ -165,17 +134,24 @@ void parse_command_line(int argc, char **argv, Args *args)
         } // input file
         if ((strcmp(argv[i], "--grasp") == 0) | (strcmp(argv[i], "-g") == 0))
         {
+            // clean default values
+            args->n_probabilities=0;
+            free(args->grasp_probabilities);
+            args->grasp_probabilities=(double*)calloc(10, sizeof(double));
+            // start parsing
             strcpy(args->grasp, argv[++i]);
-            parse_grasp_probabilities(args->grasp, &args->probabilities, &args->n_probabilities);
+            parse_grasp_probabilities(args->grasp, args->grasp_probabilities, &args->n_probabilities);
+
             for (int i = 1; i < args->n_probabilities; i++)
             {
                 if (i == 0)
-                    sprintf(args->str_probabilities, "%.1f_", args->probabilities[0]);
+                    sprintf(args->str_probabilities, "%.1f_", args->grasp_probabilities[0]);
                 else if (i == args->n_probabilities - 1)
-                    sprintf(args->str_probabilities + strlen(args->str_probabilities), "%.1f", args->probabilities[i]);
+                    sprintf(args->str_probabilities + strlen(args->str_probabilities), "%.1f", args->grasp_probabilities[i]);
                 else
-                    sprintf(args->str_probabilities + strlen(args->str_probabilities), "%.1f_", args->probabilities[i] - args->probabilities[i - 1]);
+                    sprintf(args->str_probabilities + strlen(args->str_probabilities), "%.1f_", args->grasp_probabilities[i] - args->grasp_probabilities[i - 1]);
             }
+
             continue;
         }
         if ((strcmp(argv[i], "--maxtime") == 0) | (strcmp(argv[i], "--time") == 0))
@@ -183,7 +159,7 @@ void parse_command_line(int argc, char **argv, Args *args)
             args->timelimit = atof(argv[++i]);
             continue;
         } // total time limit
-        if ((strcmp(argv[i], "-n") == 0) | (strcmp(argv[i], "--numinstnces") == 0))
+        if ((strcmp(argv[i], "-n") == 0) | (strcmp(argv[i], "--numinstances") == 0))
         {
             args->num_instances = atoi(argv[++i]);
         }
@@ -192,43 +168,58 @@ void parse_command_line(int argc, char **argv, Args *args)
             help = 1;
             continue;
         } // help
-
-        // if ( strcmp(argv[i],"-memory") == 0 ) { inst->available_memory = atoi(argv[++i]); continue; }	// available memory (in MB)
-        // if ( strcmp(argv[i],"-node_file") == 0 ) { strcpy(inst->node_file,argv[++i]); conggtinue; }		// cplex's node file
-        // if ( strcmp(argv[i],"-max_nodes") == 0 ) { inst->max_nodes = atoi(argv[++i]); continue; } 		// max n. of nodes
-        // if ( strcmp(argv[i],"-cutoff") == 0 ) { inst->cutoff = atof(argv[++i]); continue; }				// master cutoff
+        if (strcmp(argv[i], "--plot") == 0 )
+        {
+            args->toplot = 1;
+            printf("PUTTING PLOTTING AT 1");
+        }
     }
 
     if (help)
         exit(1);
 }
 
-void parse_grasp_probabilities(char *grasp, double **probabilities, int *n_probabilities)
+void parse_grasp_probabilities(char *grasp, double *probabilities, int *n_probabilities)
 {
-    (*n_probabilities) = 0;
+    // clean default values
+    *n_probabilities=0;
+
+    //setup
+    char delimiter = '.';
+    *n_probabilities = 0;
     int length = strlen(grasp);
-    for (int i = 0; i < length; i++)
+    int cur_ind=0;
+    int i;
+    DEBUG_COMMENT("parser::parser_grasp_probabilities", "grasp=%s", grasp);
+    for( i = 0; i < length; i++)
         if (grasp[i] == delimiter)
         {
-            (*n_probabilities)++;
             grasp[i] = '\0';
+            sscanf(grasp + cur_ind, "%lf", &probabilities[*n_probabilities]);
+            DEBUG_COMMENT("parser::parser_grasp_probabilities", "probabilities[%d]=%lf vs %s", *n_probabilities, probabilities[*n_probabilities], grasp + cur_ind);
+            cur_ind += strlen(grasp + cur_ind) + 1;
+            (*n_probabilities)++;
         }
+    sscanf(grasp + cur_ind, "%lf", &probabilities[*n_probabilities]);
+    DEBUG_COMMENT("parser::parser_grasp_probabilities", "probabilities[%d]=%lf vs %s", *n_probabilities, probabilities[*n_probabilities], grasp + cur_ind);
+    cur_ind += strlen(grasp + cur_ind) + 1;
     (*n_probabilities)++;
-    double *p = malloc((*n_probabilities) * sizeof(double));
+    DEBUG_COMMENT("parser::parser_grasp_probabilities", "n_probabilities=%d", *n_probabilities);
 
-    int ind = 0;
-    int sum = 0;
+    // normalize probabilities
+    double sum = 0;
     for (int i = 0; i < *n_probabilities; i++)
     {
-        sscanf(grasp + ind, "%lf", &(p[i]));
-        ind += strlen(grasp + ind) + 1;
-        // p[i]=strtod(t, t+strlen(t));
-        sum += p[i];
+        sum += probabilities[i];
     }
-    for (int i = 0; i < (*n_probabilities); i++)
-        p[i] /= sum;
-    for (int i = 1; i < (*n_probabilities); i++)
-        p[i] = p[i - 1] + p[i];
-
-    *probabilities = p;
+    for (int i = 0; i < *n_probabilities; i++)
+    {
+        probabilities[i] /= sum;
+    }
+    DEBUG_COMMENT("parser::parser_grasp_probabilities", "probabilities[%d]=%lf", 0, probabilities[0]);
+    for (int i = 1; i < *n_probabilities; i++)
+    {
+        probabilities[i] += probabilities[i - 1];
+        DEBUG_COMMENT("parser::parser_grasp_probabilities", "probabilities[%d]=%lf", i, probabilities[i]);
+    }
 }

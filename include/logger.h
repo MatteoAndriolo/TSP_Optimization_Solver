@@ -4,10 +4,15 @@
 #ifndef PRODUCTION
 #define DEBUG_COMMENT(position, ...) log_message(DEBUG, position, __VA_ARGS__)
 #define INFO_COMMENT(position, ...) log_message(INFO, position, __VA_ARGS__)
-#define WARNING_COMMENT(position, ...) log_message(WARNING, position, __VA_ARGS__)
+#define WARNING_COMMENT(position, ...) \
+  log_message(WARNING, position, __VA_ARGS__)
 #define ERROR_COMMENT(position, ...) log_message(ERROR, position, __VA_ARGS__)
-#define CRITICAL_COMMENT(position, ...) log_message(CRITICAL, position, __VA_ARGS__)
+#define CRITICAL_COMMENT(position, ...) \
+  log_message(CRITICAL, position, __VA_ARGS__)
 #define OUTPUT_COMMENT(position, ...) log_message(OUTPUT, position, __VA_ARGS__)
+#define FATAL_COMMENT(position, ...)         \
+  log_message(FATAL, position, __VA_ARGS__); \
+  exit(1);
 #else
 #define DEBUG_COMMENT(position, ...)
 #define INFO_COMMENT(position, ...) log_message(INFO, position, __VA_ARGS__)
@@ -15,23 +20,25 @@
 #define ERROR_COMMENT(position, ...) log_message(ERROR, position, __VA_ARGS__)
 #define CRITICAL_COMMENT(position, ...)
 #define OUTPUT_COMMENT(position, ...) log_message(OUTPUT, position, __VA_ARGS__)
+#define FATAL_COMMENT(position, ...)         \
+  log_message(FATAL, position, __VA_ARGS__); \
+  exit(1);
 #endif
 
-#include <stdio.h>
 #include <stdarg.h>
-#include <time.h>
+#include <stdio.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
-#include "vrp.h"
 
-typedef enum
-{
-    ERROR,
-    WARNING,
-    CRITICAL,
-    DEBUG,
-    INFO,
-    OUTPUT,
+typedef enum {
+  ERROR,
+  WARNING,
+  CRITICAL,
+  DEBUG,
+  INFO,
+  OUTPUT,
+  FATAL,
 } LogLevel;
 
 /**
@@ -42,14 +49,17 @@ typedef enum
 void logger_init(const char *log_filename);
 
 /**
- * Logs a message at the given log level, including the name of the file and function where the message is logged.
+ * Logs a message at the given log level, including the name of the file and
+ * function where the message is logged.
  *
  * @param level the log level of the message
- * @param namefile_and_func a string containing the name of the file and function where the message is logged
+ * @param namefile_and_func a string containing the name of the file and
+ * function where the message is logged
  * @param format a printf-style format string for the log message
  * @param ... variable arguments corresponding to the format string
  */
-void log_message(LogLevel level, const char *namefile_and_func, const char *format, ...);
+void log_message(LogLevel level, const char *namefile_and_func,
+                 const char *format, ...);
 
 /**
  * Flushes the output buffer of the log file.
@@ -79,14 +89,15 @@ char *getPath(const int *path, int nnodes);
 void log_distancematrix(const double *distance_matrix, int nnodes);
 
 /**
- * Logs the output of the given instance, including the tour and the total tour length.
- *
- * @param inst a pointer to the instance to be logged
+ * Closes the log file.
  */
+void logger_close();
+
 void log_output_inst(const Instance *inst);
 
 /**
- * Logs the output of the given instance, including the tour and the total tour length.
+ * Logs the output of the given instance, including the tour and the total tour
+ * length.
  *
  * @param inst a pointer to the instance to be logged
  * @param zbest the best known solution
@@ -96,7 +107,7 @@ void log_output_inst(const Instance *inst);
  * @param input_file the input file
  *
  */
-void log_output(int model_type, int node_start, double zbest, double timelimit, int randomseed, int nnodes, char *input_file);
+void log_output(int model_type, int node_start, double zbest, double timelimit,
+                int randomseed, int nnodes, char *input_file);
 
-char *getPathDBL(const double *path, int nnodes);
 #endif

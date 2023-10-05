@@ -1,6 +1,6 @@
 #ifndef PLOT_H
 #define PLOT_H
-#include "vrp.h"
+#include "../include/vrp.h"
 
 /**
  * Plot the path
@@ -12,6 +12,7 @@
  * @param title the title of the plot
  * @param starting_node the starting node
  */
-void plot(const int *path, const double *x, const double *y, const int nnodes, const char *title, const int starting_node);
+void plot(const int *path, const double *x, const double *y, const int nnodes,
+          const char *title, const int starting_node);
 
 #endif
