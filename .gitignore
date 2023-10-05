@@ -246,4 +246,7 @@ plot/*
 bin/*
 concorde
 concorde_build
+**/*.lp
 **/*.old
+obj/
+**/*.gcno
