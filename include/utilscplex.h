@@ -3,12 +3,10 @@
 #include <immintrin.h>
 #include <math.h>
 #include "logger.h"
+#include "vrp.h"
+//#include <cplex.h>
+#include "../tmpcplex/cplex.h"
 
-/**
- * @brief a set of random starting nodes.
- * @param err The error message to print.
- */
-void print_error(const char *err);
 /**
  * @brief the starting node with the first node in the path
  * @param i The index of the node to start the path at.
@@ -37,7 +35,7 @@ void xstarToPath(Instance *inst, double *xstar, int dim_xstar, int *path);
  * @brief a set of random starting nodes.
  * @param inst The instance of the problem to be solved.
  */
-void create_xheu(Instance *inst, double *xheu, int *path);
+void create_xheu(Instance *inst, double *xheu);
 
 /**
  * @brief generate the mip start for the CPLEX problem
@@ -80,4 +78,22 @@ void eliminate_radius_edges(CPXENVptr env, CPXLPptr lp, Instance *inst, double *
  * @param xheu the solution vector
  */
 void repristinate_radius_edges(CPXENVptr env, CPXLPptr lp, Instance *inst, double *xheu);
+
+/**
+ * @brief generate the variables to be eliminate from the current solution
+ * @param env CPLEX environment
+ * @param lp CPLX problem
+ * @param inst the instance of the problem to be solved
+ */
+int add_subtour_constraints(Instance *inst, CPXENVptr env, CPXLPptr lp);
+
+/**
+ * @brief build_sol
+ * @param xstar solution vector
+ * @param inst instance of the problem to be solved
+ * @param succ successor vector
+ * @param comp component vector
+ * @param ncomp number of components
+ */
+void build_sol(const double *xstar, Instance *inst, int *succ, int *comp, int *ncomp);
 #endif

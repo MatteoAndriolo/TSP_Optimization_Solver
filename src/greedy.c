@@ -6,6 +6,12 @@
 #include "../include/refinement.h"
 #include "../include/utils.h"
 
+void swapPathPoints(Instance *inst, int i, int j) {
+    int temp = inst->path[i];
+    inst->path[i] = inst->path[j];
+    inst->path[j] = temp;
+}
+
 int nearest_neighboor(Instance *inst) {
   INFO_COMMENT("nearest_neighboor", "start nearest neighboor");
   int current_node;
@@ -18,14 +24,14 @@ int nearest_neighboor(Instance *inst) {
   for (int j = 1; j < inst->nnodes; j++) {
     current_node = inst->path[j - 1];
     for (int k = j; k < inst->nnodes; k++) {
-      dist = getDistanceNodes(inst, current_node, inst->path[k]);
-      add_solution(grasp, k, dist);
+      dist = INSTANCE_getDistanceNodes(inst, current_node, inst->path[k]);
+      GRASP_addSolution(grasp, k, dist);
     }
 
-    swapPathPoints(inst, j, get_solution(grasp));
-    reset_solutions(grasp);
+    swapPathPoints(inst, j, GRASP_getSolution(grasp));
+    GRASP_resetSolutions(grasp);
   }
-  calculateTourLength(inst);
+  INSTANCE_calculateTourLength(inst);
 
   ASSERTINST(inst);
   return SUCCESS;
@@ -40,20 +46,20 @@ int extra_mileage(Instance *inst) {
   int max_index = -1;
 
   for (int i = 1; i < inst->nnodes; i++) {
-    tdist = getDistancePos(inst, 0, i);
+    tdist = INSTANCE_getDistancePos(inst, 0, i);
     if (tdist > max_distance && tdist != INFINITY) {
       max_distance = tdist;
       max_index = i;
     }
   }
-  tdist = getDistancePos(inst, 0, inst->nnodes - 1);
+  tdist = INSTANCE_getDistancePos(inst, 0, inst->nnodes - 1);
   if (tdist > max_distance && tdist != INFINITY) {
     max_distance = tdist;
     max_index = inst->nnodes - 1;
   }
 
   swapPathPoints(inst, 1, max_index);
-  setTourLenght(inst, 2 * max_distance);
+  INSTANCE_setTourLenght(inst, 2 * max_distance);
   // write nodes
 
   //--------------- START SEARCH -------------------------------------------
@@ -72,7 +78,7 @@ int extra_mileage(Instance *inst) {
     for (int j = 0; j < i - 1; j++) {
       for (int k = i; k < inst->nnodes; k++) {
         new_triangular_sum =
-            getDistancePos(inst, j, k) + getDistancePos(inst, j + 1, k);
+            INSTANCE_getDistancePos(inst, j, k) + INSTANCE_getDistancePos(inst, j + 1, k);
         if (new_triangular_sum < min_nts) {
           min_nts = new_triangular_sum;
           node_3[0] = j;
@@ -85,7 +91,7 @@ int extra_mileage(Instance *inst) {
 
     for (int k = i; k < inst->nnodes; k++) {
       new_triangular_sum =
-          getDistancePos(inst, 0, k) + getDistancePos(inst, i - 1, k);
+          INSTANCE_getDistancePos(inst, 0, k) + INSTANCE_getDistancePos(inst, i - 1, k);
       if (new_triangular_sum < min_nts) {
         min_nts = new_triangular_sum;
         node_3[0] = 0;
@@ -95,9 +101,9 @@ int extra_mileage(Instance *inst) {
       }
       CHECKTIME(inst, false);
     }
-    double new_cost = min_nts - getDistancePos(inst, node_3[0], node_3[1]);
+    double new_cost = min_nts - INSTANCE_getDistancePos(inst, node_3[0], node_3[1]);
 
-    addToTourLenght(inst, new_cost);
+    INSTANCE_addToTourLenght(inst, new_cost);
 
     // SWAP - ADJUST PATH ----------------------------------------------------
     // Save the value at position j in a temporary variable

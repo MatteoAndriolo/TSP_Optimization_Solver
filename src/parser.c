@@ -44,7 +44,7 @@ void read_input(Args *args) {
     fclose(fin);
 
     if (number_nodes != node_saved) {
-        WARNING_COMMENT("parser::read_input", "field DIMENSION != real number of nodes in the file");
+        FATAL_COMMENT("parser::read_input", "field DIMENSION != real number of nodes in the file");
     }
 
     INFO_COMMENT("parser::read_input", "Reading is finished, close the file");
@@ -91,12 +91,11 @@ void parse_model_name(char *model_type, char ***passagges, int *n_passagges)
 
 void parse_command_line(int argc, char **argv, Args *args)
 {
-    // defaults
-    // strcpy(args->model_type, "\0");
+    // DEFAULTS
     args->num_instances = 1;
     args->integer_costs = 0;
-    args->randomseed = 1234;
-    args->timelimit = 3600.0;
+    args->randomseed = -1;
+    args->timelimit = -1;
     args->toplot = 0;
     args->n_probabilities = 1;
     args->grasp_probabilities=(double*)malloc(sizeof(double));
@@ -111,39 +110,32 @@ void parse_command_line(int argc, char **argv, Args *args)
     for (int i = 1; i < argc; i++)
     {
         // model type
-        if ((strcmp(argv[i], "--model") == 0) | (strcmp(argv[i], "-m") == 0))
-        {
+        if ((strcmp(argv[i], "--model") == 0) | (strcmp(argv[i], "-m") == 0)) {
             strcpy(args->model_type, argv[++i]);
             continue;
         } // model type
-        if (strcmp(argv[i], "--int") == 0)
-        {
+        if (strcmp(argv[i], "--int") == 0) {
             args->integer_costs = 1;
             continue;
-        } // inteher costs
-        if (strcmp(argv[i], "--seed") == 0)
-        {
+        } // integer costs
+        if (strcmp(argv[i], "--seed") == 0) {
             args->randomseed = abs(atoi(argv[++i]));
             continue;
-        } // random seed
-        if ((strcmp(argv[i], "-file") == 0) | (strcmp(argv[i], "-input") == 0) | (strcmp(argv[i], "-f") == 0))
-        {
+        }
+        if ((strcmp(argv[i], "-file") == 0) | (strcmp(argv[i], "-input") == 0) | (strcmp(argv[i], "-f") == 0)) {
             strcpy(args->input_file, argv[++i]);
             fflush(stdout);
             continue;
         } // input file
-        if ((strcmp(argv[i], "--grasp") == 0) | (strcmp(argv[i], "-g") == 0))
-        {
-            // clean default values
+        if ((strcmp(argv[i], "--grasp") == 0) | (strcmp(argv[i], "-g") == 0)) {
             args->n_probabilities=0;
             free(args->grasp_probabilities);
             args->grasp_probabilities=(double*)calloc(10, sizeof(double));
-            // start parsing
+            // PARSE
             strcpy(args->grasp, argv[++i]);
             parse_grasp_probabilities(args->grasp, args->grasp_probabilities, &args->n_probabilities);
 
-            for (int i = 1; i < args->n_probabilities; i++)
-            {
+            for (int i = 1; i < args->n_probabilities; i++) {
                 if (i == 0)
                     sprintf(args->str_probabilities, "%.1f_", args->grasp_probabilities[0]);
                 else if (i == args->n_probabilities - 1)
@@ -151,27 +143,31 @@ void parse_command_line(int argc, char **argv, Args *args)
                 else
                     sprintf(args->str_probabilities + strlen(args->str_probabilities), "%.1f_", args->grasp_probabilities[i] - args->grasp_probabilities[i - 1]);
             }
-
             continue;
         }
-        if ((strcmp(argv[i], "--maxtime") == 0) | (strcmp(argv[i], "--time") == 0))
-        {
+        if ((strcmp(argv[i], "--maxtime") == 0) | (strcmp(argv[i], "--time") == 0)) {
             args->timelimit = atof(argv[++i]);
             continue;
         } // total time limit
-        if ((strcmp(argv[i], "-n") == 0) | (strcmp(argv[i], "--numinstances") == 0))
-        {
+        if ((strcmp(argv[i], "-n") == 0) | (strcmp(argv[i], "--numinstances") == 0)) {
             args->num_instances = atoi(argv[++i]);
+            continue;
         }
-        if ((strcmp(argv[i], "-help") == 0) | (strcmp(argv[i], "--help") == 0))
-        {
+        if ((strcmp(argv[i], "-help") == 0) | (strcmp(argv[i], "--help") == 0)) {
             help = 1;
             continue;
         } // help
-        if (strcmp(argv[i], "--plot") == 0 )
-        {
+        if (strcmp(argv[i], "--plot") == 0 ) {
             args->toplot = 1;
             printf("PUTTING PLOTTING AT 1");
+        }
+        // CPLEX
+        if (strcmp(argv[i], "--cperchf") == 0 ){
+            args->cplex_perchf = atof(argv[++i]);
+            if (args->cplex_perchf < 1 || args->cplex_perchf > 100){
+                FATAL_COMMENT("parser::parse_command_line", "cplex_perchf must be in [1,100]");
+            }
+            continue;
         }
     }
 

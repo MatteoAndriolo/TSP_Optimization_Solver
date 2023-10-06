@@ -50,7 +50,7 @@ int simulated_annealling(Instance *inst, double k_max) {
       restoreInstState(inst, path, tour_length);
     } else {  // accepted
       backupInstState(inst, path, &tour_length);
-      pathCheckpoint(inst);
+      INSTANCE_pathCheckpoint(inst);
     }
     CHECKTIME(inst, false);
   }
@@ -73,8 +73,8 @@ int vns_k(Instance *inst, int k)
         INFO_COMMENT("heuristics.c:vnp_k", "starting the heuristics loop for vnp_k, iteration %d", c);
         RUN(kick_function(inst, k));
         RUN(two_opt_tabu(inst, 100, initializeTabuList(20,7)));
-        calculateTourLength(inst);
-        pathCheckpoint(inst);
+        INSTANCE_calculateTourLength(inst);
+        INSTANCE_pathCheckpoint(inst);
         CHECKTIME(inst, false);
     }
     INFO_COMMENT("heuristics.c:vnp_k", "finished the huristics loop for vnp_k");

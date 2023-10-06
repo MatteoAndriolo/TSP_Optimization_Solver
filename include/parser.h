@@ -25,6 +25,7 @@ typedef struct args
     int toplot;
     int tabu_size;
     int tabu_tenure;
+    double cplex_perchf;
 } Args;
 
 static const char delimiter = '.';

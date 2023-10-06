@@ -1,19 +1,31 @@
 CPLEXDIR=/opt/ibm/ILOG/CPLEX_Studio2211
-#CCDIR=/home/matteo/Documenti/OperationResearchLaboratory/concorde_build
-CCDIR=/opt/concorde 
+ifeq ($(wildcard /home/matteo/Documenti/OperationResearchLaboratory/concorde_build/concorde.h),)
+ifeq ($(wildcard /opt/concorde/concorde.h),)
+$(error "Error: concorde.h does not exist in either of the directories")
+else
+CCDIR = /opt/concorde
+endif
+else
+CCDIR = ./concorde_build
+endif
+
+CCDIR = ./concorde_build
+
+# CCDIR=/home/matteo/Documenti/OperationResearchLaboratory/concorde_build
+# CCDIR=/opt/concorde
 
 CC = gcc
 CFLAGS = -Wall -Werror -pedantic -I./include
-CFLAGS += -I${CPLEXDIR}/cplex/include/ilcplex -I${CPLEXDIR}/concert/includes -I${CCDIR}
 #CFLAGS += -g
+CFLAGS += -I${CPLEXDIR}/cplex/include/ilcplex -I${CPLEXDIR}/concert/includes -I${CCDIR}
 
-LDFLAGS = -lm -L${CPLEXDIR}/cplex/lib/x86-64_linux/static_pic -L${CPLEXDIR}/concert/lib/x86-64_linux/static_pic -L${CCDIR} -lilocplex -lcplex -lconcert -lpthread -ldl -lconcorde
+LDFLAGS = -lm -L${CPLEXDIR}/cplex/lib/x86-64_linux/static_pic -L${CPLEXDIR}/concert/lib/x86-64_linux/static_pic -L${CCDIR}
+LDFLAGS += -lilocplex -lcplex -lconcert -lpthread -ldl -lconcorde
 
-CFLAGS = -Wall -Werror -pedantic -I./include -g
 SRC_DIR = ./src
 OBJ_DIR = ./obj
 BIN_DIR = ./bin
-COVERAGE_DIR = ./coverage  # Directory for coverage data
+COVERAGE_DIR = ./coverage
 
 SRC_FILES = $(wildcard $(SRC_DIR)/*.c)
 OBJ_FILES = $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(SRC_FILES))
@@ -27,6 +39,7 @@ dir_guard=@mkdir -p $(@D)
 #all: CFLAGS += -fprofile-arcs -ftest-coverage
 #all: clean $(TARGET)
 all: $(TARGET)
+	@echo Using concorde.h from $(CCDIR)
 	mkdir -p plot
 
 $(TARGET): $(OBJ_FILES)
@@ -38,28 +51,28 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:
-	rm -rf $(OBJ_DIR)/*.o $(TARGET) script.p example.log
+	rm -rf $(OBJ_DIR)/*.o $(OBJ_DIR)/*.gcno $(TARGET) script.p example.log
 
 production: CFLAGS  += -DPRODUCTION -O3
 production: OPT := -O3
 production: all
 
-preprofiling : CFLAGS += -pg
-preprofiling : LDFLAGS += -pg
-preprofiling: OPT := -O0
-preprofiling: all
-
-profiling:
-	gprof $(TARGET) > profiling/output.txt
-	gprof ./bin/main | gprof2dot | dot -Tpng -o profiling/output.png
-#gprof2dot -f pstats output.txt | dot -Tpng -o plot/profiling.png
-
-
-
-coverage: CFLAGS += --coverage # Add coverage flags to CFLAGS
-coverage: clean $(TARGET)
-	mkdir -p $(COVERAGE_DIR)
-	lcov --capture --directory $(OBJ_DIR) --output-file ./coverage/coverage.info
-	genhtml $(COVERAGE_DIR)/coverage.info --output-directory ./coverage/coverage_report
-	#lcov --capture --directory $(OBJ_DIR) --output-file $(COVERAGE_DIR)/coverage.info
-	#genhtml $(COVERAGE_DIR)/coverage.info --output-directory $(COVERAGE_DIR)/coverage_report
+#preprofiling : CFLAGS += -pg
+#preprofiling : LDFLAGS += -pg
+#preprofiling: OPT := -O0
+#preprofiling: all
+#
+#profiling:
+#	gprof $(TARGET) > profiling/output.txt
+#	gprof ./bin/main | gprof2dot | dot -Tpng -o profiling/output.png
+##gprof2dot -f pstats output.txt | dot -Tpng -o plot/profiling.png
+#
+#
+#
+#coverage: CFLAGS += --coverage # Add coverage flags to CFLAGS
+#coverage: clean $(TARGET)
+#	mkdir -p $(COVERAGE_DIR)
+#	lcov --capture --directory $(OBJ_DIR) --output-file ./coverage/coverage.info
+#	genhtml $(COVERAGE_DIR)/coverage.info --output-directory ./coverage/coverage_report
+#	#lcov --capture --directory $(OBJ_DIR) --output-file $(COVERAGE_DIR)/coverage.info
+#	#genhtml $(COVERAGE_DIR)/coverage.info --output-directory $(COVERAGE_DIR)/coverage_report

@@ -3,15 +3,13 @@
 
 #include <getopt.h>
 #include <math.h>
-// #include <mutex>
-#include <concorde.h>
-#include <cplex.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-// #include <cplex.h>
+//#include <cplex.h>
+#include "../tmpcplex/cplex.h"
 #include <pthread.h>
 
 #include "errors.h"
@@ -25,6 +23,16 @@
 #define TICKS_PER_SECOND \
   1000.0  // cplex's ticks on Intel Core i7 quadcore @2.3GHZ
 #define INFTY 1e+30
+
+typedef enum{
+    SOLVER_BASE=0,
+    SOLVER_BENDER=1,
+    SOLVER_PATCHING_HEURISTIC = 2,
+    SOLVER_BRANCH_AND_CUT=3,
+    SOLVER_POSTINGHEU_UCUTFRACT = 4,
+    SOLVER_MH_HARDFIX=5,
+    SOLVER_MH_LOCBRANCH=6,
+}TSPSolvers;
 
 typedef struct {
   // execution parameters
@@ -50,45 +58,46 @@ typedef struct {
   double best_tourlength;  // best sol. available
 
   // GRASP parameters
-  // int grasp_n_probabilities;
-  // double *grasp_probabilities;
   GRASP_Framework *grasp;
 
-  // CPLEX
+  // TSP MODEL
+  int percentageHF;
+  TSPSolvers solver;
   CPXENVptr env;
   CPXLPptr lp;
-  CPXCALLBACKCONTEXTptr context;
+  double *edgeList;
+  int ncols;
 
   // global data
   char input_file[1000];  // input file
   char log_file[1000];    // output log file
 } Instance;
 
-void instance_initialize(Instance *inst, double max_time, int integer_costs,
+void INSTANCE_initialize(Instance *inst, double max_time, int integer_costs,
                          int nnodes, double *x, double *y,
                          int grasp_n_probabilities, double *grasp_probabilities,
                          char *input_file, char *log_file);
 
-void instance_destroy(Instance *inst);
+void INSTANCE_free(Instance *inst);
 
-void instance_generate_path(Instance *inst);
+void INSTANCE_generatePath(Instance *inst);
 
-void instance_generate_distance_matrix(Instance *inst);
+void INSTANCE_generateDistanceMatrix(Instance *inst);
 
 // ----------------------------------------------------------------------------
 // Distance related utils
 // ----------------------------------------------------------------------------
-double getDistancePos(Instance *inst, int x, int y);
+double INSTANCE_getDistancePos(Instance *inst, int x, int y);
 
-double getDistanceNodes(Instance *inst, int x, int y);
+double INSTANCE_getDistanceNodes(Instance *inst, int x, int y);
 
-double calculateTourLength(Instance *inst);
+double INSTANCE_calculateTourLength(Instance *inst);
 
-void setTourLenght(Instance *inst, double newLength);
+void INSTANCE_setTourLenght(Instance *inst, double newLength);
 
-void addToTourLenght(Instance *inst, double toAdd);
+void INSTANCE_addToTourLenght(Instance *inst, double toAdd);
 
-void saveBestPath(Instance *inst);
+void INSTANCE_saveBestPath(Instance *inst);
 
 int checkTime(Instance *inst, bool saveBest);
 
@@ -106,12 +115,12 @@ int checkTime(Instance *inst, bool saveBest);
 
 void swapPathPoints(Instance *inst, int i, int j);
 
-int pathCheckpoint(Instance *inst);
+int INSTANCE_pathCheckpoint(Instance *inst);
 
-int assertInst(Instance *inst);
+int INSTANCE_assert(Instance *inst);
 #define ASSERTINST(inst)   \
   do {                     \
-    RUN(assertInst(inst)); \
+    RUN(INSTANCE_assert(inst)); \
   } while (0)
 
 #endif /* VRP_H_ */

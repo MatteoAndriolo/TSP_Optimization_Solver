@@ -7,7 +7,7 @@
 
 #include "../include/utils.h"
 
-void instance_generate_path(Instance *inst) {
+void INSTANCE_generatePath(Instance *inst) {
     inst->path = malloc(inst->nnodes * sizeof(int));
     inst->best_path = malloc(inst->nnodes * sizeof(int));
     for (int i = 0; i < inst->nnodes; i++) {
@@ -24,11 +24,11 @@ void instance_generate_path(Instance *inst) {
         inst->path[j] = tmp;
     }
     memcpy(inst->best_path, inst->path, inst->nnodes * sizeof(int));
-    inst->tour_length = calculateTourLength(inst);
+    inst->tour_length = INSTANCE_calculateTourLength(inst);
     inst->best_tourlength = inst->tour_length;
 }
 
-void instance_generate_distance_matrix(Instance *inst) {
+void INSTANCE_generateDistanceMatrix(Instance *inst) {
     double* dm= malloc(inst->nnodes * inst->nnodes * sizeof(double));
     for (int i = 0; i < inst->nnodes; i++) {
         for (int j = 0; j < inst->nnodes; j++) {
@@ -41,7 +41,7 @@ void instance_generate_distance_matrix(Instance *inst) {
     inst->distance_matrix = dm;
 }
 
-void instance_initialize(Instance *inst, double max_time,
+void INSTANCE_initialize(Instance *inst, double max_time,
         int integer_costs, int nnodes,
         double *x, double *y, int grasp_n_probabilities,
         double *grasp_probabilities, char *input_file,
@@ -69,19 +69,19 @@ void instance_initialize(Instance *inst, double max_time,
     memcpy(inst->x,x,sizeof(double)*inst->nnodes);
     memcpy(inst->y,y,sizeof(double)*inst->nnodes);
     /* generate distance matrix */
-    instance_generate_distance_matrix(inst);
+    INSTANCE_generateDistanceMatrix(inst);
     /*
      * generate path -> store in path and backup in path_best
      * calulate tour lenght -> init tour lenght and best_tour
      */
-    instance_generate_path(inst);
+    INSTANCE_generatePath(inst);
 
     // Initialize mutex
     pthread_mutex_init(&inst->mutex_path, NULL);
 
     // Initialize GRASP parameters
     inst->grasp = (GRASP_Framework*) malloc(sizeof(GRASP_Framework));
-    init_grasp(inst->grasp, grasp_probabilities, grasp_n_probabilities);
+    GRASP_init(inst->grasp, grasp_probabilities, grasp_n_probabilities);
 
 
     inst->grasp->size = grasp_n_probabilities;
@@ -101,7 +101,7 @@ void instance_initialize(Instance *inst, double max_time,
 }
 
 
-void instance_destroy(Instance *inst) {
+void INSTANCE_free(Instance *inst) {
     if (inst) {
         if (inst->path) {
             free(inst->path);
@@ -144,6 +144,13 @@ void instance_destroy(Instance *inst) {
         if (pthread_mutex_destroy(&inst->mutex_path) != 0) {
             ERROR_COMMENT("instance_destroy", "mutex destroy failed");
         }
+
+        if (inst->edgeList!=NULL){
+            free(inst->edgeList);
+            inst->edgeList=NULL;
+            DEBUG_COMMENT("instance_destroy", "edgeList");
+        }
+
         //pthread_mutex_destroy(&inst->mutex_path);
         DEBUG_COMMENT("instance_destroy", "mutex destroyed");
     }
@@ -152,48 +159,33 @@ void instance_destroy(Instance *inst) {
     }
 }
 
-void swapPathPoints(Instance *inst, int i, int j) {
-    int temp = inst->path[i];
-    inst->path[i] = inst->path[j];
-    inst->path[j] = temp;
-}
 
-void swapAndShiftPath(Instance *inst, int i, int j) {
-    int temp =
-        inst->path[j];  // Save the value at position j in a temporary variable
-    for (int k = j; k > i; k--) {
-        inst->path[k] =
-            inst->path[k - 1];  // Shift all elements to the right from j to i+1
-    }
-    inst->path[i] = temp;  // Put the saved value from position j into position i
-}
-
-double calculateTourLength(Instance *inst) {
-    double tour_length = getDistancePos(inst, 0, inst->nnodes - 1);
+double INSTANCE_calculateTourLength(Instance *inst) {
+    double tour_length = INSTANCE_getDistancePos(inst, 0, inst->nnodes - 1);
     for (int i = 0; i < inst->nnodes - 1; i++) {
-        tour_length += getDistancePos(inst, i, i + 1);
+        tour_length += INSTANCE_getDistancePos(inst, i, i + 1);
     }
     inst->tour_length = tour_length;
     return tour_length;
 }
 
-double getDistancePos(Instance *inst, int x, int y) {
+double INSTANCE_getDistancePos(Instance *inst, int x, int y) {
     return inst->distance_matrix[inst->path[x] * inst->nnodes + inst->path[y]];
 }
 
-double getDistanceNodes(Instance *inst, int x, int y) {
+double INSTANCE_getDistanceNodes(Instance *inst, int x, int y) {
     return inst->distance_matrix[x * inst->nnodes + y];
 }
 
-void setTourLenght(Instance *inst, double newLength) {
+void INSTANCE_setTourLenght(Instance *inst, double newLength) {
     inst->tour_length = newLength;
 }
 
-void addToTourLenght(Instance *inst, double toAdd) {
-    setTourLenght(inst, inst->tour_length + toAdd);
+void INSTANCE_addToTourLenght(Instance *inst, double toAdd) {
+    INSTANCE_setTourLenght(inst, inst->tour_length + toAdd);
 }
 
-int assertInst(Instance *inst) {
+int INSTANCE_assert(Instance *inst) {
     /*
      * Checks if the path is valid
      * 1. All nodes are used
@@ -207,11 +199,15 @@ int assertInst(Instance *inst) {
 
     if (check_nnodes != 0) {
         ERROR_COMMENT("assertInst", "Not all nodes are used");
+        ERROR_COMMENT("assertInst", "Missing %d nodes", check_nnodes);
+        ffflush();
         return ERROR_NODES;
     }
 
-    double check_tour_length = calculateTourLength(inst);
+    double check_tour_length = INSTANCE_calculateTourLength(inst);
     if (check_tour_length != inst->tour_length) {
+        ERROR_COMMENT("vrp::assertInst", "Tour length is not correct, missing %d", check_tour_length - inst->tour_length);
+        ffflush();
         return ERROR_TOUR_LENGTH;
     }
     DEBUG_COMMENT("assertInst", "Instance is valid");
@@ -219,8 +215,8 @@ int assertInst(Instance *inst) {
     return SUCCESS;
 }
 
-int pathCheckpoint(Instance *inst){
-    calculateTourLength(inst);
+int INSTANCE_pathCheckpoint(Instance *inst){
+    INSTANCE_calculateTourLength(inst);
     ASSERTINST(inst);
     if(inst->tour_length < inst->best_tourlength){
         memcpy(inst->best_path, inst->path, inst->nnodes * sizeof(int));
@@ -229,14 +225,14 @@ int pathCheckpoint(Instance *inst){
     return SUCCESS;
 }
 
-void saveBestPath(Instance *inst) {
-    pathCheckpoint(inst);
+void INSTANCE_saveBestPath(Instance *inst) {
+    INSTANCE_pathCheckpoint(inst);
 }
 
 int checkTime(Instance *inst, bool saveBest) {
     if (inst->tend < time(NULL)) {
         if(saveBest){
-            saveBestPath(inst);
+            INSTANCE_saveBestPath(inst);
         }
         ERROR_COMMENT("vrp::checkTime", "Time limit reached");
         return ERROR_TIME_LIMIT;

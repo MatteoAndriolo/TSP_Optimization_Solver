@@ -13,11 +13,11 @@ typedef struct {
     int size;
 } GRASP_Framework;
 
-void init_grasp(GRASP_Framework* grasp, double probabilities[], int size);
-void add_solution(GRASP_Framework* grasp, int solution, double value);
-int get_solution(GRASP_Framework* grasp);
-void free_grasp(GRASP_Framework* grasp);
-void reset_solutions(GRASP_Framework* grasp);
+void GRASP_init(GRASP_Framework* grasp, double probabilities[], int size);
+void GRASP_addSolution(GRASP_Framework* grasp, int solution, double value);
+int GRASP_getSolution(GRASP_Framework* grasp);
+void GRASP_free(GRASP_Framework* grasp);
+void GRASP_resetSolutions(GRASP_Framework* grasp);
 
 #endif // GRASP_H
 

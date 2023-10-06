@@ -14,7 +14,7 @@ int compare(const void* a, const void* b) {
     else return 0;
 }
 
-void init_grasp(GRASP_Framework* grasp, double probabilities[], int size) {
+void GRASP_init(GRASP_Framework* grasp, double probabilities[], int size) {
     grasp->count = 0;
     grasp->size = size;
     grasp->solutions = (Solution*)malloc(size * sizeof(Solution));
@@ -41,7 +41,7 @@ void init_grasp(GRASP_Framework* grasp, double probabilities[], int size) {
     }
 }
 
-void add_solution(GRASP_Framework* grasp, int solution, double value) {
+void GRASP_addSolution(GRASP_Framework* grasp, int solution, double value) {
     if (grasp->count < grasp->size) {
         grasp->solutions[grasp->count].solution = solution;
         grasp->solutions[grasp->count].value = value;
@@ -58,7 +58,7 @@ void add_solution(GRASP_Framework* grasp, int solution, double value) {
     qsort(grasp->solutions, grasp->count, sizeof(Solution), compare);
 }
 
-int get_solution(GRASP_Framework* grasp) {
+int GRASP_getSolution(GRASP_Framework* grasp) {
     double random_value = (double)rand() / RAND_MAX;
 
     for (int i = 0; i < grasp->count; i++) {
@@ -71,15 +71,8 @@ int get_solution(GRASP_Framework* grasp) {
     return grasp->solutions[grasp->count - 1].solution;
 }
 
-void reset_solutions(GRASP_Framework* grasp){
-    for (int i = 0; i < grasp->size; i++) {
-        grasp->solutions[i].solution = -1;
-        grasp->solutions[i].value = INFINITY;
-    }
-    grasp->count = 0;
-}
 
-void free_grasp(GRASP_Framework* grasp) {
+void GRASP_free(GRASP_Framework* grasp) {
     free(grasp->solutions);
     free(grasp->probabilities);
     grasp->solutions = NULL;
@@ -88,3 +81,10 @@ void free_grasp(GRASP_Framework* grasp) {
     grasp->size = 0;
 }
 
+void GRASP_resetSolutions(GRASP_Framework* grasp){
+    for (int i = 0; i < grasp->size; i++) {
+        grasp->solutions[i].solution = -1;
+        grasp->solutions[i].value = INFINITY;
+    }
+    grasp->count = 0;
+}

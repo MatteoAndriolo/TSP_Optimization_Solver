@@ -13,10 +13,10 @@ int two_opt(Instance *inst, double iterations) {
         for (int i = 0; i < inst->nnodes - 2; i++) {
             for (int j = i + 1; j < inst->nnodes; j++) {
                 int j1 = (j + 1) % inst->nnodes;
-                cost_old_edge = getDistancePos(inst,i, i+1);
-                cost_new_edge = getDistancePos(inst, i, j);
-                cost_old_edge2 = getDistancePos(inst,j, j1);
-                cost_new_edge2 = getDistancePos(inst, i+1, j1);
+                cost_old_edge = INSTANCE_getDistancePos(inst,i, i+1);
+                cost_new_edge = INSTANCE_getDistancePos(inst, i, j);
+                cost_old_edge2 = INSTANCE_getDistancePos(inst,j, j1);
+                cost_new_edge2 = INSTANCE_getDistancePos(inst, i+1, j1);
                 double delta = -(cost_old_edge + cost_old_edge2) +
                     (cost_new_edge + cost_new_edge2);
 
@@ -53,16 +53,16 @@ int two_opt_tabu(Instance *inst,  double iterations, TabuList *tabuList) {
             for (int j = i + 1; j < inst->nnodes; j++) {
                 // get distances
                 int j1 = (j + 1) % inst->nnodes;
-                cost_old_edge = getDistancePos(inst,i, i+1);
-                cost_new_edge = getDistancePos(inst, i, j);
-                cost_old_edge2 = getDistancePos(inst,j, j1);
-                cost_new_edge2 = getDistancePos(inst, i+1, j1);
+                cost_old_edge = INSTANCE_getDistancePos(inst,i, i+1);
+                cost_new_edge = INSTANCE_getDistancePos(inst, i, j);
+                cost_old_edge2 = INSTANCE_getDistancePos(inst,j, j1);
+                cost_new_edge2 = INSTANCE_getDistancePos(inst, i+1, j1);
                 double delta = -(cost_old_edge + cost_old_edge2) +
                     (cost_new_edge + cost_new_edge2);
 
                 if (delta < 0 && !areAnyValuesTabu(tabuList, inst->path[i], inst->path[j], inst->path[i+1],inst->path[j1])){
                     two_opt_move(inst, i, j);
-                    calculateTourLength(inst);
+                    INSTANCE_calculateTourLength(inst);
 
                     incAgeTabuList(tabuList);
                     addTabu(tabuList,i);

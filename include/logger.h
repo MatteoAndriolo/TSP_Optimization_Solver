@@ -4,15 +4,13 @@
 #ifndef PRODUCTION
 #define DEBUG_COMMENT(position, ...) log_message(DEBUG, position, __VA_ARGS__)
 #define INFO_COMMENT(position, ...) log_message(INFO, position, __VA_ARGS__)
-#define WARNING_COMMENT(position, ...) \
+#define WARNING_COMMENT(position, ...) Args \
   log_message(WARNING, position, __VA_ARGS__)
 #define ERROR_COMMENT(position, ...) log_message(ERROR, position, __VA_ARGS__)
 #define CRITICAL_COMMENT(position, ...) \
   log_message(CRITICAL, position, __VA_ARGS__)
 #define OUTPUT_COMMENT(position, ...) log_message(OUTPUT, position, __VA_ARGS__)
-#define FATAL_COMMENT(position, ...)         \
-  log_message(FATAL, position, __VA_ARGS__); \
-  exit(1);
+#define FATAL_COMMENT(position, ...)  log_message(FATAL, position, __VA_ARGS__);  exit(1);
 #else
 #define DEBUG_COMMENT(position, ...)
 #define INFO_COMMENT(position, ...) log_message(INFO, position, __VA_ARGS__)
@@ -81,7 +79,7 @@ void log_path(const int *path, int nnodes);
  * @param nnodes the number of nodes
  * @return string of the given path
  */
-char *getPath(const int *path, int nnodes);
+//char *getPath(const int *path, int nnodes);
 
 /**
  *
@@ -93,21 +91,5 @@ void log_distancematrix(const double *distance_matrix, int nnodes);
  */
 void logger_close();
 
-void log_output_inst(const Instance *inst);
-
-/**
- * Logs the output of the given instance, including the tour and the total tour
- * length.
- *
- * @param inst a pointer to the instance to be logged
- * @param zbest the best known solution
- * @param timelimit the time limit
- * @param randomseed the random seed
- * @param nnodes the number of nodes
- * @param input_file the input file
- *
- */
-void log_output(int model_type, int node_start, double zbest, double timelimit,
-                int randomseed, int nnodes, char *input_file);
 
 #endif
