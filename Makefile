@@ -51,7 +51,7 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:
-	rm -rf $(OBJ_DIR)/*.o $(OBJ_DIR)/*.gcno $(TARGET) script.p example.log
+	rm -rf $(OBJ_DIR)/*.o $(OBJ_DIR)/*.gcno $(TARGET) script.p example.log *.lp
 
 production: CFLAGS  += -DPRODUCTION -O3
 production: OPT := -O3
