@@ -2,9 +2,10 @@
 #define UTILS_H
 #include <immintrin.h>
 #include <math.h>
+
 #include "logger.h"
 #include "vrp.h"
-//#include <cplex.h>
+// #include <cplex.h>
 #include "../tmpcplex/cplex.h"
 
 /**
@@ -29,7 +30,7 @@ double dist(int i, int j, Instance *inst);
  * @param dim_xstar dimension of the solution vector
  * @param path solution vector
  */
-void xstarToPath(Instance *inst, double *xstar, int dim_xstar, int *path);
+void xstarToPath(Instance *inst, const double *xstar, int dim_xstar, int *path);
 
 /**
  * @brief a set of random starting nodes.
@@ -44,7 +45,8 @@ void create_xheu(Instance *inst, double *xheu);
  * @param env CPLEX environment
  * @param lp CPLEX problem
  */
-void generate_mip_start(Instance *inst, CPXENVptr env, CPXLPptr lp, double *xheu);
+void generate_mip_start(Instance *inst, CPXENVptr env, CPXLPptr lp,
+                        double *xheu);
 /**
  * @brief generate the fix edfges set for hard fixing
  * @param env CPLEX environment
@@ -68,7 +70,8 @@ void unfix_edges(CPXENVptr env, CPXLPptr lp, Instance *inst, double *xheu);
  * @param lp CPLX problem
  * @param inst the instance of the problem to be solved
  */
-void eliminate_radius_edges(CPXENVptr env, CPXLPptr lp, Instance *inst, double *xheu, int radious);
+void eliminate_radius_edges(CPXENVptr env, CPXLPptr lp, Instance *inst,
+                            double *xheu, int radious);
 
 /**
  * @brief generate the variables to be eliminate from the current solution
@@ -77,7 +80,8 @@ void eliminate_radius_edges(CPXENVptr env, CPXLPptr lp, Instance *inst, double *
  * @param inst the instance of the problem to be solved
  * @param xheu the solution vector
  */
-void repristinate_radius_edges(CPXENVptr env, CPXLPptr lp, Instance *inst, double *xheu);
+void repristinate_radius_edges(CPXENVptr env, CPXLPptr lp, Instance *inst,
+                               double *xheu);
 
 /**
  * @brief generate the variables to be eliminate from the current solution
@@ -85,7 +89,7 @@ void repristinate_radius_edges(CPXENVptr env, CPXLPptr lp, Instance *inst, doubl
  * @param lp CPLX problem
  * @param inst the instance of the problem to be solved
  */
-int add_subtour_constraints(Instance *inst, CPXENVptr env, CPXLPptr lp);
+int bender(Instance *inst, CPXENVptr env, CPXLPptr lp);
 
 /**
  * @brief build_sol
@@ -95,5 +99,6 @@ int add_subtour_constraints(Instance *inst, CPXENVptr env, CPXLPptr lp);
  * @param comp component vector
  * @param ncomp number of components
  */
-void build_sol(const double *xstar, Instance *inst, int *succ, int *comp, int *ncomp);
+void build_sol(const double *xstar, Instance *inst, int *succ, int *comp,
+               int *ncomp);
 #endif

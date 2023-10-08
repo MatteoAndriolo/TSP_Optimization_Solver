@@ -109,7 +109,7 @@ int extra_mileage(Instance *inst) {
     // SWAP - ADJUST PATH ----------------------------------------------------
     // Save the value at position j in a temporary variable
     if (is_close_edge) {
-      int tmp = inst->path[node_3[2]];  // save node in index best
+      int tmp = inst->path[node_3[2]]; // save node in index best
       for (int k = node_3[2]; k > node_3[1]; k--) {
         inst->path[k] = inst->path[k - 1];
       }
@@ -118,7 +118,7 @@ int extra_mileage(Instance *inst) {
       int tmp = inst->path[node_3[2]];
       for (int k = node_3[2]; k >= node_3[1]; k--) {
         inst->path[k] =
-            inst->path[k - 1];  // Shift all elements to the right from j to i+1
+            inst->path[k - 1]; // Shift all elements to the right from j to i+1
       }
       inst->path[node_3[1]] = tmp;
     }
