@@ -8,10 +8,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-//#include <cplex.h>
-#include "../tmpcplex/cplex.h"
-#include <pthread.h>
+// #include <cplex.h>
 
+#include "../tmpcplex/cplex.h"
 #include "errors.h"
 #include "grasp.h"
 #include "logger.h"
@@ -24,15 +23,15 @@
   1000.0  // cplex's ticks on Intel Core i7 quadcore @2.3GHZ
 #define INFTY 1e+30
 
-typedef enum{
-    SOLVER_BASE=0,
-    SOLVER_BENDER=1,
-    SOLVER_PATCHING_HEURISTIC = 2,
-    SOLVER_BRANCH_AND_CUT=3,
-    SOLVER_POSTINGHEU_UCUTFRACT = 4,
-    SOLVER_MH_HARDFIX=5,
-    SOLVER_MH_LOCBRANCH=6,
-}TSPSolvers;
+typedef enum {
+  SOLVER_BASE = 0,
+  SOLVER_BENDER = 1,
+  SOLVER_PATCHING_HEURISTIC = 2,
+  SOLVER_BRANCH_AND_CUT = 3,
+  SOLVER_POSTINGHEU_UCUTFRACT = 4,
+  SOLVER_MH_HARDFIX = 5,
+  SOLVER_MH_LOCBRANCH = 6,
+} TSPSolvers;
 
 typedef struct {
   // execution parameters
@@ -118,8 +117,8 @@ void swapPathPoints(Instance *inst, int i, int j);
 int INSTANCE_pathCheckpoint(Instance *inst);
 
 int INSTANCE_assert(Instance *inst);
-#define ASSERTINST(inst)   \
-  do {                     \
+#define ASSERTINST(inst)        \
+  do {                          \
     RUN(INSTANCE_assert(inst)); \
   } while (0)
 
