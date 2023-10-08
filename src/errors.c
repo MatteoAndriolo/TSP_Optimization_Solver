@@ -1,2 +1,3 @@
-#include <stdio.h>
 #include "../include/errors.h"
+
+#include <stdio.h>

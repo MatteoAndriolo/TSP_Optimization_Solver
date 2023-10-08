@@ -3,35 +3,36 @@
 
 #include <argp.h>
 #include <stdio.h>
-#include "vrp.h"
+
 #include "logger.h"
+#include "vrp.h"
 
 // Parse arguments
-typedef struct args
-{
-    int num_instances;
-    char model_type[256];
-    int integer_costs;
-    int randomseed;
-    double timelimit;
-    char input_file[256];
-    int nnodes;
-    double *x, *y;
-    char log_file[256];
-    char grasp[20];
-    int n_probabilities;
-    double *grasp_probabilities;
-    char str_probabilities[20];
-    int toplot;
-    int tabu_size;
-    int tabu_tenure;
-    double cplex_perchf;
+typedef struct args {
+  int num_instances;
+  char model_type[256];
+  int integer_costs;
+  int randomseed;
+  double timelimit;
+  char input_file[256];
+  int nnodes;
+  double *x, *y;
+  char log_file[256];
+  char grasp[20];
+  int n_probabilities;
+  double *grasp_probabilities;
+  char str_probabilities[20];
+  int toplot;
+  int tabu_size;
+  int tabu_tenure;
+  double cplex_perchf;
 } Args;
 
 static const char delimiter = '.';
 
 /**
- * Reads the nodes file for the given instance, initializes the instance with the read data, and calculates the distance matrix.
+ * Reads the nodes file for the given instance, initializes the instance with
+ * the read data, and calculates the distance matrix.
  *
  * @param inst a pointer to the instance to initialize
  */
@@ -46,7 +47,8 @@ void read_input(Args *args);
 void print_arguments(const Args *args);
 
 /**
- * Parses the command line arguments and stores the results in the given arguments struct.
+ * Parses the command line arguments and stores the results in the given
+ * arguments struct.
  *
  * @param argc the number of command line arguments
  * @param argv an array of command line argument strings
@@ -70,6 +72,7 @@ void parse_model_name(char *model_type, char ***passagges, int *n_passagges);
  * @param probabilities the probabilities
  * @param n_probabilities the number of probabilities
  */
-void parse_grasp_probabilities(char *grasp, double *probabilities, int *n_probabilities);
+void parse_grasp_probabilities(char *grasp, double *probabilities,
+                               int *n_probabilities);
 
 #endif

@@ -4,13 +4,15 @@
 #ifndef PRODUCTION
 #define DEBUG_COMMENT(position, ...) log_message(DEBUG, position, __VA_ARGS__)
 #define INFO_COMMENT(position, ...) log_message(INFO, position, __VA_ARGS__)
-#define WARNING_COMMENT(position, ...) Args \
-  log_message(WARNING, position, __VA_ARGS__)
+#define WARNING_COMMENT(position, ...) \
+  Args log_message(WARNING, position, __VA_ARGS__)
 #define ERROR_COMMENT(position, ...) log_message(ERROR, position, __VA_ARGS__)
 #define CRITICAL_COMMENT(position, ...) \
   log_message(CRITICAL, position, __VA_ARGS__)
 #define OUTPUT_COMMENT(position, ...) log_message(OUTPUT, position, __VA_ARGS__)
-#define FATAL_COMMENT(position, ...)  log_message(FATAL, position, __VA_ARGS__);  exit(1);
+#define FATAL_COMMENT(position, ...)         \
+  log_message(FATAL, position, __VA_ARGS__); \
+  exit(1);
 #else
 #define DEBUG_COMMENT(position, ...)
 #define INFO_COMMENT(position, ...) log_message(INFO, position, __VA_ARGS__)
@@ -79,7 +81,7 @@ void log_path(const int *path, int nnodes);
  * @param nnodes the number of nodes
  * @return string of the given path
  */
-//char *getPath(const int *path, int nnodes);
+// char *getPath(const int *path, int nnodes);
 
 /**
  *
@@ -90,6 +92,5 @@ void log_distancematrix(const double *distance_matrix, int nnodes);
  * Closes the log file.
  */
 void logger_close();
-
 
 #endif

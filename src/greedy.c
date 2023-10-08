@@ -7,9 +7,9 @@
 #include "../include/utils.h"
 
 void swapPathPoints(Instance *inst, int i, int j) {
-    int temp = inst->path[i];
-    inst->path[i] = inst->path[j];
-    inst->path[j] = temp;
+  int temp = inst->path[i];
+  inst->path[i] = inst->path[j];
+  inst->path[j] = temp;
 }
 
 int nearest_neighboor(Instance *inst) {
@@ -77,8 +77,8 @@ int extra_mileage(Instance *inst) {
     // Check from all the inst->path to the following one
     for (int j = 0; j < i - 1; j++) {
       for (int k = i; k < inst->nnodes; k++) {
-        new_triangular_sum =
-            INSTANCE_getDistancePos(inst, j, k) + INSTANCE_getDistancePos(inst, j + 1, k);
+        new_triangular_sum = INSTANCE_getDistancePos(inst, j, k) +
+                             INSTANCE_getDistancePos(inst, j + 1, k);
         if (new_triangular_sum < min_nts) {
           min_nts = new_triangular_sum;
           node_3[0] = j;
@@ -90,8 +90,8 @@ int extra_mileage(Instance *inst) {
     }
 
     for (int k = i; k < inst->nnodes; k++) {
-      new_triangular_sum =
-          INSTANCE_getDistancePos(inst, 0, k) + INSTANCE_getDistancePos(inst, i - 1, k);
+      new_triangular_sum = INSTANCE_getDistancePos(inst, 0, k) +
+                           INSTANCE_getDistancePos(inst, i - 1, k);
       if (new_triangular_sum < min_nts) {
         min_nts = new_triangular_sum;
         node_3[0] = 0;
@@ -101,7 +101,8 @@ int extra_mileage(Instance *inst) {
       }
       CHECKTIME(inst, false);
     }
-    double new_cost = min_nts - INSTANCE_getDistancePos(inst, node_3[0], node_3[1]);
+    double new_cost =
+        min_nts - INSTANCE_getDistancePos(inst, node_3[0], node_3[1]);
 
     INSTANCE_addToTourLenght(inst, new_cost);
 
