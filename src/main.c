@@ -10,8 +10,7 @@
 #include "../include/parser.h"
 #include "../include/plot.h"
 #include "../include/tabu.h"
-// #include "../include/tspcplex.h"
-#include "../include/cpx.h"
+#include "../include/tspcplex.h"
 #include "../include/utils.h"
 #include "../include/vrp.h"
 
@@ -32,8 +31,8 @@ int main(int argc, char **argv) {
 
   // Manage model selection -------------------------------------------------
   print_arguments(&args);
-  srand(args.randomseed);                  // set random seed
-  Instance instances[args.num_instances];  // array of instances
+  srand(args.randomseed);                 // set random seed
+  Instance instances[args.num_instances]; // array of instances
 
   // RUN_MAIN
   for (int c_inst = 0; c_inst < args.num_instances; c_inst++) {
@@ -92,13 +91,14 @@ int main(int argc, char **argv) {
         inst->solver = SOLVER_POSTINGHEU_UCUTFRACT;
         TSPopt(inst);
       } else if (strcmp(passagges[j], "cplexhf") == 0) {
-        inst->solver = SOLVER_MH_HARDFIX;  // TODO not working
+        inst->solver = SOLVER_MH_HARDFIX; // TODO not working
         TSPopt(inst);
       } else if (strcmp(passagges[j], "cplexlb") == 0) {
         inst->solver = SOLVER_MH_LOCBRANCH;
 
         two_opt(inst, INFINITY);
         TSPopt(inst);
+        DEBUG_COMMENT("main::main", "back to main");
       } else if (strcmp(passagges[j], "test") == 0) {
         testTabuList();
       } else {
@@ -119,7 +119,8 @@ int main(int argc, char **argv) {
       // printf("tourlenght %lf\n", get_tour_length(inst->path, args.nnodes,
       // inst->distance_matrix));
 
-      if (j == n_passagges - 1) strcpy(title, "\0");
+      if (j == n_passagges - 1)
+        strcpy(title, "\0");
       INFO_COMMENT("main::main", "Passagge %s completed with tl %lf",
                    passagges[j], inst->best_tourlength);
     }

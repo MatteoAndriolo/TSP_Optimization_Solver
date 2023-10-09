@@ -35,10 +35,10 @@ void INSTANCE_generateDistanceMatrix(Instance *inst) {
     for (int j = 0; j < inst->nnodes; j++) {
       dm[i * inst->nnodes + j] = distance_euclidean(
           inst->x[i], inst->y[i], inst->x[j],
-          inst->y[j]);  // DEBUG_COMMENT("instance_generate_distance_matrix",
-                        // "Distance from %d (%lf, %lf) to %d (%lf, %lf)  :
-                        // %lf", i, j, inst->x[i], inst->y[i],inst->x[j],
-                        // inst->y[j],dm[i * inst->nnodes + j]);
+          inst->y[j]); // DEBUG_COMMENT("instance_generate_distance_matrix",
+                       // "Distance from %d (%lf, %lf) to %d (%lf, %lf)  :
+                       // %lf", i, j, inst->x[i], inst->y[i],inst->x[j],
+                       // inst->y[j],dm[i * inst->nnodes + j]);
     }
   }
   for (int i = 0; i < inst->nnodes; i++) {
@@ -201,7 +201,8 @@ int INSTANCE_assert(Instance *inst) {
                     inst->path[i]);
       exit(ERROR_NODES);
     } else {
-      DEBUG_COMMENT("vrp.c:INSTANCE_assert", "Node %d is used", inst->path[i]);
+      // DEBUG_COMMENT("vrp.c:INSTANCE_assert", "Node %d is used",
+      // inst->path[i]);
     }
   }
 
@@ -229,7 +230,7 @@ int INSTANCE_assert(Instance *inst) {
 }
 
 int INSTANCE_pathCheckpoint(Instance *inst) {
-  DEBUG_COMMENT("vrp::pathCheckpoint", "Is this path the best?");
+  DEBUG_COMMENT("vrp:INSTANCE_pathCheckpoint", "Is this path the best?");
   INSTANCE_calculateTourLength(inst);
   ASSERTINST(inst);
   if (inst->tour_length < inst->best_tourlength) {
@@ -238,9 +239,10 @@ int INSTANCE_pathCheckpoint(Instance *inst) {
     INFO_COMMENT("vrp::pathCheckpoint", "New best path found: %lf",
                  inst->best_tourlength);
   } else {
-    INFO_COMMENT("vrp::pathCheckpoint", "This path is not the best");
-    DEBUG_COMMENT("vrp::pathCheckpoint", "Best path: %lf, Current path: %lf",
-                  inst->best_tourlength, inst->tour_length);
+    INFO_COMMENT("vrp:INSTANCE_pathCheckpoint", "This path is not the best");
+    DEBUG_COMMENT("vrp:INSTANCE_pathCheckpoint",
+                  "Best path: %lf, Current path: %lf", inst->best_tourlength,
+                  inst->tour_length);
   }
   return SUCCESS;
 }

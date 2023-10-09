@@ -45,8 +45,7 @@ void create_xheu(Instance *inst, double *xheu);
  * @param env CPLEX environment
  * @param lp CPLEX problem
  */
-void generate_mip_start(Instance *inst, CPXENVptr env, CPXLPptr lp,
-                        double *xheu);
+void set_mip_start(Instance *inst, CPXENVptr env, CPXLPptr lp, double *xheu);
 /**
  * @brief generate the fix edfges set for hard fixing
  * @param env CPLEX environment
@@ -101,4 +100,5 @@ int bender(Instance *inst, CPXENVptr env, CPXLPptr lp);
  */
 void build_sol(const double *xstar, Instance *inst, int *succ, int *comp,
                int *ncomp);
+void init_mip(const CPXENVptr env, const CPXLPptr lp, Instance *inst);
 #endif
