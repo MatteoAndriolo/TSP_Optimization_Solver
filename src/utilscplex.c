@@ -52,19 +52,20 @@ void xstarToPath(Instance *inst, const double *xstar, int dim_xstar,
                  int *path) {
   DEBUG_COMMENT("utilscplex.c:xstarToPath", "xstarToPath");
 
+  dim_xstar = inst->ncols;
   // double *temp_path = malloc(inst->nnodes * 2 * sizeof(double));
-  double temp_path[inst->nnodes * 2];
-  memcpy(temp_path, xstar, 2 * inst->nnodes * sizeof(double));
-  qsort(temp_path, inst->nnodes, sizeof(int), cmpfunc);
-  DEBUG_COMMENT("utilscplex.c:xstarToPath", "Path: ");
-  int count = 0;
-  for (int i = 0; i < dim_xstar; i++) {
-    if (temp_path[i] > 0.5) {
-      count++;
-      DEBUG_COMMENT("utilscplex.c:xstarToPath", "%d/%d | %d -> %lf ", i,
-                    dim_xstar, count, temp_path[i]);
-    }
-  }
+  double temp_path[inst->ncols];
+  memcpy(temp_path, xstar, inst->ncols * sizeof(double));
+  qsort(temp_path, inst->ncols, sizeof(int), cmpfunc);
+  // DEBUG_COMMENT("utilscplex.c:xstarToPath", "Path: ");
+  // int count = 0;
+  // for (int i = 0; i < dim_xstar; i++) {
+  //   if (temp_path[i] > 0.5) {
+  //     count++;
+  //     DEBUG_COMMENT("utilscplex.c:xstarToPath", "%d/%d | %d -> %lf ", i,
+  //                   dim_xstar, count, temp_path[i]);
+  //   }
+  // }
   // free(temp_path);
   // temp_path = NULL;
 
@@ -76,13 +77,14 @@ void xstarToPath(Instance *inst, const double *xstar, int dim_xstar,
 
   build_sol(xstar, inst, succ, comp, &ncomp);
 
-  DEBUG_COMMENT("utilscplex.c:xstarToPath", "ncomp = %d", ncomp);
-  for (int i = 0; i < inst->nnodes; i++) {
-    DEBUG_COMMENT("utilscplex.c:xstarToPath", "%d\t%d\t%d", i, succ[i],
-                  comp[i]);
-  }
+  // DEBUG_COMMENT("utilscplex.c:xstarToPath", "ncomp = %d", ncomp);
+  // for (int i = 0; i < inst->nnodes; i++) {
+  //   DEBUG_COMMENT("utilscplex.c:xstarToPath", "%d\t%d\t%d", i, succ[i],
+  //                 comp[i]);
+  // }
 
-  int *new_path = (int *)malloc(sizeof(int) * inst->nnodes);
+  // int *new_path = (int *)malloc(sizeof(int) * inst->nnodes);
+  int new_path[inst->nnodes];
   int size = 0;
   int succ_node;
 
@@ -101,9 +103,9 @@ void xstarToPath(Instance *inst, const double *xstar, int dim_xstar,
     }
   }
 
-  for (int i = 0; i < inst->nnodes; i++) {
-    DEBUG_COMMENT("utilscplex.c:xstarToPath", "%d -> %d", i, new_path[i]);
-  }
+  // for (int i = 0; i < inst->nnodes; i++) {
+  //   DEBUG_COMMENT("utilscplex.c:xstarToPath", "%d -> %d", i, new_path[i]);
+  // }
   if (path != NULL) {
     memcpy(path, new_path, inst->nnodes * sizeof(int));
   } else {
@@ -120,14 +122,14 @@ void create_xheu(Instance *inst, double *xheu) {
   }
   xheu[xpos(inst->path[inst->nnodes - 1], inst->path[0], inst)] = 1.0;
 
-  DEBUG_COMMENT("utilscplex.c:create_xheu", "xheu: ");
-  for (int i = 0; i < inst->nnodes; i++) {
-    for (int j = i + 1; j < inst->nnodes; j++) {
-      if (xheu[xpos(i, j, inst)] > 0.5)
-        DEBUG_COMMENT("utilscplex.c:create_xheu", "xheu[%d,%d] = %lf", i, j,
-                      xheu[xpos(i, j, inst)]);
-    }
-  }
+  // DEBUG_COMMENT("utilscplex.c:create_xheu", "xheu: ");
+  // for (int i = 0; i < inst->nnodes; i++) {
+  //   for (int j = i + 1; j < inst->nnodes; j++) {
+  //     if (xheu[xpos(i, j, inst)] > 0.5)
+  //       DEBUG_COMMENT("utilscplex.c:create_xheu", "xheu[%d,%d] = %lf", i, j,
+  //                     xheu[xpos(i, j, inst)]);
+  //   }
+  // }
 }
 
 void set_mip_start(Instance *inst, const CPXENVptr env, const CPXLPptr lp,
