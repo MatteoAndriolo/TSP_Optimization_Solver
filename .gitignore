@@ -250,3 +250,6 @@ concorde_build
 **/*.old
 obj/
 **/*.gcno
+.clangd
+TODO.md
+tmpcplex/
