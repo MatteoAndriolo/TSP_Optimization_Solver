@@ -171,13 +171,11 @@ void INSTANCE_free(Instance *inst) {
  * @return the tour lenght
  */
 double INSTANCE_calculateTourLength(Instance *inst) {
-  DEBUG_COMMENT("vrp.c:INSTANCE_calculateTourLength", "Enter");
   double tour_length = INSTANCE_getDistancePos(inst, 0, inst->nnodes - 1);
   for (int i = 0; i < inst->nnodes - 1; i++) {
     tour_length += INSTANCE_getDistancePos(inst, i, i + 1);
   }
   inst->tour_length = tour_length;
-  DEBUG_COMMENT("vrp.c:INSTANCE_calculateTourLength", "Exit");
   return tour_length;
 }
 
@@ -323,9 +321,6 @@ ErrorCode INSTANCE_saveBestPath(Instance *inst) {
  * @return SUCCESS if the path is correct, ERROR_NODES or ERROR_TOUR_LENGTH
  */
 ErrorCode checkTime(Instance *inst, bool saveBest) {
-  DEBUG_COMMENT("vrp.c:checkTime", "Enter");
-  DEBUG_COMMENT("vrp.c:checkTime", "Time missing %ld",
-                difftime(inst->tend, time(NULL)));
   if (inst->tend < time(NULL)) {
     if (saveBest) {
       RUN(INSTANCE_pathCheckpoint(inst));
