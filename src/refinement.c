@@ -4,7 +4,7 @@
 
 #include "../include/tabu.h"
 
-int two_opt(Instance *inst, double iterations) {
+ErrorCode two_opt(Instance *inst, double iterations) {
   INFO_COMMENT("refinement.c:2opt", "starting 2opt");
   int foundImprovement = 1;
   double cost_old_edge, cost_new_edge, cost_new_edge2, cost_old_edge2;
@@ -36,13 +36,13 @@ int two_opt(Instance *inst, double iterations) {
       }
     }
   }
-  ASSERTINST(inst);
+  RUN(INSTANCE_saveBestPath(inst));
   DEBUG_COMMENT("refinement.c:2opt", "attual tour length %lf",
                 inst->tour_length);
   return SUCCESS;
 }
 
-int two_opt_tabu(Instance *inst, double iterations, TabuList *tabuList) {
+ErrorCode two_opt_tabu(Instance *inst, double iterations, TabuList *tabuList) {
   INFO_COMMENT("refinement.c:2opt_tabu", "starting 2opt");
   bool foundImprovement = true;
   double cost_old_edge, cost_new_edge, cost_new_edge2, cost_old_edge2;
@@ -79,7 +79,7 @@ int two_opt_tabu(Instance *inst, double iterations, TabuList *tabuList) {
     CHECKTIME(inst, false);
   }
 
-  ASSERTINST(inst);
+  RUN(INSTANCE_saveBestPath(inst));
   INFO_COMMENT("refinement.c:2opt_tabu", "finished - final tour length %lf",
                inst->tour_length);
   return SUCCESS;

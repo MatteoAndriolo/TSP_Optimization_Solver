@@ -13,7 +13,7 @@ typedef struct args {
   char model_type[256];
   int integer_costs;
   int randomseed;
-  double timelimit;
+  long timelimit;
   char input_file[256];
   int nnodes;
   double *x, *y;

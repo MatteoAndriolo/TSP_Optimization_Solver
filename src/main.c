@@ -2,6 +2,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
 
 #include "../include/greedy.h"
@@ -125,9 +126,8 @@ int main(int argc, char **argv) {
                    passagges[j], inst->best_tourlength);
     }
     // print tourlenght model time
-
     OUTPUT_COMMENT("main.c:main", "Tour lenght: %lf , time elapsed %ld",
-                   inst->best_tourlength, time(NULL) - inst->tstart);
+                   inst->best_tourlength, difftime(time(NULL), inst->tstart));
     INFO_COMMENT("main.c:main", "Instance %d completed", c_inst);
     INSTANCE_free(inst);
     INFO_COMMENT("main.c:main", "Instance %d completed", c_inst);

@@ -2,6 +2,7 @@
 #ifndef ERROR_CODES_H
 #define ERROR_CODES_H
 #include "../include/logger.h"
+#include <stdio.h>
 typedef enum {
   SUCCESS = 0,
   OK = 0,
@@ -27,45 +28,38 @@ typedef enum {
   do {                                                                         \
     ErrorCode err_code = (x);                                                  \
     if (err_code != SUCCESS) {                                                 \
-      printf("Error running '%s' in %s:%d - ", #x, __FILE__, __LINE__);        \
+      char err_name[40] = "";                                                  \
       switch (err_code) {                                                      \
       case FAILURE:                                                            \
-        printf("Failure\n");                                                   \
+        sprintf(err_name, "Failure");                                          \
         break;                                                                 \
       case ERROR_FILE_NOT_FOUND:                                               \
-        printf("File Not Found\n");                                            \
+        sprintf(err_name, "File Not Found");                                   \
         break;                                                                 \
       case ERROR_INVALID_ARGUMENT:                                             \
-        printf("Invalid Argument\n");                                          \
+        sprintf(err_name, "Invalid Argument");                                 \
         break;                                                                 \
       case ERROR_INVALID_PATH:                                                 \
-        printf("Invalid Path\n");                                              \
+        sprintf(err_name, "Invalid Path");                                     \
         break;                                                                 \
       case ERROR_NODES:                                                        \
-        printf("Node Error\n");                                                \
+        sprintf(err_name, "Node Error");                                       \
         break;                                                                 \
       case ERROR_TOUR_LENGTH:                                                  \
-        printf("Tour Length Error\n");                                         \
+        sprintf(err_name, "Tour Length Error");                                \
         break;                                                                 \
       case ERROR_TIME_LIMIT:                                                   \
-        printf("Time Limit Reached\n");                                        \
+        sprintf(err_name, "Time Limit Reached");                               \
         break;                                                                 \
       default:                                                                 \
-        printf("Unknown Error\n");                                             \
+        sprintf(err_name, "Unknown Error");                                    \
         break;                                                                 \
       }                                                                        \
+      printf("Error '%s' in %s:%d | %s \n", #x, __FILE__, __LINE__, err_name); \
       if (!ismain || err_code != ERROR_TIME_LIMIT)                             \
         return err_code;                                                       \
-      else {                                                                   \
-        printf("Success running '%s' in %s:%d\n", #x, __FILE__, __LINE__);     \
-        return SUCCESS;                                                        \
-      }                                                                        \
     }                                                                          \
-  } while (0)
-
-//} else {
-//    printf("Success running '%s' in %s:%d\n", #x, __FILE__, __LINE__);
-//}
+  } while (false)
 
 #define RUN(x) _RUN(x, false)
 #define RUN_MAIN(x) _RUN(x, true)

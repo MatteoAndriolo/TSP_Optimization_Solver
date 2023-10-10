@@ -97,17 +97,11 @@ void INSTANCE_setTourLenght(Instance *inst, double newLength);
 
 void INSTANCE_addToTourLenght(Instance *inst, double toAdd);
 
-void INSTANCE_saveBestPath(Instance *inst);
+ErrorCode INSTANCE_saveBestPath(Instance *inst);
 
-int checkTime(Instance *inst, bool saveBest);
+ErrorCode checkTime(Instance *inst, bool saveBest);
 
-#define CHECKTIME(inst, bool)                                                  \
-  do {                                                                         \
-    ErrorCode err = checkTime((inst), (bool));                                 \
-    if (err != SUCCESS) {                                                      \
-      return err;                                                              \
-    }                                                                          \
-  } while (0)
+#define CHECKTIME(inst, b) RUN(checkTime(inst, b));
 
 // ----------------------------------------------------------------------------
 // General instance related utils
@@ -115,12 +109,8 @@ int checkTime(Instance *inst, bool saveBest);
 
 void swapPathPoints(Instance *inst, int i, int j);
 
-int INSTANCE_pathCheckpoint(Instance *inst);
+ErrorCode INSTANCE_pathCheckpoint(Instance *inst);
 
 ErrorCode INSTANCE_assert(Instance *inst);
-#define ASSERTINST(inst)                                                       \
-  do {                                                                         \
-    RUN(INSTANCE_assert(inst));                                                \
-  } while (0)
 
 #endif /* VRP_H_ */

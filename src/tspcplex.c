@@ -237,7 +237,7 @@ int solve_problem(const CPXENVptr env, const CPXLPptr lp, Instance *inst) {
 
   if (status != SUCCESS) {
     if (status == ERROR_TIME_LIMIT) {
-      INSTANCE_pathCheckpoint(inst);
+      RUN(INSTANCE_pathCheckpoint(inst));
       INFO_COMMENT("tspcplex.c:solve_problem", "Time limit reached");
     } else {
       ERROR_COMMENT("tspcplex.c:solve_problem", "Execution FAILED");
@@ -275,8 +275,6 @@ void TSPopt(Instance *inst) {
   INSTANCE_pathCheckpoint(inst);
   if (status)
     ERROR_COMMENT("tspcplex.c:TSPopt", "Execution FAILED");
-  else
-    printf("status = %d-------------------------------------------s\n", status);
 
   //------------------------ free and close cplex model
   //--------------------------------------------------------------

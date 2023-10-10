@@ -1,6 +1,7 @@
 #include "../include/parser.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 void read_input(Args *args) {
   FILE *fin = fopen(args->input_file, "r");
@@ -63,6 +64,7 @@ void print_arguments(const Args *args) {
   printf("-m %s\n", args->model_type);
   printf("--seed %d\n", args->randomseed);
   printf("--numinstances %d\n", args->num_instances);
+  printf("--time %ld\n", args->timelimit);
   if (strcmp(args->grasp, "1") != 0)
     for (int i = 0; i < args->n_probabilities; i++)
       printf("--grasp %lf\n", args->grasp_probabilities[i]);
@@ -154,17 +156,17 @@ void parse_command_line(int argc, char **argv, Args *args) {
       }
       continue;
     }
-    if ((strcmp(argv[i], "--maxtime") == 0) |
-        (strcmp(argv[i], "--time") == 0)) {
-      args->timelimit = atof(argv[++i]);
+    if ((strcmp(argv[i], "--maxtime") == 0) ||
+        (strcmp(argv[i], "--time") == 0) || (strcmp(argv[i], "-t") == 0)) {
+      args->timelimit = atol(argv[++i]);
       continue;
     } // total time limit
-    if ((strcmp(argv[i], "-n") == 0) |
+    if ((strcmp(argv[i], "-n") == 0) ||
         (strcmp(argv[i], "--numinstances") == 0)) {
       args->num_instances = atoi(argv[++i]);
       continue;
     }
-    if ((strcmp(argv[i], "-help") == 0) | (strcmp(argv[i], "--help") == 0)) {
+    if ((strcmp(argv[i], "-help") == 0) || (strcmp(argv[i], "--help") == 0)) {
       help = 1;
       continue;
     } // help

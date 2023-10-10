@@ -5,6 +5,7 @@
 #include "../include/tabu.h"
 #include "../include/utils.h"
 #include "../include/vrp.h"
+#include "errors.h"
 
 /**
  * Applies the 2-opt algorithm to a given distance matrix and node list (in
@@ -15,7 +16,7 @@
  * improvement is found)
  * @return void
  */
-int two_opt(Instance *inst, double iterations);
+ErrorCode two_opt(Instance *inst, double iterations);
 
 /**
  * Applies the 2-opt algorithm to a given distance matrix and node list (in
@@ -26,5 +27,5 @@ int two_opt(Instance *inst, double iterations);
  * improvement is found)
  * @param tabuList A pointer to the tabu list.
  */
-int two_opt_tabu(Instance *inst, double iterations, TabuList *tabuList);
+ErrorCode two_opt_tabu(Instance *inst, double iterations, TabuList *tabuList);
 #endif

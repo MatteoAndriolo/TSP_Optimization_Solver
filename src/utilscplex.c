@@ -76,43 +76,47 @@ ErrorCode xstarToPath(Instance *inst, const double *xstar, int dim_xstar,
   int ncomp = 0;
 
   build_sol(xstar, inst, succ, comp, &ncomp);
-
-  // DEBUG_COMMENT("utilscplex.c:xstarToPath", "ncomp = %d", ncomp);
-  // for (int i = 0; i < inst->nnodes; i++) {
-  //   DEBUG_COMMENT("utilscplex.c:xstarToPath", "%d\t%d\t%d", i, succ[i],
-  //                 comp[i]);
-  // }
+  DEBUG_COMMENT("utilscplex.c:xstarToPath", "succ:");
+  for (int i = 0; i < inst->nnodes; i++) {
+    DEBUG_COMMENT("utilscplex.c:xstarToPath", "%d -> %d", i, succ[i]);
+  }
 
   // int *new_path = (int *)malloc(sizeof(int) * inst->nnodes);
   int new_path[inst->nnodes];
   int size = 0;
   int succ_node;
+  int current_comp = 0;
 
   for (int i = 0; i < inst->nnodes; i++) {
-    new_path[size] = i;
-    size++;
+    if (comp[i] == -1)
+      continue;
+    current_comp = comp[i];
     succ_node = succ[i];
     comp[i] = -1;
-    succ[i] = -1;
-    while (succ_node != -1) {
-      new_path[size] = succ_node;
-      comp[new_path[size]] = -1;
+
+    new_path[size++] = i;
+    comp[i] = -1;
+
+    while (comp[succ_node] != -1 && comp[succ_node] == current_comp) {
+      new_path[size++] = succ_node;
+      comp[succ_node] = -1;
       succ_node = succ[succ_node];
-      succ[new_path[size]] = -1;
-      size++;
     }
   }
 
-  // for (int i = 0; i < inst->nnodes; i++) {
-  //   DEBUG_COMMENT("utilscplex.c:xstarToPath", "%d -> %d", i, new_path[i]);
-  // }
+  if (size != inst->nnodes) {
+    ERROR_COMMENT("utilscplex.c:xstarToPath", "size != inst->nnodes");
+    return ERROR_NODES;
+  }
+
   if (path != NULL) {
     memcpy(path, new_path, inst->nnodes * sizeof(int));
   } else {
     ERROR_COMMENT("utilscplex.c:xstarToPath", "path is NULL");
   }
-  ASSERTINST(inst);
+  RUN(INSTANCE_assert(inst));
   DEBUG_COMMENT("utilscplex.c:xstarToPath", "xstarToPath ENDED");
+  return SUCCESS;
 }
 
 void create_xheu(Instance *inst, double *xheu) {
