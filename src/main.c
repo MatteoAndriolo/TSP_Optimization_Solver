@@ -45,11 +45,11 @@ int main(int argc, char **argv) {
     char title[40] = "\0";
 
     for (int j = 0; j < n_passagges; j++) {
-      INFO_COMMENT("main::main", "Generating instance %s", passagges[j]);
+      INFO_COMMENT("main.c:main", "Generating instance %s", passagges[j]);
       printf("Generating instance %s\n", passagges[j]);
       if (strcmp(passagges[j], "em") == 0) {
         if (inst->grasp->size > 1) {
-          ERROR_COMMENT("main::main",
+          ERROR_COMMENT("main.c:main",
                         "Extra mileage not implemented for grasp");
         }
         RUN_MAIN(extra_mileage(&instances[c_inst]));
@@ -57,7 +57,7 @@ int main(int argc, char **argv) {
         RUN_MAIN(two_opt(inst, INFINITY));
       } else if (strcmp(passagges[j], "tabu") == 0) {
         if (j == 0) {
-          FATAL_COMMENT("main::main",
+          FATAL_COMMENT("main.c:main",
                         "Tabu search must be used with a starting point");
         }
         RUN_MAIN(two_opt_tabu(inst, INFINITY, initializeTabuList(10, 4)));
@@ -66,7 +66,7 @@ int main(int argc, char **argv) {
       } else if (strcmp(passagges[j], "sa") == 0) {
         RUN_MAIN(simulated_annealling(inst, 1000));
       } else if (strcmp(passagges[j], "gen") == 0) {
-        ERROR_COMMENT("main::main", "Genetic algorithm not implemented yet");
+        ERROR_COMMENT("main.c:main", "Genetic algorithm not implemented yet");
       } else if (strcmp(passagges[j], "nn") == 0) {
         RUN_MAIN(nearest_neighboor(inst));
       } else if (strcmp(passagges[j], "cplex") == 0) {
@@ -98,11 +98,11 @@ int main(int argc, char **argv) {
 
         two_opt(inst, INFINITY);
         TSPopt(inst);
-        DEBUG_COMMENT("main::main", "back to main");
+        DEBUG_COMMENT("main.c:main", "back to main");
       } else if (strcmp(passagges[j], "test") == 0) {
         testTabuList();
       } else {
-        FATAL_COMMENT("main::main", "Model %s not recognized", passagges[j]);
+        FATAL_COMMENT("main.c:main", "Model %s not recognized", passagges[j]);
       }
 
       INSTANCE_saveBestPath(inst);
@@ -121,15 +121,15 @@ int main(int argc, char **argv) {
 
       if (j == n_passagges - 1)
         strcpy(title, "\0");
-      INFO_COMMENT("main::main", "Passagge %s completed with tl %lf",
+      INFO_COMMENT("main.c:main", "Passagge %s completed with tl %lf",
                    passagges[j], inst->best_tourlength);
     }
     // print tourlenght model time
 
-    OUTPUT_COMMENT("main::main", "Tour lenght: %lf , time elapsed %ld",
+    OUTPUT_COMMENT("main.c:main", "Tour lenght: %lf , time elapsed %ld",
                    inst->best_tourlength, time(NULL) - inst->tstart);
-    INFO_COMMENT("main::main", "Instance %d completed", c_inst);
+    INFO_COMMENT("main.c:main", "Instance %d completed", c_inst);
     INSTANCE_free(inst);
-    INFO_COMMENT("main::main", "Instance %d completed", c_inst);
+    INFO_COMMENT("main.c:main", "Instance %d completed", c_inst);
   }
 }

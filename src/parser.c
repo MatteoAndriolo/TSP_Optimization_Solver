@@ -5,7 +5,7 @@
 void read_input(Args *args) {
   FILE *fin = fopen(args->input_file, "r");
   if (fin == NULL) {
-    FATAL_COMMENT("parser::read_input", "File %s not found/not exists",
+    FATAL_COMMENT("parser.c:read_input", "File %s not found/not exists",
                   args->input_file);
   }
 
@@ -22,14 +22,14 @@ void read_input(Args *args) {
     int node_number;
     double node_x, node_y;
     if (sscanf(line, "DIMENSION : %d", &number_nodes) == 1) {
-      DEBUG_COMMENT("parser::read_input",
+      DEBUG_COMMENT("parser.c:read_input",
                     "Number of nodes in the field DIMENSION: %d", number_nodes);
       args->nnodes = number_nodes;
       args->x = (double *)malloc(number_nodes * sizeof(double));
       args->y = (double *)malloc(number_nodes * sizeof(double));
-      DEBUG_COMMENT("parser::read_input", "Memory for x and y allocated");
+      DEBUG_COMMENT("parser.c:read_input", "Memory for x and y allocated");
     } else if (strcmp(line, "NODE_COORD_SECTION") == 0) {
-      DEBUG_COMMENT("parser::read_input",
+      DEBUG_COMMENT("parser.c:read_input",
                     "Reading in the file the NODE_COORD_SECTION and start "
                     "reading the node");
       while (fgets(line, 1024, fin)) {
@@ -39,7 +39,7 @@ void read_input(Args *args) {
           args->y[nn] = node_y;
           node_saved++;
         } else {
-          DEBUG_COMMENT("parser::read_input", "Reached end of the file");
+          DEBUG_COMMENT("parser.c:read_input", "Reached end of the file");
           break;
         }
       }
@@ -49,17 +49,16 @@ void read_input(Args *args) {
   fclose(fin);
 
   if (number_nodes != node_saved) {
-    FATAL_COMMENT("parser::read_input",
+    FATAL_COMMENT("parser.c:read_input",
                   "field DIMENSION != real number of nodes in the file");
   }
 
-  INFO_COMMENT("parser::read_input", "Reading is finished, close the file");
+  INFO_COMMENT("parser.c:read_input", "Reading is finished, close the file");
 }
 
 void print_arguments(const Args *args) {
-  printf(
-      "\n\navailable parameters (vers. 16-may-2015) "
-      "--------------------------------------------------\n");
+  printf("\n\navailable parameters (vers. 16-may-2015) "
+         "--------------------------------------------------\n");
   printf("-input %s\n", args->input_file);
   printf("-m %s\n", args->model_type);
   printf("--seed %d\n", args->randomseed);
@@ -109,17 +108,18 @@ void parse_command_line(int argc, char **argv, Args *args) {
   strcpy(args->grasp, "1");
 
   int help = 0;
-  if (argc < 1) help = 1;
+  if (argc < 1)
+    help = 1;
   for (int i = 1; i < argc; i++) {
     // model type
     if ((strcmp(argv[i], "--model") == 0) | (strcmp(argv[i], "-m") == 0)) {
       strcpy(args->model_type, argv[++i]);
       continue;
-    }  // model type
+    } // model type
     if (strcmp(argv[i], "--int") == 0) {
       args->integer_costs = 1;
       continue;
-    }  // integer costs
+    } // integer costs
     if (strcmp(argv[i], "--seed") == 0) {
       args->randomseed = abs(atoi(argv[++i]));
       continue;
@@ -129,7 +129,7 @@ void parse_command_line(int argc, char **argv, Args *args) {
       strcpy(args->input_file, argv[++i]);
       fflush(stdout);
       continue;
-    }  // input file
+    } // input file
     if ((strcmp(argv[i], "--grasp") == 0) | (strcmp(argv[i], "-g") == 0)) {
       args->n_probabilities = 0;
       free(args->grasp_probabilities);
@@ -147,10 +147,10 @@ void parse_command_line(int argc, char **argv, Args *args) {
           sprintf(args->str_probabilities + strlen(args->str_probabilities),
                   "%.1f", args->grasp_probabilities[i]);
         else
-          sprintf(
-              args->str_probabilities + strlen(args->str_probabilities),
-              "%.1f_",
-              args->grasp_probabilities[i] - args->grasp_probabilities[i - 1]);
+          sprintf(args->str_probabilities + strlen(args->str_probabilities),
+                  "%.1f_",
+                  args->grasp_probabilities[i] -
+                      args->grasp_probabilities[i - 1]);
       }
       continue;
     }
@@ -158,7 +158,7 @@ void parse_command_line(int argc, char **argv, Args *args) {
         (strcmp(argv[i], "--time") == 0)) {
       args->timelimit = atof(argv[++i]);
       continue;
-    }  // total time limit
+    } // total time limit
     if ((strcmp(argv[i], "-n") == 0) |
         (strcmp(argv[i], "--numinstances") == 0)) {
       args->num_instances = atoi(argv[++i]);
@@ -167,7 +167,7 @@ void parse_command_line(int argc, char **argv, Args *args) {
     if ((strcmp(argv[i], "-help") == 0) | (strcmp(argv[i], "--help") == 0)) {
       help = 1;
       continue;
-    }  // help
+    } // help
     if (strcmp(argv[i], "--plot") == 0) {
       args->toplot = 1;
       printf("PUTTING PLOTTING AT 1");
@@ -176,14 +176,15 @@ void parse_command_line(int argc, char **argv, Args *args) {
     if (strcmp(argv[i], "--cperchf") == 0) {
       args->cplex_perchf = atof(argv[++i]);
       if (args->cplex_perchf < 1 || args->cplex_perchf > 100) {
-        FATAL_COMMENT("parser::parse_command_line",
+        FATAL_COMMENT("parser.c:parse_command_line",
                       "cplex_perchf must be in [1,100]");
       }
       continue;
     }
   }
 
-  if (help) exit(1);
+  if (help)
+    exit(1);
 }
 
 void parse_grasp_probabilities(char *grasp, double *probabilities,
@@ -197,24 +198,24 @@ void parse_grasp_probabilities(char *grasp, double *probabilities,
   int length = strlen(grasp);
   int cur_ind = 0;
   int i;
-  DEBUG_COMMENT("parser::parser_grasp_probabilities", "grasp=%s", grasp);
+  DEBUG_COMMENT("parser.c:parser_grasp_probabilities", "grasp=%s", grasp);
   for (i = 0; i < length; i++)
     if (grasp[i] == delimiter) {
       grasp[i] = '\0';
       sscanf(grasp + cur_ind, "%lf", &probabilities[*n_probabilities]);
-      DEBUG_COMMENT("parser::parser_grasp_probabilities",
+      DEBUG_COMMENT("parser.c:parser_grasp_probabilities",
                     "probabilities[%d]=%lf vs %s", *n_probabilities,
                     probabilities[*n_probabilities], grasp + cur_ind);
       cur_ind += strlen(grasp + cur_ind) + 1;
       (*n_probabilities)++;
     }
   sscanf(grasp + cur_ind, "%lf", &probabilities[*n_probabilities]);
-  DEBUG_COMMENT("parser::parser_grasp_probabilities",
+  DEBUG_COMMENT("parser.c:parser_grasp_probabilities",
                 "probabilities[%d]=%lf vs %s", *n_probabilities,
                 probabilities[*n_probabilities], grasp + cur_ind);
   cur_ind += strlen(grasp + cur_ind) + 1;
   (*n_probabilities)++;
-  DEBUG_COMMENT("parser::parser_grasp_probabilities", "n_probabilities=%d",
+  DEBUG_COMMENT("parser.c:parser_grasp_probabilities", "n_probabilities=%d",
                 *n_probabilities);
 
   // normalize probabilities
@@ -225,11 +226,11 @@ void parse_grasp_probabilities(char *grasp, double *probabilities,
   for (int i = 0; i < *n_probabilities; i++) {
     probabilities[i] /= sum;
   }
-  DEBUG_COMMENT("parser::parser_grasp_probabilities", "probabilities[%d]=%lf",
+  DEBUG_COMMENT("parser.c:parser_grasp_probabilities", "probabilities[%d]=%lf",
                 0, probabilities[0]);
   for (int i = 1; i < *n_probabilities; i++) {
     probabilities[i] += probabilities[i - 1];
-    DEBUG_COMMENT("parser::parser_grasp_probabilities", "probabilities[%d]=%lf",
-                  i, probabilities[i]);
+    DEBUG_COMMENT("parser.c:parser_grasp_probabilities",
+                  "probabilities[%d]=%lf", i, probabilities[i]);
   }
 }

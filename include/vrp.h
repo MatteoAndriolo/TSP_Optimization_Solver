@@ -16,11 +16,12 @@
 #include "logger.h"
 
 // hard-wired parameters
-#define XSMALL \
-  1e-5  // 1e-4*	// tolerance used to decide ingerality of 0-1 var.s
-#define EPSILON 1e-9  // 1e-9		// very small numerical tolerance
-#define TICKS_PER_SECOND \
-  1000.0  // cplex's ticks on Intel Core i7 quadcore @2.3GHZ
+#define XSMALL                                                                 \
+  1e-5               // 1e-4*	// tolerance used to decide ingerality of 0-1
+                     // var.s
+#define EPSILON 1e-9 // 1e-9		// very small numerical tolerance
+#define TICKS_PER_SECOND                                                       \
+  1000.0 // cplex's ticks on Intel Core i7 quadcore @2.3GHZ
 #define INFTY 1e+30
 
 typedef enum {
@@ -35,9 +36,9 @@ typedef enum {
 
 typedef struct {
   // execution parameters
-  double max_time;  // overall time limit, in sec.s
-  time_t tstart;    // starting time
-  time_t tend;      // end time
+  double max_time; // overall time limit, in sec.s
+  time_t tstart;   // starting time
+  time_t tend;     // end time
   pthread_mutex_t mutex_path;
 
   // MODEL
@@ -54,7 +55,7 @@ typedef struct {
   int *path;
   int *best_path;
   double tour_length;
-  double best_tourlength;  // best sol. available
+  double best_tourlength; // best sol. available
 
   // GRASP parameters
   GRASP_Framework *grasp;
@@ -68,8 +69,8 @@ typedef struct {
   int ncols;
 
   // global data
-  char input_file[1000];  // input file
-  char log_file[1000];    // output log file
+  char input_file[1000]; // input file
+  char log_file[1000];   // output log file
 } Instance;
 
 void INSTANCE_initialize(Instance *inst, double max_time, int integer_costs,
@@ -100,12 +101,12 @@ void INSTANCE_saveBestPath(Instance *inst);
 
 int checkTime(Instance *inst, bool saveBest);
 
-#define CHECKTIME(inst, bool)                  \
-  do {                                         \
-    ErrorCode err = checkTime((inst), (bool)); \
-    if (err != SUCCESS) {                      \
-      return err;                              \
-    }                                          \
+#define CHECKTIME(inst, bool)                                                  \
+  do {                                                                         \
+    ErrorCode err = checkTime((inst), (bool));                                 \
+    if (err != SUCCESS) {                                                      \
+      return err;                                                              \
+    }                                                                          \
   } while (0)
 
 // ----------------------------------------------------------------------------
@@ -116,10 +117,10 @@ void swapPathPoints(Instance *inst, int i, int j);
 
 int INSTANCE_pathCheckpoint(Instance *inst);
 
-int INSTANCE_assert(Instance *inst);
-#define ASSERTINST(inst)        \
-  do {                          \
-    RUN(INSTANCE_assert(inst)); \
+ErrorCode INSTANCE_assert(Instance *inst);
+#define ASSERTINST(inst)                                                       \
+  do {                                                                         \
+    RUN(INSTANCE_assert(inst));                                                \
   } while (0)
 
 #endif /* VRP_H_ */

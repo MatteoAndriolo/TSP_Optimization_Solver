@@ -6,7 +6,8 @@ double energy_probabilities(double cost_current, double cost_new, double T,
                             double coefficient) {
   // double delta = (cost_new - cost_current) / (cost_current + cost_new) *
   // coefficient;
-  if (cost_new < cost_current) return 1;
+  if (cost_new < cost_current)
+    return 1;
   return exp(-coefficient / T);
 }
 
@@ -47,9 +48,9 @@ int simulated_annealling(Instance *inst, double k_max) {
                   "k: %d, T: %f, energy: %f, rand_val: %f", k, T, energy,
                   rand_val);
 
-    if (rand_val < energy) {  // rejected !
+    if (rand_val < energy) { // rejected !
       restoreInstState(inst, path, tour_length);
-    } else {  // accepted
+    } else { // accepted
       backupInstState(inst, path, &tour_length);
       INSTANCE_pathCheckpoint(inst);
     }
@@ -117,12 +118,14 @@ int kick_function(Instance *inst, int k) {
   //---------------------------------------------------------------------------------------
   int *final_path = malloc(inst->nnodes * sizeof(int));
   int count = 0;
-  for (int i = 0; i < index_1; i++) final_path[count++] = inst->path[i];
+  for (int i = 0; i < index_1; i++)
+    final_path[count++] = inst->path[i];
   for (int i = index_4; i < inst->nnodes; i++)
     final_path[count++] = inst->path[i];
   for (int i = index_4 - 1; i >= index_3; i--)
     final_path[count++] = inst->path[i];
-  for (int i = index_2; i < index_3; i++) final_path[count++] = inst->path[i];
+  for (int i = index_2; i < index_3; i++)
+    final_path[count++] = inst->path[i];
   for (int i = index_2 - 1; i >= index_1; i--)
     final_path[count++] = inst->path[i];
   free(inst->path);

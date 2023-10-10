@@ -3,6 +3,7 @@
 #include <immintrin.h>
 #include <math.h>
 
+#include "errors.h"
 #include "logger.h"
 #include "vrp.h"
 // #include <cplex.h>
@@ -29,8 +30,10 @@ double dist(int i, int j, Instance *inst);
  * @param xstar solution vector
  * @param dim_xstar dimension of the solution vector
  * @param path solution vector
+ * @return ErrorCode
  */
-void xstarToPath(Instance *inst, const double *xstar, int dim_xstar, int *path);
+ErrorCode xstarToPath(Instance *inst, const double *xstar, int dim_xstar,
+                      int *path);
 
 /**
  * @brief a set of random starting nodes.
@@ -83,14 +86,6 @@ void repristinate_radius_edges(CPXENVptr env, CPXLPptr lp, Instance *inst,
                                double *xheu);
 
 /**
- * @brief generate the variables to be eliminate from the current solution
- * @param env CPLEX environment
- * @param lp CPLX problem
- * @param inst the instance of the problem to be solved
- */
-int bender(Instance *inst, CPXENVptr env, CPXLPptr lp);
-
-/**
  * @brief build_sol
  * @param xstar solution vector
  * @param inst instance of the problem to be solved
@@ -101,4 +96,26 @@ int bender(Instance *inst, CPXENVptr env, CPXLPptr lp);
 void build_sol(const double *xstar, Instance *inst, int *succ, int *comp,
                int *ncomp);
 void init_mip(const CPXENVptr env, const CPXLPptr lp, Instance *inst);
+
+/*
+ * @brief build_model
+ * @param inst instance of the problem to be solved
+ * @param env CPLEX environment
+ * @param lp CPLEX problem
+ */
+void build_model(Instance *inst, const CPXENVptr env,
+                 const CPXLPptr lp); // CPXENVptr env, CPXLPptr lp);
+/*
+ * @brief build_model
+ * @param inst instance of the problem to be solved
+ * @param env CPLEX environment
+ * @param lp CPLEX problem
+ */
+void build_model(Instance *inst, const CPXENVptr env,
+                 const CPXLPptr lp); // CPXENVptr env, CPXLPptr lp);
+int addSubtourConstraints(CPXENVptr env, CPXLPptr lp, int nnodes, int *comp,
+                          Instance *inst, int *counter, double *xstar);
+
+int patchPath(Instance *inst, double *xstar, int *succ, int *comp, int *path,
+              double *obj_value);
 #endif

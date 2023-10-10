@@ -48,8 +48,8 @@ void saveBestSolution(const CPXENVptr env, const CPXLPptr lp, Instance *inst) {
   }
 }
 
-void xstarToPath(Instance *inst, const double *xstar, int dim_xstar,
-                 int *path) {
+ErrorCode xstarToPath(Instance *inst, const double *xstar, int dim_xstar,
+                      int *path) {
   DEBUG_COMMENT("utilscplex.c:xstarToPath", "xstarToPath");
 
   dim_xstar = inst->ncols;
@@ -111,7 +111,7 @@ void xstarToPath(Instance *inst, const double *xstar, int dim_xstar,
   } else {
     ERROR_COMMENT("utilscplex.c:xstarToPath", "path is NULL");
   }
-  INSTANCE_assert(inst);
+  ASSERTINST(inst);
   DEBUG_COMMENT("utilscplex.c:xstarToPath", "xstarToPath ENDED");
 }
 
@@ -251,8 +251,8 @@ bool isConstraintNotValidForCurrOpt(Instance *inst, double *xstar, int *rmatind,
   return true;
 }
 
-void addSubtourConstraints(CPXENVptr env, CPXLPptr lp, int nnodes, int *comp,
-                           Instance *inst, int *counter, double *xstar) {
+int addSubtourConstraints(CPXENVptr env, CPXLPptr lp, int nnodes, int *comp,
+                          Instance *inst, int *counter, double *xstar) {
   DEBUG_COMMENT("utilscplex.c:addSubtourConstraints",
                 "Adding subtour constraints");
   // INIT
@@ -311,15 +311,16 @@ void addSubtourConstraints(CPXENVptr env, CPXLPptr lp, int nnodes, int *comp,
       // debug list of rmatval != 1
 
       if (!isConstraintNotValidForCurrOpt(inst, xstar, rmatind, nzcnt, rhs)) {
-        DEBUG_COMMENT("utilscplex.c:addSubtourConstraints",
+        ERROR_COMMENT("utilscplex.c:addSubtourConstraints",
                       "constraint valid for current opt");
-        exit(1);
+        return ERROR_NODES;
       }
       int status = CPXaddrows(env, lp, ccnt, rcnt, nzcnt, &rhs, &sense, rmatbeg,
                               rmatind, rmatval, NULL, cname);
       if (status) {
-        fprintf(stderr, "Failed to add %s constraint.\n", cname[0]);
-        exit(1);
+        ERROR_COMMENT("utilscplex.c:addSubtourConstraints",
+                      "CPXaddrows(): error 1");
+        return status;
       }
       DEBUG_COMMENT("utilscplex.c:addSubtourConstraints",
                     "constraint added, number rows is %d",
@@ -332,63 +333,7 @@ void addSubtourConstraints(CPXENVptr env, CPXLPptr lp, int nnodes, int *comp,
   }
   free(component);
   component = NULL;
-}
-
-int bender(Instance *inst, const CPXENVptr env, const CPXLPptr lp) {
-  INFO_COMMENT(
-      "constraint.c:bender",
-      "Adding subtour constraints, starting the while loop for BENDERS");
-  int ncomp = 0;
-  int n_STC = 0;
-  int *succ = (int *)malloc(sizeof(int) * inst->nnodes);
-  int *comp = (int *)malloc(sizeof(int) * inst->nnodes);
-  double *xstar = (double *)calloc(inst->ncols, sizeof(double));
-  // take the time and if exceed the time limit then break the loop
-  // time_t start_time = time(NULL);
-
-  // // Set MIP start
-  // CPXsetdblparam(env, CPXPARAM_TimeLimit, 10);
-  // double *xheu = (double *)calloc(inst->ncols, sizeof(double));
-  // create_xheu(inst, xheu);
-  // set_mip_start(inst, env, lp, xheu);
-  // free(xheu);
-  // xheu = NULL;
-
-  DEBUG_COMMENT("constraint.c:bender", "initialization terminated");
-  int iteration = 0;
-  while (ncomp != 1) { // && difftime(time(NULL), start_time) < 10) {
-    CPXsetdblparam(env, CPXPARAM_TimeLimit, 10);
-    // base_cplex(env, lp, *inst);
-    if (CPXmipopt(env, lp)) {
-      ERROR_COMMENT("constraint.c:bender",
-                    "CPXmipopt() error, not able to solve the problem");
-      exit(-1);
-    }
-
-    if (CPXgetx(env, lp, xstar, 0, inst->ncols - 1))
-      ERROR_COMMENT("constraint.c:bender",
-                    "CPXgetx() error, not able to retrive the solution");
-
-    build_sol(xstar, inst, succ, comp, &ncomp);
-    DEBUG_COMMENT("constraint.c:bender", "ncomp = %d", ncomp);
-    if (ncomp == 1)
-      continue;
-
-    DEBUG_COMMENT("constraint.c:bender", "addSubtourConstraints");
-    addSubtourConstraints(env, lp, inst->nnodes, comp, inst, &n_STC, xstar);
-    char name[30];
-    sprintf(name, "benders_%d.lp", iteration);
-    iteration++;
-    CPXwriteprob(env, lp, name, NULL);
-    // getchar();
-  }
-
-  xstarToPath(inst, xstar, inst->ncols, inst->path);
-  memcpy(inst->best_path, inst->path, inst->nnodes * sizeof(int));
-  free(xstar);
-  free(succ);
-  free(comp);
-  return 0;
+  return SUCCESS;
 }
 
 void build_sol(const double *xstar, Instance *inst, int *succ, int *comp,
@@ -425,4 +370,128 @@ void build_sol(const double *xstar, Instance *inst, int *succ, int *comp,
     }
     succ[i] = start; // last arc to close the cycle go to the next component...
   }
+}
+void build_model(Instance *inst, const CPXENVptr env, const CPXLPptr lp) {
+  INFO_COMMENT("utilscplex.c:build_model", "Building model");
+
+  char **cname =
+      (char **)malloc(inst->nnodes * (inst->nnodes - 1) / 2 *
+                      sizeof(char *)); // (char **) required by cplex...
+  if (!cname)
+    ERROR_COMMENT("utilscplex.c:build_model", "wrong allocation of cname");
+
+  inst->ncols = inst->nnodes * (inst->nnodes - 1) / 2;
+  inst->edgeList =
+      (double *)calloc((inst->nnodes * (inst->nnodes - 1)) / 2, sizeof(double));
+  double *obj = (double *)calloc(inst->ncols, sizeof(double));
+  double *lb = (double *)calloc(inst->ncols, sizeof(double));
+  double *ub = (double *)calloc(inst->ncols, sizeof(double));
+  char *xctype = (char *)calloc(inst->ncols, sizeof(char));
+
+  int c = 0;
+  for (int i = 0; i < inst->nnodes - 1; i++) {
+    for (int j = i + 1; j < inst->nnodes; j++) {
+      cname[c] = (char *)calloc(20, sizeof(char));
+      sprintf(cname[c], "x(%d,%d)", i + 1,
+              j + 1); // (i+1,j+1) because CPLEX starts from 1 (not 0)
+      obj[c++] = INSTANCE_getDistanceNodes(inst, i, j);
+    }
+  }
+  if (c != inst->ncols)
+    ERROR_COMMENT("utilscplex.c:build_model", "wrong number of columns");
+  for (int i = 0; i < inst->ncols; i++) {
+    // lb[i] = 0.0;
+    ub[i] = 1.0;
+    xctype[i] = CPX_BINARY;
+  }
+
+  int status = CPXnewcols(env, lp, inst->ncols, obj, lb, ub, xctype, cname);
+  DEBUG_COMMENT("tspcplex.c:build_model", "status %d", status);
+  free(obj);
+  free(lb);
+  free(ub);
+  free(xctype);
+  DEBUG_COMMENT("utilscplex.c:build_model",
+                "number of columns in CPLEX after adding x var.s %d",
+                CPXgetnumcols(env, lp));
+
+  if (inst->ncols != CPXgetnumcols(env, lp))
+    ERROR_COMMENT(
+        "utilscplex.c:build_model",
+        " wrong number of columns in CPLEX after adding x var.s %d vs %d",
+        inst->ncols, CPXgetnumcols(env, lp));
+  if (inst->ncols != (inst->nnodes * (inst->nnodes - 1)) / 2)
+    ERROR_COMMENT("utilscplex.c:build_model",
+                  "wrong number of columns in CPLEX after adding x var.s");
+
+  // ADD CONSTRAITS - ROWS
+  // add_degree_constraint(inst, env, lp) for each node
+  INFO_COMMENT("constraint.c:add_degree_constraint",
+               "Adding degree constraints");
+  int *index = (int *)calloc(inst->nnodes, sizeof(int));
+  double *value = (double *)calloc(inst->nnodes, sizeof(double));
+
+  for (int i = 0; i < inst->nnodes; i++) {
+    double rhs = 2.0;
+    char sense = 'E';                       // 'E' for equality constraint
+    sprintf(cname[0], "degree(%d)", i + 1); // rowname
+    int nnz = 0; // number of non zero constraints to be added to constraint
+                 // matrix length of array rmatind rmatval
+    for (int j = 0; j < inst->nnodes; j++) {
+      if (j == i)
+        continue;
+      index[nnz] = xpos(j, i, inst); // rmatind
+      value[nnz] = 1.0;              // rmatval
+      nnz++;
+    }
+    int izero = 0; // rmatbeg
+                   // int  CPXaddrows( CPXCENVptr env, CPXLPptr lp, int ccnt,
+                   // int rcnt, int nzcnt, double const * rhs, char const *
+                   // sense, int const * rmatbeg, int const * rmatind, double
+                   // const * rmatval, char ** colname, char ** rowname
+                   // )
+    if (CPXaddrows(env, lp, 0, 1, nnz, &rhs, &sense, &izero, index, value, NULL,
+                   &cname[0]))
+      ERROR_COMMENT("constraint.c:add_degree_constraint",
+                    "CPXaddrows(): error 1");
+  }
+  DEBUG_COMMENT("constraint.c:add_degree_constraint",
+                "NUMBER OF ROW IN CPLEX after adding degree constraints %d",
+                CPXgetnumrows(env, lp));
+
+  // FREE
+  for (int i = 0; i < inst->nnodes * (inst->nnodes - 1) / 2; i++)
+    free(cname[i]);
+  free(cname);
+  free(index);
+  free(value);
+}
+
+int patchPath(Instance *inst, double *xstar, int *succ, int *comp, int *path,
+              double *obj_value) {
+  DEBUG_COMMENT("utilscplex.c:patchPath", "Patching path");
+  xstarToPath(inst, xstar, inst->ncols, path);
+  int component[inst->nnodes];
+  memcpy(component, comp, inst->nnodes * sizeof(int));
+  int counter = 0;
+  for (int i = 0; i < inst->nnodes; i++) {
+    if (component[i] < 0)
+      continue;
+    int current_component = component[i];
+    path[counter++] = i;
+    component[i] = -1;
+
+    int succ_node = succ[i];
+    while (component[succ_node] == current_component) {
+      path[counter++] = succ_node;
+      component[succ_node] = -1;
+      succ_node = succ[succ_node];
+    }
+  }
+  if (counter != inst->nnodes) {
+    ERROR_COMMENT("utilscplex.c:patchPath", "counter != inst->nnodes");
+    return ERROR;
+  }
+
+  return SUCCESS;
 }

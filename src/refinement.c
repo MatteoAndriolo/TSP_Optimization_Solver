@@ -5,7 +5,7 @@
 #include "../include/tabu.h"
 
 int two_opt(Instance *inst, double iterations) {
-  INFO_COMMENT("refinement:2opt", "starting 2opt");
+  INFO_COMMENT("refinement.c:2opt", "starting 2opt");
   int foundImprovement = 1;
   double cost_old_edge, cost_new_edge, cost_new_edge2, cost_old_edge2;
   double c_iter = 0;
@@ -25,9 +25,9 @@ int two_opt(Instance *inst, double iterations) {
           foundImprovement = 1;
           two_opt_move(inst, i, j);
         }
-        // DEBUG_COMMENT("refinement:2opt", "delta %lf, tl %lf", delta,
+        // DEBUG_COMMENT("refinement.c:2opt", "delta %lf, tl %lf", delta,
         // tour_length);
-        CHECKTIME(inst, false);
+        // CHECKTIME(inst, false);
       }
       c_iter++;
       if (c_iter > iterations) {
@@ -37,12 +37,13 @@ int two_opt(Instance *inst, double iterations) {
     }
   }
   ASSERTINST(inst);
-  DEBUG_COMMENT("refinement:2opt", "attual tour length %lf", inst->tour_length);
+  DEBUG_COMMENT("refinement.c:2opt", "attual tour length %lf",
+                inst->tour_length);
   return SUCCESS;
 }
 
 int two_opt_tabu(Instance *inst, double iterations, TabuList *tabuList) {
-  INFO_COMMENT("refinement:2opt_tabu", "starting 2opt");
+  INFO_COMMENT("refinement.c:2opt_tabu", "starting 2opt");
   bool foundImprovement = true;
   double cost_old_edge, cost_new_edge, cost_new_edge2, cost_old_edge2;
   double c_iter = 0;
@@ -79,7 +80,7 @@ int two_opt_tabu(Instance *inst, double iterations, TabuList *tabuList) {
   }
 
   ASSERTINST(inst);
-  INFO_COMMENT("refinement:2opt_tabu", "finished - final tour length %lf",
+  INFO_COMMENT("refinement.c:2opt_tabu", "finished - final tour length %lf",
                inst->tour_length);
   return SUCCESS;
 }

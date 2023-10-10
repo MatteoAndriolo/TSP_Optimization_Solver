@@ -13,7 +13,7 @@ void swapPathPoints(Instance *inst, int i, int j) {
 }
 
 int nearest_neighboor(Instance *inst) {
-  INFO_COMMENT("nearest_neighboor", "start nearest neighboor");
+  INFO_COMMENT("greedy.c:nearest_neighboor", "start nearest neighboor");
   int current_node;
   GRASP_Framework *grasp = inst->grasp;
   double dist;
@@ -38,7 +38,7 @@ int nearest_neighboor(Instance *inst) {
 }
 
 int extra_mileage(Instance *inst) {
-  INFO_COMMENT("greedy::extra_mileage", "start extra mileage");
+  INFO_COMMENT("greedy.c:extra_mileage", "start extra mileage");
   //--------------- FIND DIAMETER -------------------------------------------
   // TODO find diameter | farthest with lowest mean distance from other nodes
   double max_distance = 0;

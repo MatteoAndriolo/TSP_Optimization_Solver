@@ -27,7 +27,7 @@ void GRASP_init(GRASP_Framework *grasp, double probabilities[], int size) {
   grasp->probabilities = (double *)malloc(size * sizeof(double));
 
   if (grasp->solutions == NULL || grasp->probabilities == NULL) {
-    ERROR_COMMENT("init_grasp", "malloc failed");
+    ERROR_COMMENT("grasp.c:init_grasp", "malloc failed");
     exit(FAILURE);
   }
 
@@ -39,11 +39,11 @@ void GRASP_init(GRASP_Framework *grasp, double probabilities[], int size) {
   for (int i = 0; i < size; i++) {
     grasp->probabilities[i] = probabilities[i];
   }
-  INFO_COMMENT("init_grasp", "GRASP initialized");
-  INFO_COMMENT("init_grasp", "GRASP size: %d", size);
-  INFO_COMMENT("init_grasp", "GRASP probabilities:");
+  INFO_COMMENT("grasp.c:init_grasp", "GRASP initialized");
+  INFO_COMMENT("grasp.c:init_grasp", "GRASP size: %d", size);
+  INFO_COMMENT("grasp.c:init_grasp", "GRASP probabilities:");
   for (int i = 0; i < size; i++) {
-    INFO_COMMENT("init_grasp", "GRASP probabilities[%d]: %f", i,
+    INFO_COMMENT("grasp.c:init_grasp", "GRASP probabilities[%d]: %f", i,
                  probabilities[i]);
   }
 }
@@ -70,7 +70,7 @@ int GRASP_getSolution(GRASP_Framework *grasp) {
 
   for (int i = 0; i < grasp->count; i++) {
     if (random_value <= grasp->probabilities[i]) {
-      // DEBUG_COMMENT("get_solution", "returned %d-th, prob %lf", i,
+      // DEBUG_COMMENT("grasp.c:get_solution", "returned %d-th, prob %lf", i,
       // random_value);
       return grasp->solutions[i].solution;
     }
