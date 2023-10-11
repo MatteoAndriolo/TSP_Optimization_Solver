@@ -1,7 +1,5 @@
 #ifndef GREEDY_H
 #define GREEDY_H
-#include <math.h>
-#include <stdlib.h>
 
 #include "errors.h"
 #include "vrp.h"

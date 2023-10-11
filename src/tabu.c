@@ -1,7 +1,5 @@
 #include "../include/tabu.h"
 
-#include <stdbool.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 TabuList *initializeTabuList(int size, int tenure) {
@@ -88,7 +86,7 @@ void testTabuList() {
   printf("Testing Single-Integer Tabu List...\n");
 
   // Initialize Tabu List
-  TabuList *list = initializeTabuList(5, 3);  // Size: 5, Tenure: 3
+  TabuList *list = initializeTabuList(5, 3); // Size: 5, Tenure: 3
   INFO_COMMENT("tabu::testTabuList()", "Initialized Tabu List");
   INFO_COMMENT("tabu::testTabuList()", "Size: %d, Tenure: %d", list->size,
                list->tenure);
@@ -111,17 +109,17 @@ void testTabuList() {
   INFO_COMMENT("tabu::testTabuList()", "Added 3 to Tabu List");
   printTabuList(list);
 
-  incAgeTabuList(list);  // Iteration 1
+  incAgeTabuList(list); // Iteration 1
   INFO_COMMENT("tabu::testTabuList()", "Updated Tabu List");
   printTabuList(list);
-  incAgeTabuList(list);  // Iteration 2
+  incAgeTabuList(list); // Iteration 2
   INFO_COMMENT("tabu::testTabuList()", "Updated Tabu List");
   printTabuList(list);
-  incAgeTabuList(list);  // Iteration 3
+  incAgeTabuList(list); // Iteration 3
   INFO_COMMENT("tabu::testTabuList()", "Updated Tabu List");
   printTabuList(list);
 
-  if (!isTabu(list, 1)) {  // 1 should be removed due to tenure
+  if (!isTabu(list, 1)) { // 1 should be removed due to tenure
     printf("Test 2 Passed!\n");
   } else {
     printf("Test 2 Failed!\n");
@@ -134,7 +132,7 @@ void testTabuList() {
   addTabu(list, 5);
   INFO_COMMENT("tabu::testTabuList()", "Added 5 to Tabu List");
   printTabuList(list);
-  if (isTabu(list, 4) && !isTabu(list, 1)) {  // 1 should be overwritten
+  if (isTabu(list, 4) && !isTabu(list, 1)) { // 1 should be overwritten
     printf("Test 3 Passed!\n");
   } else {
     printf("Test 3 Failed!\n");

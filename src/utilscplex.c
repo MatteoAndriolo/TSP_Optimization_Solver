@@ -15,6 +15,7 @@ bool checkxstart(double *xstar, int dim_xstar) {
   }
   return true;
 }
+
 void init_mip(const CPXENVptr env, const CPXLPptr lp, Instance *inst) {
   double *xheu = (double *)calloc(inst->ncols, sizeof(double));
   create_xheu(inst, xheu);
@@ -31,21 +32,6 @@ int xpos(int i, int j, Instance *inst) {
     return xpos(j, i, inst);
   int pos = i * inst->nnodes + j - ((i + 1) * (i + 2)) / 2;
   return pos;
-}
-
-void saveBestSolution(const CPXENVptr env, const CPXLPptr lp, Instance *inst) {
-  double objval;
-  double *xcurr = (double *)malloc(inst->ncols * sizeof(double));
-  CPXgetx(env, lp, xcurr, 0, inst->ncols - 1);
-  CPXgetobjval(env, lp, &objval);
-
-  if (objval < inst->best_tourlength) {
-    DEBUG_COMMENT("utilscplex.c:getNewSolution", "New best solution found: %lf",
-                  objval);
-
-    inst->best_tourlength = objval;
-    memcpy(inst->edgeList, xcurr, inst->ncols * sizeof(double));
-  }
 }
 
 ErrorCode xstarToPath(Instance *inst, const double *xstar, int dim_xstar,
@@ -76,10 +62,10 @@ ErrorCode xstarToPath(Instance *inst, const double *xstar, int dim_xstar,
   int ncomp = 0;
 
   build_sol(xstar, inst, succ, comp, &ncomp);
-  DEBUG_COMMENT("utilscplex.c:xstarToPath", "succ:");
-  for (int i = 0; i < inst->nnodes; i++) {
-    DEBUG_COMMENT("utilscplex.c:xstarToPath", "%d -> %d", i, succ[i]);
-  }
+  // DEBUG_COMMENT("utilscplex.c:xstarToPath", "succ:");
+  // for (int i = 0; i < inst->nnodes; i++) {
+  //   DEBUG_COMMENT("utilscplex.c:xstarToPath", "%d -> %d", i, succ[i]);
+  // }
 
   // int *new_path = (int *)malloc(sizeof(int) * inst->nnodes);
   int new_path[inst->nnodes];
@@ -385,20 +371,22 @@ void build_model(Instance *inst, const CPXENVptr env, const CPXLPptr lp) {
     ERROR_COMMENT("utilscplex.c:build_model", "wrong allocation of cname");
 
   inst->ncols = inst->nnodes * (inst->nnodes - 1) / 2;
-  inst->edgeList =
-      (double *)calloc((inst->nnodes * (inst->nnodes - 1)) / 2, sizeof(double));
+  inst->edgeList = (int *)malloc(inst->ncols * 2 * sizeof(int));
   double *obj = (double *)calloc(inst->ncols, sizeof(double));
   double *lb = (double *)calloc(inst->ncols, sizeof(double));
   double *ub = (double *)calloc(inst->ncols, sizeof(double));
   char *xctype = (char *)calloc(inst->ncols, sizeof(char));
 
   int c = 0;
+  inst->ecount = 0;
   for (int i = 0; i < inst->nnodes - 1; i++) {
     for (int j = i + 1; j < inst->nnodes; j++) {
       cname[c] = (char *)calloc(20, sizeof(char));
       sprintf(cname[c], "x(%d,%d)", i + 1,
               j + 1); // (i+1,j+1) because CPLEX starts from 1 (not 0)
       obj[c++] = INSTANCE_getDistanceNodes(inst, i, j);
+      inst->edgeList[inst->ecount++] = i;
+      inst->edgeList[inst->ecount++] = j;
     }
   }
   if (c != inst->ncols)

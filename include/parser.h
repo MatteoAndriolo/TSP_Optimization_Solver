@@ -4,7 +4,6 @@
 #include <argp.h>
 #include <stdio.h>
 
-#include "logger.h"
 #include "vrp.h"
 
 // Parse arguments

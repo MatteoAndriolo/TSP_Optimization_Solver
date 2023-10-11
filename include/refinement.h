@@ -3,7 +3,6 @@
 #include <time.h>
 
 #include "../include/tabu.h"
-#include "../include/utils.h"
 #include "../include/vrp.h"
 #include "errors.h"
 

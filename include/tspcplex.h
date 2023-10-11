@@ -5,14 +5,11 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include "../tmpcplex/cplex.h"
-// #include "../tmpcplex/cplexx.h"
 // #include <cplex.h>
-#include <concorde.h>
+// #include <concorde.h>
+#include "../tmpcplex/cplex.h"
 // #include "../concorde_build/concorde.h"
 
-#include "logger.h"
-#include "utilscplex.h"
 #include "vrp.h"
 
 // typedef struct{

@@ -1,6 +1,5 @@
 #ifndef PLOT_H
 #define PLOT_H
-#include "../include/vrp.h"
 
 /**
  * Plot the path

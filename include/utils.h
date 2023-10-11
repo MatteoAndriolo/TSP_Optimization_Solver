@@ -4,11 +4,10 @@
 #include <math.h>
 #include <stdbool.h>
 
-#include "../include/logger.h"
-#include "../include/vrp.h"
+#include "vrp.h"
 
-#define FREE(ptr) \
-  free(ptr);      \
+#define FREE(ptr)                                                              \
+  free(ptr);                                                                   \
   ptr = NULL;
 
 /**

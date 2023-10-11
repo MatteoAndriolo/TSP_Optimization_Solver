@@ -10,9 +10,8 @@
 #include "../include/metaheuristic.h"
 #include "../include/parser.h"
 #include "../include/plot.h"
-#include "../include/tabu.h"
+#include "../include/refinement.h"
 #include "../include/tspcplex.h"
-#include "../include/utils.h"
 #include "../include/vrp.h"
 
 int main(int argc, char **argv) {

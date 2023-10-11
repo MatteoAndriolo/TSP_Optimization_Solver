@@ -1,13 +1,10 @@
 #ifndef UTILS_H
 #define UTILS_H
-#include <immintrin.h>
 #include <math.h>
 
 #include "errors.h"
-#include "logger.h"
 #include "vrp.h"
 // #include <cplex.h>
-#include "../tmpcplex/cplex.h"
 
 /**
  * @brief the starting node with the first node in the path

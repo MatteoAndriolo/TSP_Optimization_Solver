@@ -1,7 +1,7 @@
 #include "../include/tspcplex.h"
 #include "../include/mycallback.h"
 #include "../include/refinement.h"
-#include "../include/vrp.h"
+#include "../include/utilscplex.h"
 
 #include <stdbool.h>
 #include <string.h>
@@ -9,37 +9,37 @@
 
 int branch_and_cut(Instance *inst, const CPXENVptr env, const CPXLPptr lp,
                    CPXLONG contextid) {
-  //   if (contextid != -1)
-  //     if (CPXcallbacksetfunc(env, lp, contextid, my_callback, inst))
-  //       ERROR_COMMENT("tspcplex.c:branch_and_cut", "CPXcallbacksetfunc()
-  //       error");
-  //
-  //   // FROM CHATGPT
-  //   CPXmipopt(env, lp);
-  //
-  //   // double *xstar = (double *)calloc(inst->ncols, sizeof(double));
-  //   double xstar[inst->ncols];
-  //   CPXgetx(env, lp, xstar, 0, inst->ncols - 1);
-  //
-  //   // int *succ = (int *)calloc(inst->nnodes, sizeof(int));
-  //   // int *comp = (int *)calloc(inst->nnodes, sizeof(int));
-  //   int succ[inst->nnodes];
-  //   int comp[inst->nnodes];
-  //   int ncomp;
-  //
-  //   build_sol(xstar, inst, succ, comp, &ncomp);
-  //
-  //   double obj_val;
-  //   int error = CPXgetobjval(env, lp, &obj_val);
-  //   if (error)
-  //     ERROR_COMMENT("tspcplex.c:branch_and_cut", "CPXgetobjval() error\n");
-  //
-  //   xstarToPath(inst, xstar, inst->ncols, inst->path);
-  //   memcpy(inst->best_path, inst->path, sizeof(int) * inst->nnodes);
-  //   // free(comp);
-  //   // free(succ);
-  //   // free(xstar);
-  //
+  if (CPXcallbacksetfunc(env, lp, contextid, my_callback, inst))
+    ERROR_COMMENT("tspcplex.c:branch_and_cut", "CPXcallbacksetfunc() error");
+
+  // FROM CHATGPT
+  CPXmipopt(env, lp);
+
+  // double *xstar = (double *)calloc(inst->ncols, sizeof(double));
+  double xstar[inst->ncols];
+  CPXgetx(env, lp, xstar, 0, inst->ncols - 1);
+
+  // int *succ = (int *)calloc(inst->nnodes, sizeof(int));
+  // int *comp = (int *)calloc(inst->nnodes, sizeof(int));
+  int succ[inst->nnodes];
+  int comp[inst->nnodes];
+  int ncomp;
+
+  build_sol(xstar, inst, succ, comp, &ncomp);
+
+  double obj_val;
+  int error = CPXgetobjval(env, lp, &obj_val);
+  if (error)
+    ERROR_COMMENT("tspcplex.c:branch_and_cut", "CPXgetobjval() error\n");
+
+  RUN(xstarToPath(inst, xstar, inst->ncols, inst->path));
+
+  RUN(INSTANCE_pathCheckpoint(inst));
+  // memcpy(inst->best_path, inst->path, sizeof(int) * inst->nnodes);
+  //  free(comp);
+  //  free(succ);
+  //  free(xstar);
+
   return 0;
 }
 
@@ -68,14 +68,14 @@ int hard_fixing(const CPXENVptr env, const CPXLPptr lp, Instance *inst) {
     //--------------------------------- calling the branch and cut solution
     //-------------------------------------------------------
     inst->solver = 2;
-    int status = solve_problem(
-        env, lp,
-        inst); // branch_and_cut(inst, env, lp, CPX_CALLBACKCONTEXT_CANDIDATE
-               // | CPX_CALLBACKCONTEXT_RELAXATION);
+    int status = solve_problem(env, lp,
+                               inst); // branch_and_cut(inst, env, lp,
+                                      // CPX_CALLBACKCONTEXT_CANDIDATE |
+                                      // CPX_CALLBACKCONTEXT_RELAXATION);
     if (status)
       ERROR_COMMENT("tspcplex.c:hard_fixing", "Execution FAILED");
-    // ---------------------------------- check if the solution is better than
-    // the previous one ---------------------------------
+    // ---------------------------------- check if the solution is better
+    // than the previous one ---------------------------------
     double actual_solution;
     int error = CPXgetobjval(env, lp, &actual_solution);
     if (error)
@@ -172,14 +172,14 @@ int local_branching(const CPXENVptr env, const CPXLPptr lp, Instance *inst) {
     //--------------------------------- calling the branch and cut solution
     //-------------------------------------------------------
     inst->solver = 2;
-    int status = solve_problem(
-        env, lp,
-        inst); // branch_and_cut(inst, env, lp, CPX_CALLBACKCONTEXT_CANDIDATE
-               // | CPX_CALLBACKCONTEXT_RELAXATION);
+    int status = solve_problem(env, lp,
+                               inst); // branch_and_cut(inst, env, lp,
+                                      // CPX_CALLBACKCONTEXT_CANDIDATE |
+                                      // CPX_CALLBACKCONTEXT_RELAXATION);
     if (status)
       ERROR_COMMENT("tspcplex.c:local_branching", "Execution FAILED");
-    // ---------------------------------- check if the solution is better than
-    // the previous one ---------------------------------
+    // ---------------------------------- check if the solution is better
+    // than the previous one ---------------------------------
     double actual_solution;
     int error = CPXgetobjval(env, lp, &actual_solution);
     if (error)
@@ -294,7 +294,7 @@ int bender(const CPXENVptr env, const CPXLPptr lp, Instance *inst,
   int comp[inst->nnodes];
   double xstar[inst->ncols];
   double obj_val;
-  inst->tend = time(NULL) + 60 * 3;
+  inst->tend = time(NULL) + inst->max_time;
   // take the time and if exceed the time limit then break the loop
   // time_t start_time = time(NULL);
 
@@ -333,7 +333,7 @@ int bender(const CPXENVptr env, const CPXLPptr lp, Instance *inst,
     if (patching) {
       RUN(patchPath(inst, xstar, succ, comp, inst->path, &obj_val));
 
-      RUN(two_opt(inst, inst->nnodes));
+      RUN(two_opt(inst, 10 * inst->nnodes));
       obj_val = INSTANCE_calculateTourLength(inst);
       if (obj_val < inst->best_tourlength) {
         inst->best_tourlength = obj_val;
@@ -343,7 +343,11 @@ int bender(const CPXENVptr env, const CPXLPptr lp, Instance *inst,
       }
     }
     // getchar();
-    CHECKTIME(inst, false);
+    INFO_COMMENT(
+        "tspcplex.c:bender",
+        "checking time -------------------------------------------------");
+    if (checkTime(inst, false) == ERROR_TIME_LIMIT)
+      break;
   }
 
   xstarToPath(inst, xstar, inst->ncols, inst->path);

@@ -1,4 +1,3 @@
-// error_codes.h
 #ifndef ERROR_CODES_H
 #define ERROR_CODES_H
 #include "../include/logger.h"

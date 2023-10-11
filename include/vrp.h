@@ -11,17 +11,12 @@
 // #include <cplex.h>
 
 #include "../tmpcplex/cplex.h"
+
 #include "errors.h"
 #include "grasp.h"
-#include "logger.h"
 
-// hard-wired parameters
-#define XSMALL                                                                 \
-  1e-5               // 1e-4*	// tolerance used to decide ingerality of 0-1
-                     // var.s
-#define EPSILON 1e-9 // 1e-9		// very small numerical tolerance
-#define TICKS_PER_SECOND                                                       \
-  1000.0 // cplex's ticks on Intel Core i7 quadcore @2.3GHZ
+#define XSMALL 1e-5
+#define EPSILON 1e-9
 #define INFTY 1e+30
 
 typedef enum {
@@ -61,12 +56,16 @@ typedef struct {
   GRASP_Framework *grasp;
 
   // TSP MODEL
-  int percentageHF;
-  TSPSolvers solver;
   CPXENVptr env;
   CPXLPptr lp;
-  double *edgeList;
   int ncols;
+  TSPSolvers solver;
+
+  int ecount;
+  int *edgeList; // pairs node to node for each edge in list
+
+  int percentageHF;
+  void *params;
 
   // global data
   char input_file[1000]; // input file

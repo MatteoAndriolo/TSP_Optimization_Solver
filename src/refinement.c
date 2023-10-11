@@ -1,8 +1,7 @@
 #include "../include/refinement.h"
 
-#include <stdio.h>
-
 #include "../include/tabu.h"
+#include "../include/utils.h"
 
 ErrorCode two_opt(Instance *inst, double iterations) {
   INFO_COMMENT("refinement.c:2opt", "starting 2opt");

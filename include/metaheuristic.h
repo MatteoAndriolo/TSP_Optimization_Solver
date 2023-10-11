@@ -1,13 +1,5 @@
 #ifndef METAHEURISTICS_H
 #define METAHEURISTICS_H
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
-
-#include "../include/logger.h"
-#include "../include/refinement.h"
-#include "../include/utils.h"
 #include "../include/vrp.h"
 
 /**

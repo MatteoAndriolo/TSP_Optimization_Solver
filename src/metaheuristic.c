@@ -1,4 +1,6 @@
 #include "../include/metaheuristic.h"
+#include "../include/refinement.h"
+#include "../include/utils.h"
 
 #include <string.h>
 
