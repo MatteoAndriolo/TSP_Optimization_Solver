@@ -121,6 +121,7 @@ int main(int argc, char **argv) {
 
       if (j == n_passagges - 1)
         strcpy(title, "\0");
+
       INFO_COMMENT("main.c:main", "Passagge %s completed with tl %lf",
                    passagges[j], inst->best_tourlength);
     }

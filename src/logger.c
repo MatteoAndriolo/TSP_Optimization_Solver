@@ -53,37 +53,37 @@ void log_message(LogLevel level, const char *namefile_and_func,
   // Get the log level string
   const char *level_str;
   switch (level) {
-    case DEBUG:
-      level_str = "DEBUG";
-      break;
-    case INFO:
-      level_str = "INFO";
-      break;
-    case WARNING:
-      level_str = "WARNING";
-      break;
-    case ERROR:
-      level_str = "ERROR";
-      break;
-    case CRITICAL:
-      level_str = "CRITICAL";
-      break;
-    case OUTPUT:
-      level_str = "OUTPUT";
-      break;
-    case FATAL:
-      level_str = "FATAL";
-      break;
-    default:
-      level_str = "";
-      break;
+  case DEBUG:
+    level_str = "DEBUG";
+    break;
+  case INFO:
+    level_str = "INFO";
+    break;
+  case WARNING:
+    level_str = "WARNING";
+    break;
+  case ERROR:
+    level_str = "ERROR";
+    break;
+  case CRITICAL:
+    level_str = "CRITICAL";
+    break;
+  case OUTPUT:
+    level_str = "OUTPUT";
+    break;
+  case FATAL:
+    level_str = "FATAL";
+    break;
+  default:
+    level_str = "";
+    break;
   }
 
   // Write the log message to the log file
   va_list args;
   sprintf(combined_str, "%s | %s", namefile_and_func, format);
   va_start(args, format);
-  fprintf(log_file, "%04d-%02d-%02d %02d:%02d:%02d [%s] ",
+  fprintf(log_file, "%04d-%02d-%02d %02d:%02d:%02d [%s]\t",
           tm_info->tm_year + 1900, tm_info->tm_mon + 1, tm_info->tm_mday,
           tm_info->tm_hour, tm_info->tm_min, tm_info->tm_sec, level_str);
 

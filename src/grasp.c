@@ -39,12 +39,12 @@ void GRASP_init(GRASP_Framework *grasp, double probabilities[], int size) {
   for (int i = 0; i < size; i++) {
     grasp->probabilities[i] = probabilities[i];
   }
-  INFO_COMMENT("grasp.c:init_grasp", "GRASP initialized");
-  INFO_COMMENT("grasp.c:init_grasp", "GRASP size: %d", size);
-  INFO_COMMENT("grasp.c:init_grasp", "GRASP probabilities:");
+  DEBUG_COMMENT("grasp.c:init_grasp", "GRASP initialized");
+  DEBUG_COMMENT("grasp.c:init_grasp", "GRASP size: %d", size);
+  DEBUG_COMMENT("grasp.c:init_grasp", "GRASP probabilities:");
   for (int i = 0; i < size; i++) {
-    INFO_COMMENT("grasp.c:init_grasp", "GRASP probabilities[%d]: %f", i,
-                 probabilities[i]);
+    DEBUG_COMMENT("grasp.c:init_grasp", "GRASP probabilities[%d]: %f", i,
+                  probabilities[i]);
   }
 }
 

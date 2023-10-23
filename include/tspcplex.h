@@ -6,9 +6,7 @@
 #include <time.h>
 
 // #include <cplex.h>
-// #include <concorde.h>
 #include "../tmpcplex/cplex.h"
-// #include "../concorde_build/concorde.h"
 
 #include "vrp.h"
 

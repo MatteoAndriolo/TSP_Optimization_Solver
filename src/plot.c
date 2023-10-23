@@ -5,15 +5,15 @@
 
 void plot(const int *path, const double *x, const double *y, const int nnodes,
           const char *title, const int starting_node) {
-  DEBUG_COMMENT("plot::plot", "open gnuplot pipe");
+  DEBUG_COMMENT("plot.c:plot", "open gnuplot pipe");
   FILE *gnuplotPipe = fopen("src/script.p", "w");
 
   if (!gnuplotPipe) {
     fprintf(stderr, "Error: could not open gnuplot pipe.\n");
     exit(1);
-    ERROR_COMMENT("plot::plot", "Error: could not open gnuplot pipe");
+    ERROR_COMMENT("plot.c:plot", "Error: could not open gnuplot pipe");
   }
-  DEBUG_COMMENT("plot::plot", "opened gnuplot pipe");
+  DEBUG_COMMENT("plot.c:plot", "opened gnuplot pipe");
 
   // Send commands to gnuplot to create a 2D graph and plot the points
   fprintf(gnuplotPipe, "set title '%s'\n", title);
@@ -42,7 +42,8 @@ void plot(const int *path, const double *x, const double *y, const int nnodes,
   fprintf(gnuplotPipe, "e\n");
 
   // Draw the starting node -------
-  DEBUG_COMMENT("plot::plot", "Draw the starting node%d,%d coordinates %lf,%lf",
+  DEBUG_COMMENT("plot.c:plot",
+                "Draw the starting node%d,%d coordinates %lf,%lf",
                 starting_node, index_starting_node,
                 x[path[index_starting_node]], y[path[index_starting_node]]);
   fprintf(gnuplotPipe, "%d %d\n", (int)x[path[index_starting_node]],
@@ -61,9 +62,9 @@ void plot(const int *path, const double *x, const double *y, const int nnodes,
 
   fprintf(gnuplotPipe, "replot");
 
-  DEBUG_COMMENT("plot::plot", "close gnuplot pipe");
+  DEBUG_COMMENT("plot.c:plot", "close gnuplot pipe");
   fclose(gnuplotPipe);
-  DEBUG_COMMENT("plot::plot",
+  DEBUG_COMMENT("plot.c:plot",
                 "write on the terminal the command to launch gnuplot");
   system("gnuplot -p src/script.p");
 }

@@ -34,7 +34,7 @@ typedef struct {
   double max_time; // overall time limit, in sec.s
   time_t tstart;   // starting time
   time_t tend;     // end time
-  pthread_mutex_t mutex_path;
+  pthread_mutex_t mut_calcTourLenght, mut_assert, mut_pathCheckpoint;
 
   // MODEL
   int integer_costs;

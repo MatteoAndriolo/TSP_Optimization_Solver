@@ -2,6 +2,7 @@
 #define ERROR_CODES_H
 #include "../include/logger.h"
 #include <stdio.h>
+
 typedef enum {
   SUCCESS = 0,
   OK = 0,

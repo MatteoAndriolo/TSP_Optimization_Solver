@@ -18,6 +18,7 @@ CC = gcc
 CFLAGS = -Wall -Werror -pedantic -I./include
 #CFLAGS += -g
 CFLAGS += -I${CPLEXDIR}/cplex/include/ilcplex -I${CPLEXDIR}/concert/includes -I${CCDIR}
+ASAN_FLAGS = -fsanitize=address -fno-omit-frame-pointer
 
 LDFLAGS = -lm -L${CPLEXDIR}/cplex/lib/x86-64_linux/static_pic -L${CPLEXDIR}/concert/lib/x86-64_linux/static_pic -L${CCDIR}
 LDFLAGS += -lilocplex -lcplex -lconcert -lpthread -ldl -lconcorde
@@ -49,6 +50,12 @@ $(TARGET): $(OBJ_FILES)
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	$(dir_guard)
 	$(CC) $(CFLAGS) -c -o $@ $<
+
+asan: CFLAGS += $(ASAN_FLAGS)
+asan: LDFLAGS += $(ASAN_FLAGS)
+asan: all
+
+
 
 clean:
 	rm -rf $(OBJ_DIR)/*.o $(OBJ_DIR)/*.gcno $(TARGET) script.p example.log *.lp

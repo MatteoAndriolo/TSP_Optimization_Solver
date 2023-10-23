@@ -83,7 +83,9 @@ void INSTANCE_initialize(Instance *inst, double max_time, int integer_costs,
   INSTANCE_generatePath(inst);
 
   // Initialize mutex
-  pthread_mutex_init(&inst->mutex_path, NULL);
+  pthread_mutex_init(&inst->mut_assert, NULL);
+  pthread_mutex_init(&inst->mut_calcTourLenght, NULL);
+  pthread_mutex_init(&inst->mut_pathCheckpoint, NULL);
 
   // Initialize GRASP parameters
   inst->grasp = (GRASP_Framework *)malloc(sizeof(GRASP_Framework));
@@ -95,6 +97,7 @@ void INSTANCE_initialize(Instance *inst, double max_time, int integer_costs,
   // inst->grasp_probabilities = malloc(grasp_n_probabilities * sizeof(double));
   // memcpy(inst->grasp_probabilities, grasp_probabilities,
   //         grasp_n_probabilities * sizeof(double));
+  inst->edgeList = NULL;
 
   // Initialize file names
   strncpy(inst->input_file, input_file, sizeof(inst->input_file) - 1);
@@ -102,9 +105,16 @@ void INSTANCE_initialize(Instance *inst, double max_time, int integer_costs,
 
   strncpy(inst->log_file, log_file, sizeof(inst->log_file) - 1);
   inst->log_file[sizeof(inst->log_file) - 1] = '\0';
-  INFO_COMMENT("vrp.c:instance_initialize", "Instance initialized");
 
-  inst->edgeList = NULL;
+  DEBUG_COMMENT("vrp.c:instance_initialize", "tstart: %ld", inst->tstart);
+  DEBUG_COMMENT("vrp.c:instance_initialize", "max_time: %lf", max_time);
+  DEBUG_COMMENT("vrp.c:instance_initialize", "tend: %ld", inst->tend);
+  DEBUG_COMMENT("vrp.c:instance_initialize", "integer_costs: %d",
+                integer_costs);
+  DEBUG_COMMENT("vrp.c:instance_initialize", "nnodes: %d", nnodes);
+  DEBUG_COMMENT("vrp.c:instance_initialize", "starting_node: %d",
+                inst->starting_node);
+  INFO_COMMENT("vrp.c:instance_initialize", "Instance initialized");
 }
 
 void INSTANCE_free(Instance *inst) {
@@ -146,7 +156,9 @@ void INSTANCE_free(Instance *inst) {
     // }
 
     // Destroy the mutex
-    if (pthread_mutex_destroy(&inst->mutex_path) != 0) {
+    if (pthread_mutex_destroy(&inst->mut_pathCheckpoint) != 0 ||
+        pthread_mutex_destroy(&inst->mut_calcTourLenght) != 0 ||
+        pthread_mutex_destroy(&inst->mut_assert) != 0) {
       ERROR_COMMENT("vrp.c:INSTANCE_free", "mutex destroy failed");
     }
 
@@ -156,7 +168,6 @@ void INSTANCE_free(Instance *inst) {
       inst->edgeList = NULL;
     }
 
-    // pthread_mutex_destroy(&inst->mutex_path);
     DEBUG_COMMENT("vrp.c:INSTANCE_free", "mutex destroyed");
   } else {
     ERROR_COMMENT("vrp.c:INSTANCE_free", "inst is NULL");
@@ -171,11 +182,13 @@ void INSTANCE_free(Instance *inst) {
  * @return the tour lenght
  */
 double INSTANCE_calculateTourLength(Instance *inst) {
+  pthread_mutex_lock(&inst->mut_calcTourLenght);
   double tour_length = INSTANCE_getDistancePos(inst, 0, inst->nnodes - 1);
   for (int i = 0; i < inst->nnodes - 1; i++) {
     tour_length += INSTANCE_getDistancePos(inst, i, i + 1);
   }
   inst->tour_length = tour_length;
+  pthread_mutex_unlock(&inst->mut_calcTourLenght);
   return tour_length;
 }
 
@@ -232,6 +245,7 @@ void INSTANCE_addToTourLenght(Instance *inst, double toAdd) {
  * @return SUCCESS if the path is correct, ERROR_NODES or ERROR_TOUR_LENGTH
  */
 ErrorCode INSTANCE_assert(Instance *inst) {
+  pthread_mutex_lock(&inst->mut_assert);
   DEBUG_COMMENT("vrp.c:INSTANCE_assert", "Enter assert");
   bool found[inst->nnodes];
   for (int i = 0; i < inst->nnodes; i++)
@@ -245,6 +259,7 @@ ErrorCode INSTANCE_assert(Instance *inst) {
     if (inst->path[i] < 0 || inst->path[i] >= inst->nnodes) {
       ERROR_COMMENT("vrp.c:INSTANCE_assert", "Node %d is not valid",
                     inst->path[i]);
+      pthread_mutex_unlock(&inst->mut_assert);
       return ERROR_NODES;
     }
   }
@@ -256,18 +271,22 @@ ErrorCode INSTANCE_assert(Instance *inst) {
       ERROR_COMMENT("vrp.c:INSTANCE_assert", "Missing node %d ", i);
     }
   }
-  if (isMissing)
+  if (isMissing) {
+    pthread_mutex_unlock(&inst->mut_assert);
     return ERROR_NODES;
+  }
 
   // ------ TOUR LENGTH
   double check_tour_length = INSTANCE_calculateTourLength(inst);
   if (check_tour_length != inst->tour_length) {
     ERROR_COMMENT("vrp.c:INSTANCE_assert", "Tour length is not correct",
                   check_tour_length - inst->tour_length);
+    pthread_mutex_unlock(&inst->mut_assert);
     return ERROR_TOUR_LENGTH;
   }
 
   DEBUG_COMMENT("vrp.c:INSTANCE_assert", "Exit assert");
+  pthread_mutex_unlock(&inst->mut_assert);
   return SUCCESS;
 }
 
@@ -279,12 +298,12 @@ ErrorCode INSTANCE_assert(Instance *inst) {
  * @return SUCCESS if the path is correct, ERROR_NODES or ERROR_TOUR_LENGTH
  */
 ErrorCode INSTANCE_pathCheckpoint(Instance *inst) {
+  pthread_mutex_lock(&inst->mut_pathCheckpoint);
   DEBUG_COMMENT("vrp.c:INSTANCE_pathCheckpoint", "Entering ");
 
   INSTANCE_calculateTourLength(inst);
 
   RUN(INSTANCE_assert(inst));
-
   DEBUG_COMMENT("vrp.c:INSTANCE_pathCheckpoint", "Check if path is the best");
   if (inst->tour_length < inst->best_tourlength) {
     DEBUG_COMMENT("vrp.c:INSTANCE_pathCheckpoint", "This path is the best");
@@ -295,10 +314,11 @@ ErrorCode INSTANCE_pathCheckpoint(Instance *inst) {
   } else {
     INFO_COMMENT("vrp.c:INSTANCE_pathCheckpoint", "This path is not the best");
     DEBUG_COMMENT("vrp.c:INSTANCE_pathCheckpoint",
-                  "Best path: %lf, Current path: %lf", inst->best_tourlength,
-                  inst->tour_length);
+                  "Current path: %lf,Best path: %lf", inst->tour_length,
+                  inst->best_tourlength);
   }
   DEBUG_COMMENT("vrp.c:INSTANCE_pathCheckpoint", "Exit ");
+  pthread_mutex_unlock(&inst->mut_pathCheckpoint);
   return SUCCESS;
 }
 
