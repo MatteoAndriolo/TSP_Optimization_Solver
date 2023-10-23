@@ -7,6 +7,7 @@
 #include "utils.h"
 #include "heuristics.h"
 #include "tspcplex.h"
+#include "simulate_anealling.h"
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -111,6 +112,10 @@ int main(int argc, char **argv)
 				instances[c_inst].solver = 4;
 				two_opt(distance_matrix, args.nnodes, path, &(instances[c_inst].tour_lenght));
 				TSPopt(&instances[c_inst], path);
+			}
+			if (strcmp(passagges[j], "sim_anealling") == 0)
+			{
+				simulate_anealling(distance_matrix, path, args.nnodes, &(instances[c_inst].tour_lenght), 100, 1000);
 			}
 			strcpy(title + strlen(title), passagges[j]);
 			// TODO fix title in all the different
