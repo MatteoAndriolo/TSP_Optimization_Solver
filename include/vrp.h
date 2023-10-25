@@ -8,9 +8,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-// #include <cplex.h>
+#include <cplex.h>
 
-#include "../tmpcplex/cplex.h"
+// #include "../tmpcplex/cplex.h"
 
 #include "errors.h"
 #include "grasp.h"
@@ -19,7 +19,8 @@
 #define EPSILON 1e-9
 #define INFTY 1e+30
 
-typedef enum {
+typedef enum
+{
   SOLVER_BASE = 0,
   SOLVER_BENDER = 1,
   SOLVER_PATCHING_HEURISTIC = 2,
@@ -29,7 +30,8 @@ typedef enum {
   SOLVER_MH_LOCBRANCH = 6,
 } TSPSolvers;
 
-typedef struct {
+typedef struct
+{
   // execution parameters
   double max_time; // overall time limit, in sec.s
   time_t tstart;   // starting time

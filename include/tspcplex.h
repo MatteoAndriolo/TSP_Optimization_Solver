@@ -5,8 +5,8 @@
 #include <stdlib.h>
 #include <time.h>
 
-// #include <cplex.h>
-#include "../tmpcplex/cplex.h"
+#include <cplex.h>
+// #include "../tmpcplex/cplex.h"
 
 #include "vrp.h"
 
@@ -21,7 +21,8 @@
 //   CPXCALLBACKCONTEXTptr context;
 // }CPLEX_MODEL;
 
-typedef struct {
+typedef struct
+{
   CPXCALLBACKCONTEXTptr context;
   Instance *inst;
   double *xstar;

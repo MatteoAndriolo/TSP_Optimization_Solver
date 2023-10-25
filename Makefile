@@ -9,10 +9,9 @@ else
 CCDIR = ./concorde_build
 endif
 
-CCDIR = ./concorde_build
 
-# CCDIR=/home/matteo/Documenti/OperationResearchLaboratory/concorde_build
-# CCDIR=/opt/concorde
+#CCDIR=/home/matteo/Documenti/OperationResearchLaboratory/concorde_build
+CCDIR=/opt/concorde
 
 CC = gcc
 CFLAGS = -Wall -Werror -pedantic -I./include

@@ -1,3 +1,4 @@
+// CPXWRITE
 #include "../include/vrp.h"
 
 #include <pthread.h>
@@ -9,17 +10,18 @@
 #include "../include/grasp.h"
 #include "../include/utils.h"
 
-void INSTANCE_generatePath(Instance *inst) {
-  inst->path = malloc(inst->nnodes * sizeof(int));
-  inst->best_path = malloc(inst->nnodes * sizeof(int));
-  for (int i = 0; i < inst->nnodes; i++) {
+void INSTANCE_generatePath(Instance *inst)
+{
+  for (int i = 0; i < inst->nnodes; i++)
+  {
     inst->path[i] = i;
   }
   inst->path[inst->starting_node] = 0;
   inst->path[0] = inst->starting_node;
 
   int j, tmp;
-  for (int i = 0; i < inst->nnodes; i++) {
+  for (int i = 0; i < inst->nnodes; i++)
+  {
     j = rand() % inst->nnodes;
     tmp = inst->path[i];
     inst->path[i] = inst->path[j];
@@ -30,10 +32,13 @@ void INSTANCE_generatePath(Instance *inst) {
   inst->best_tourlength = inst->tour_length;
 }
 
-void INSTANCE_generateDistanceMatrix(Instance *inst) {
+void INSTANCE_generateDistanceMatrix(Instance *inst)
+{
   double *dm = malloc(inst->nnodes * inst->nnodes * sizeof(double));
-  for (int i = 0; i < inst->nnodes; i++) {
-    for (int j = 0; j < inst->nnodes; j++) {
+  for (int i = 0; i < inst->nnodes; i++)
+  {
+    for (int j = 0; j < inst->nnodes; j++)
+    {
       dm[i * inst->nnodes + j] = distance_euclidean(
           inst->x[i], inst->y[i], inst->x[j],
           inst->y[j]); // DEBUG_COMMENT("instance_generate_distance_matrix",
@@ -42,7 +47,9 @@ void INSTANCE_generateDistanceMatrix(Instance *inst) {
                        // inst->y[j],dm[i * inst->nnodes + j]);
     }
   }
-  for (int i = 0; i < inst->nnodes; i++) {
+
+  for (int i = 0; i < inst->nnodes; i++)
+  {
     dm[i * inst->nnodes + i] = INFINITY;
   }
   inst->distance_matrix = dm;
@@ -51,20 +58,24 @@ void INSTANCE_generateDistanceMatrix(Instance *inst) {
 void INSTANCE_initialize(Instance *inst, double max_time, int integer_costs,
                          int nnodes, double *x, double *y,
                          int grasp_n_probabilities, double *grasp_probabilities,
-                         char *input_file, char *log_file) {
+                         char *input_file, char *log_file)
+{
   INFO_COMMENT("vrp.c:instance_initialize", "Initializing instance");
-  if (!inst) {
+  if (!inst)
+  {
     return;
   }
-
   // Initialize execution parameters
   inst->max_time = max_time;
   inst->tstart = time(NULL);
   inst->tend = inst->tstart + max_time;
+  printf("tstart: %ld\n", inst->tstart);
 
   // Initialize MODEL
   // inst->model_type = model_type;
   inst->integer_costs = integer_costs;
+
+  printf("integer_costs: %d\n", inst->integer_costs);
 
   // Initialize Data
   inst->nnodes = nnodes;
@@ -80,6 +91,8 @@ void INSTANCE_initialize(Instance *inst, double max_time, int integer_costs,
    * generate path -> store in path and backup in path_best
    * calulate tour lenght -> init tour lenght and best_tour
    */
+  inst->path = (int *)malloc(inst->nnodes * sizeof(int));
+  inst->best_path = (int *)malloc(inst->nnodes * sizeof(int));
   INSTANCE_generatePath(inst);
 
   // Initialize mutex
@@ -98,6 +111,7 @@ void INSTANCE_initialize(Instance *inst, double max_time, int integer_costs,
   // memcpy(inst->grasp_probabilities, grasp_probabilities,
   //         grasp_n_probabilities * sizeof(double));
   inst->edgeList = NULL;
+  printf("grasp_n_probabilities: %d\n", grasp_n_probabilities);
 
   // Initialize file names
   strncpy(inst->input_file, input_file, sizeof(inst->input_file) - 1);
@@ -117,33 +131,40 @@ void INSTANCE_initialize(Instance *inst, double max_time, int integer_costs,
   INFO_COMMENT("vrp.c:instance_initialize", "Instance initialized");
 }
 
-void INSTANCE_free(Instance *inst) {
-  if (inst) {
-    if (inst->path) {
+void INSTANCE_free(Instance *inst)
+{
+  if (inst)
+  {
+    if (inst->path)
+    {
       free(inst->path);
       inst->path = NULL;
       DEBUG_COMMENT("vrp.c:INSTANCE_free", "path");
     }
 
-    if (inst->distance_matrix) {
+    if (inst->distance_matrix)
+    {
       free(inst->distance_matrix);
       inst->distance_matrix = NULL;
       DEBUG_COMMENT("vrp.c:INSTANCE_free", "distance_matrix");
     }
 
-    if (inst->x) {
+    if (inst->x)
+    {
       free(inst->x);
       inst->x = NULL;
       DEBUG_COMMENT("vrp.c:INSTANCE_free", "x");
     }
 
-    if (inst->y) {
+    if (inst->y)
+    {
       free(inst->y);
       inst->y = NULL;
       DEBUG_COMMENT("vrp.c:INSTANCE_free", "y");
     }
 
-    if (inst->best_path) {
+    if (inst->best_path)
+    {
       free(inst->best_path);
       inst->best_path = NULL;
       DEBUG_COMMENT("vrp.c:INSTANCE_free", "best_path");
@@ -158,18 +179,22 @@ void INSTANCE_free(Instance *inst) {
     // Destroy the mutex
     if (pthread_mutex_destroy(&inst->mut_pathCheckpoint) != 0 ||
         pthread_mutex_destroy(&inst->mut_calcTourLenght) != 0 ||
-        pthread_mutex_destroy(&inst->mut_assert) != 0) {
+        pthread_mutex_destroy(&inst->mut_assert) != 0)
+    {
       ERROR_COMMENT("vrp.c:INSTANCE_free", "mutex destroy failed");
     }
 
-    if (inst->edgeList != NULL) {
+    if (inst->edgeList != NULL)
+    {
       DEBUG_COMMENT("vrp.c:INSTANCE_free", "edgeList");
       free(inst->edgeList);
       inst->edgeList = NULL;
     }
 
     DEBUG_COMMENT("vrp.c:INSTANCE_free", "mutex destroyed");
-  } else {
+  }
+  else
+  {
     ERROR_COMMENT("vrp.c:INSTANCE_free", "inst is NULL");
   }
 }
@@ -181,10 +206,13 @@ void INSTANCE_free(Instance *inst) {
  * @param inst The instance of the problem to be solved.
  * @return the tour lenght
  */
-double INSTANCE_calculateTourLength(Instance *inst) {
+double INSTANCE_calculateTourLength(Instance *inst)
+{
+  pthread_mutex_unlock(&inst->mut_calcTourLenght);
   pthread_mutex_lock(&inst->mut_calcTourLenght);
   double tour_length = INSTANCE_getDistancePos(inst, 0, inst->nnodes - 1);
-  for (int i = 0; i < inst->nnodes - 1; i++) {
+  for (int i = 0; i < inst->nnodes - 1; i++)
+  {
     tour_length += INSTANCE_getDistancePos(inst, i, i + 1);
   }
   inst->tour_length = tour_length;
@@ -200,7 +228,8 @@ double INSTANCE_calculateTourLength(Instance *inst) {
  * @param y The second position in path_best
  * @return the distance between the two nodes
  */
-double INSTANCE_getDistancePos(Instance *inst, int x, int y) {
+double INSTANCE_getDistancePos(Instance *inst, int x, int y)
+{
   return inst->distance_matrix[inst->path[x] * inst->nnodes + inst->path[y]];
 }
 
@@ -212,7 +241,8 @@ double INSTANCE_getDistancePos(Instance *inst, int x, int y) {
  * @param y The second nnodes
  * @return the distance between the two nodes
  */
-double INSTANCE_getDistanceNodes(Instance *inst, int x, int y) {
+double INSTANCE_getDistanceNodes(Instance *inst, int x, int y)
+{
   return inst->distance_matrix[x * inst->nnodes + y];
 }
 
@@ -222,7 +252,8 @@ double INSTANCE_getDistanceNodes(Instance *inst, int x, int y) {
  * @param inst The instance of the problem to be solved.
  * @param newLength The new tour lenght
  */
-void INSTANCE_setTourLenght(Instance *inst, double newLength) {
+void INSTANCE_setTourLenght(Instance *inst, double newLength)
+{
   inst->tour_length = newLength;
 }
 
@@ -232,7 +263,8 @@ void INSTANCE_setTourLenght(Instance *inst, double newLength) {
  * @param inst The instance of the problem to be solved.
  * @param toAdd The value to add to the tour lenght
  */
-void INSTANCE_addToTourLenght(Instance *inst, double toAdd) {
+void INSTANCE_addToTourLenght(Instance *inst, double toAdd)
+{
   INSTANCE_setTourLenght(inst, inst->tour_length + toAdd);
 }
 
@@ -244,7 +276,8 @@ void INSTANCE_addToTourLenght(Instance *inst, double toAdd) {
  * @param inst The instance of the problem to be solved.
  * @return SUCCESS if the path is correct, ERROR_NODES or ERROR_TOUR_LENGTH
  */
-ErrorCode INSTANCE_assert(Instance *inst) {
+ErrorCode INSTANCE_assert(Instance *inst)
+{
   pthread_mutex_lock(&inst->mut_assert);
   DEBUG_COMMENT("vrp.c:INSTANCE_assert", "Enter assert");
   bool found[inst->nnodes];
@@ -253,10 +286,12 @@ ErrorCode INSTANCE_assert(Instance *inst) {
 
   // ------ NODES
   int check_nnodes = (inst->nnodes * (inst->nnodes - 1)) / 2;
-  for (int i = 0; i < inst->nnodes; i++) {
+  for (int i = 0; i < inst->nnodes; i++)
+  {
     check_nnodes -= inst->path[i];
     found[inst->path[i]] = true;
-    if (inst->path[i] < 0 || inst->path[i] >= inst->nnodes) {
+    if (inst->path[i] < 0 || inst->path[i] >= inst->nnodes)
+    {
       ERROR_COMMENT("vrp.c:INSTANCE_assert", "Node %d is not valid",
                     inst->path[i]);
       pthread_mutex_unlock(&inst->mut_assert);
@@ -265,20 +300,24 @@ ErrorCode INSTANCE_assert(Instance *inst) {
   }
 
   bool isMissing = false;
-  for (int i = 0; i < inst->nnodes; i++) {
-    if (!found[i]) {
+  for (int i = 0; i < inst->nnodes; i++)
+  {
+    if (!found[i])
+    {
       isMissing = true;
       ERROR_COMMENT("vrp.c:INSTANCE_assert", "Missing node %d ", i);
     }
   }
-  if (isMissing) {
+  if (isMissing)
+  {
     pthread_mutex_unlock(&inst->mut_assert);
     return ERROR_NODES;
   }
 
   // ------ TOUR LENGTH
   double check_tour_length = INSTANCE_calculateTourLength(inst);
-  if (check_tour_length != inst->tour_length) {
+  if (check_tour_length != inst->tour_length)
+  {
     ERROR_COMMENT("vrp.c:INSTANCE_assert", "Tour length is not correct",
                   check_tour_length - inst->tour_length);
     pthread_mutex_unlock(&inst->mut_assert);
@@ -297,7 +336,8 @@ ErrorCode INSTANCE_assert(Instance *inst) {
  * @param inst The instance of the problem to be solved.
  * @return SUCCESS if the path is correct, ERROR_NODES or ERROR_TOUR_LENGTH
  */
-ErrorCode INSTANCE_pathCheckpoint(Instance *inst) {
+ErrorCode INSTANCE_pathCheckpoint(Instance *inst)
+{
   pthread_mutex_lock(&inst->mut_pathCheckpoint);
   DEBUG_COMMENT("vrp.c:INSTANCE_pathCheckpoint", "Entering ");
 
@@ -305,13 +345,16 @@ ErrorCode INSTANCE_pathCheckpoint(Instance *inst) {
 
   RUN(INSTANCE_assert(inst));
   DEBUG_COMMENT("vrp.c:INSTANCE_pathCheckpoint", "Check if path is the best");
-  if (inst->tour_length < inst->best_tourlength) {
+  if (inst->tour_length < inst->best_tourlength)
+  {
     DEBUG_COMMENT("vrp.c:INSTANCE_pathCheckpoint", "This path is the best");
     memcpy(inst->best_path, inst->path, inst->nnodes * sizeof(int));
     inst->best_tourlength = inst->tour_length;
     INFO_COMMENT("vrp.c:pathCheckpoint", "New best path found: %lf",
                  inst->best_tourlength);
-  } else {
+  }
+  else
+  {
     INFO_COMMENT("vrp.c:INSTANCE_pathCheckpoint", "This path is not the best");
     DEBUG_COMMENT("vrp.c:INSTANCE_pathCheckpoint",
                   "Current path: %lf,Best path: %lf", inst->tour_length,
@@ -327,7 +370,8 @@ ErrorCode INSTANCE_pathCheckpoint(Instance *inst) {
  *
  * @param inst The instance of the problem to be solved.
  */
-ErrorCode INSTANCE_saveBestPath(Instance *inst) {
+ErrorCode INSTANCE_saveBestPath(Instance *inst)
+{
   RUN(INSTANCE_pathCheckpoint(inst));
   return SUCCESS;
 }
@@ -340,9 +384,12 @@ ErrorCode INSTANCE_saveBestPath(Instance *inst) {
  * @param saveBest If true, it saves the best path
  * @return SUCCESS if the path is correct, ERROR_NODES or ERROR_TOUR_LENGTH
  */
-ErrorCode checkTime(Instance *inst, bool saveBest) {
-  if (inst->tend < time(NULL)) {
-    if (saveBest) {
+ErrorCode checkTime(Instance *inst, bool saveBest)
+{
+  if (inst->tend < time(NULL))
+  {
+    if (saveBest)
+    {
       RUN(INSTANCE_pathCheckpoint(inst));
     }
     ERROR_COMMENT("vrp.c:checkTime", "Time limit reached");
