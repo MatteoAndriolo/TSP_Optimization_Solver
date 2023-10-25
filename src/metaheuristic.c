@@ -5,7 +5,8 @@
 #include <string.h>
 
 double energy_probabilities(double cost_current, double cost_new, double T,
-                            double coefficient) {
+                            double coefficient)
+{
   // double delta = (cost_new - cost_current) / (cost_current + cost_new) *
   // coefficient;
   if (cost_new < cost_current)
@@ -13,17 +14,20 @@ double energy_probabilities(double cost_current, double cost_new, double T,
   return exp(-coefficient / T);
 }
 
-void backupInstState(const Instance *inst, int *path, int *tour_length) {
+void backupInstState(const Instance *inst, int *path, int *tour_length)
+{
   memcpy(path, inst->path, inst->nnodes * sizeof(int));
   *tour_length = inst->tour_length;
 }
 
-void restoreInstState(Instance *inst, const int *path, const int tour_length) {
+void restoreInstState(Instance *inst, const int *path, const int tour_length)
+{
   memcpy(inst->path, path, inst->nnodes * sizeof(int));
   inst->tour_length = tour_length;
 }
 
-int simulated_annealling(Instance *inst, double k_max) {
+int simulated_annealling(Instance *inst, double k_max)
+{
   INFO_COMMENT("metaheuristic.c:simulate_anealling",
                "Starting simulated annealing metaheuristic");
   double T, rand_val, energy;
@@ -34,7 +38,8 @@ int simulated_annealling(Instance *inst, double k_max) {
   backupInstState(inst, path, &tour_length);
 
   // Main loop iterating through k_max iterations
-  for (int k = 0; k < k_max; k++) {
+  for (int k = 0; k < k_max; k++)
+  {
     T = 1 - ((double)k / k_max);
 
     // Modify and optimize current solution
@@ -50,9 +55,12 @@ int simulated_annealling(Instance *inst, double k_max) {
                   "k: %d, T: %f, energy: %f, rand_val: %f", k, T, energy,
                   rand_val);
 
-    if (rand_val < energy) { // rejected !
+    if (rand_val < energy)
+    { // rejected !
       restoreInstState(inst, path, tour_length);
-    } else { // accepted
+    }
+    else
+    { // accepted
       backupInstState(inst, path, &tour_length);
       INSTANCE_pathCheckpoint(inst);
     }
@@ -68,10 +76,12 @@ int simulated_annealling(Instance *inst, double k_max) {
 // ----------------------------------------------------------------------------
 // VNS
 // ----------------------------------------------------------------------------
-int vns_k(Instance *inst, int k) {
+int vns_k(Instance *inst, int k)
+{
   // TODO fix while loop
   int c = 0;
-  while (++c < 1000) {
+  while (++c < 1000)
+  {
     INFO_COMMENT("heuristics.c:vnp_k",
                  "starting the heuristics loop for vnp_k, iteration %d", c);
     RUN(kick_function(inst, k));
@@ -86,27 +96,33 @@ int vns_k(Instance *inst, int k) {
   return SUCCESS;
 }
 
-int kick_function(Instance *inst, int k) {
+int kick_function(Instance *inst, int k)
+{
   int found = 0;
   int index_0, index_1, index_2, index_3, index_4;
-  while (found != 4) {
+  while (found != 4)
+  {
     found = 0;
     index_0 = 1;
     found++;
     index_1 = randomBetween(index_0 + 1, inst->nnodes);
-    if (inst->nnodes - index_1 > 6) {
+    if (inst->nnodes - index_1 > 6)
+    {
       index_2 = randomBetween(index_1 + 2, inst->nnodes);
       found++;
     }
-    if (inst->nnodes - index_2 > 4) {
+    if (inst->nnodes - index_2 > 4)
+    {
       index_3 = randomBetween(index_2 + 2, inst->nnodes);
       found++;
     }
-    if (inst->nnodes - index_3 > 2) {
+    if (inst->nnodes - index_3 > 2)
+    {
       index_4 = randomBetween(index_3 + 2, inst->nnodes);
       found++;
     }
-    if (found == 4) {
+    if (found == 4)
+    {
       index_0--;
       index_1--;
       index_2--;

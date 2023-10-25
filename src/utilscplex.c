@@ -6,17 +6,21 @@
 // TODO thraw away
 int cmpfunc(const void *a, const void *b) { return (*(int *)a - *(int *)b); }
 
-bool checkxstart(double *xstar, int dim_xstar) {
-  for (int i = 0; i < dim_xstar; i++) {
+bool checkxstart(double *xstar, int dim_xstar)
+{
+  for (int i = 0; i < dim_xstar; i++)
+  {
     DEBUG_COMMENT("utilscplex.c:checkxstart", "xstar[%d] = %lf", i, xstar[i]);
-    if (!(xstar[i] > 0 - EPSILON || xstar[i] < 1 + EPSILON)) {
+    if (!(xstar[i] > 0 - EPSILON || xstar[i] < 1 + EPSILON))
+    {
       return false;
     }
   }
   return true;
 }
 
-void init_mip(const CPXENVptr env, const CPXLPptr lp, Instance *inst) {
+void init_mip(const CPXENVptr env, const CPXLPptr lp, Instance *inst)
+{
   double *xheu = (double *)calloc(inst->ncols, sizeof(double));
   create_xheu(inst, xheu);
   set_mip_start(inst, env, lp, xheu);
@@ -25,7 +29,8 @@ void init_mip(const CPXENVptr env, const CPXLPptr lp, Instance *inst) {
 }
 ////////////////////
 
-int xpos(int i, int j, Instance *inst) {
+int xpos(int i, int j, Instance *inst)
+{
   if (i == j)
     ERROR_COMMENT("utilscplex.c:xpos", "i == j");
   if (i > j)
@@ -35,7 +40,8 @@ int xpos(int i, int j, Instance *inst) {
 }
 
 ErrorCode xstarToPath(Instance *inst, const double *xstar, int dim_xstar,
-                      int *path) {
+                      int *path)
+{
   DEBUG_COMMENT("utilscplex.c:xstarToPath", "xstarToPath");
 
   dim_xstar = inst->ncols;
@@ -73,7 +79,8 @@ ErrorCode xstarToPath(Instance *inst, const double *xstar, int dim_xstar,
   int succ_node;
   int current_comp = 0;
 
-  for (int i = 0; i < inst->nnodes; i++) {
+  for (int i = 0; i < inst->nnodes; i++)
+  {
     if (comp[i] == -1)
       continue;
     current_comp = comp[i];
@@ -83,21 +90,26 @@ ErrorCode xstarToPath(Instance *inst, const double *xstar, int dim_xstar,
     new_path[size++] = i;
     comp[i] = -1;
 
-    while (comp[succ_node] != -1 && comp[succ_node] == current_comp) {
+    while (comp[succ_node] != -1 && comp[succ_node] == current_comp)
+    {
       new_path[size++] = succ_node;
       comp[succ_node] = -1;
       succ_node = succ[succ_node];
     }
   }
 
-  if (size != inst->nnodes) {
+  if (size != inst->nnodes)
+  {
     ERROR_COMMENT("utilscplex.c:xstarToPath", "size != inst->nnodes");
     return ERROR_NODES;
   }
 
-  if (path != NULL) {
+  if (path != NULL)
+  {
     memcpy(path, new_path, inst->nnodes * sizeof(int));
-  } else {
+  }
+  else
+  {
     ERROR_COMMENT("utilscplex.c:xstarToPath", "path is NULL");
   }
   RUN(INSTANCE_assert(inst));
@@ -105,12 +117,14 @@ ErrorCode xstarToPath(Instance *inst, const double *xstar, int dim_xstar,
   return SUCCESS;
 }
 
-void create_xheu(Instance *inst, double *xheu) {
+void create_xheu(Instance *inst, double *xheu)
+{
   DEBUG_COMMENT("utilscplex.c:create_xheu", "Creating xheu");
-  for (int i = 0; i < inst->nnodes - 1; i++) {
-    xheu[xpos(inst->path[i], inst->path[i + 1], inst)] = 1.0;
+  for (int i = 0; i < inst->nnodes - 1; i++)
+  {
+    xheu[xpos(inst->best_path[i], inst->best_path[i + 1], inst)] = 1.0;
   }
-  xheu[xpos(inst->path[inst->nnodes - 1], inst->path[0], inst)] = 1.0;
+  xheu[xpos(inst->best_path[inst->nnodes - 1], inst->best_path[0], inst)] = 1.0;
 
   // DEBUG_COMMENT("utilscplex.c:create_xheu", "xheu: ");
   // for (int i = 0; i < inst->nnodes; i++) {
@@ -123,31 +137,40 @@ void create_xheu(Instance *inst, double *xheu) {
 }
 
 void set_mip_start(Instance *inst, const CPXENVptr env, const CPXLPptr lp,
-                   double *xheu) {
-  INFO_COMMENT("utilscplex.c:ge*nerate_mip_start", "Generating MIP start");
+                   double *xheu)
+{
+  INFO_COMMENT("utilscplex.c:generate_mip_start", "Generating MIP start");
   int effortlevel = CPX_MIPSTART_NOCHECK;
   int beg = 0;
+
   int *ind = (int *)calloc(inst->ncols, sizeof(int));
   for (int j = 0; j < inst->ncols; j++)
     ind[j] = j;
+
   if (CPXaddmipstarts(env, lp, 1, inst->ncols, &beg, ind, xheu, &effortlevel,
                       NULL))
+
     ERROR_COMMENT("utilscplex.c:generate_mip_start", "CPXaddmipstarts() error");
   free(ind);
   INFO_COMMENT("utilscplex.c:set_mip_start", "MIP start ENDED");
 }
 
 void fix_edges(const CPXENVptr env, const CPXLPptr lp, Instance *inst,
-               double *xheu) {
+               double *xheu)
+{
   DEBUG_COMMENT("utilscplex.c:fix_edges", "Fixing edges");
   int *ind = (int *)calloc(inst->nnodes, sizeof(int));
   double *bd = (double *)calloc(inst->nnodes, sizeof(double));
-  for (int i = 0; i < inst->nnodes; i++) {
-    for (int j = i + 1; j < inst->nnodes; j++) {
+  for (int i = 0; i < inst->nnodes; i++)
+  {
+    for (int j = i + 1; j < inst->nnodes; j++)
+    {
 
-      if (xheu[xpos(i, j, inst)] > 0.5) {
+      if (xheu[xpos(i, j, inst)] > 0.5)
+      {
         int random = rand() % 100;
-        if (random < inst->percentageHF) {
+        if (random < inst->percentageHF)
+        {
           ind[i] = xpos(i, j, inst);
           bd[i] = 1.0;
           if (CPXchgbds(env, lp, 1, &ind[i], "L", &bd[i]))
@@ -159,12 +182,15 @@ void fix_edges(const CPXENVptr env, const CPXLPptr lp, Instance *inst,
 }
 
 void unfix_edges(const CPXENVptr env, const CPXLPptr lp, Instance *inst,
-                 double *xheu) {
+                 double *xheu)
+{
   INFO_COMMENT("utilscplex.c:fix_edges", "unfixing edges");
   int *ind = (int *)calloc(inst->nnodes, sizeof(int));
   double *bd = (double *)calloc(inst->nnodes, sizeof(double));
-  for (int i = 0; i < inst->nnodes; i++) {
-    for (int j = i + 1; j < inst->nnodes; j++) {
+  for (int i = 0; i < inst->nnodes; i++)
+  {
+    for (int j = i + 1; j < inst->nnodes; j++)
+    {
       ind[i] = xpos(i, j, inst);
       bd[i] = 0.0;
       if (CPXchgbds(env, lp, 1, &ind[i], "L", &bd[i]))
@@ -174,7 +200,8 @@ void unfix_edges(const CPXENVptr env, const CPXLPptr lp, Instance *inst,
 }
 
 void eliminate_radius_edges(const CPXENVptr env, const CPXLPptr lp,
-                            Instance *inst, double *xheu, int radious) {
+                            Instance *inst, double *xheu, int radious)
+{
   INFO_COMMENT("utilscplex.c:eliminate_fix_edges",
                "eliminating fixed edges form xheu for local branching");
   int *ind = (int *)calloc(inst->nnodes, sizeof(int));
@@ -183,17 +210,22 @@ void eliminate_radius_edges(const CPXENVptr env, const CPXLPptr lp,
   int percentage = (int)(inst->nnodes * radious);
   int count = 0;
   int flag = 0;
-  while (count < percentage) {
-    for (int i = 0; i < inst->nnodes; i++) {
-      for (int j = 0; j < inst->nnodes; j++) {
-        if (xheu[xpos(i, j, inst)] > 0.5 && (rand() % 100) < 50) {
+  while (count < percentage)
+  {
+    for (int i = 0; i < inst->nnodes; i++)
+    {
+      for (int j = 0; j < inst->nnodes; j++)
+      {
+        if (xheu[xpos(i, j, inst)] > 0.5 && (rand() % 100) < 50)
+        {
           ind[i] = xpos(i, j, inst);
           bd[i] = 1.0;
           if (CPXchgbds(env, lp, 1, &ind[i], "L", &bd[i]))
             ERROR_COMMENT("utilscplex.c:eliminate_fix_edges",
                           "CPXchgbds() error");
           count++;
-          if (count >= percentage) {
+          if (count >= percentage)
+          {
             flag = 1;
             break;
           }
@@ -208,14 +240,18 @@ void eliminate_radius_edges(const CPXENVptr env, const CPXLPptr lp,
 }
 
 void repristinate_radius_edges(const CPXENVptr env, const CPXLPptr lp,
-                               Instance *inst, double *xheu) {
+                               Instance *inst, double *xheu)
+{
   INFO_COMMENT("utilscplex.c:repristinate_fix_edges",
                "repristinating fixed edges form xheu for local branching");
   int *ind = (int *)calloc(inst->nnodes, sizeof(int));
   double *bd = (double *)calloc(inst->nnodes, sizeof(double));
-  for (int i = 0; i < inst->nnodes; i++) {
-    for (int j = i + 1; j < inst->nnodes; j++) {
-      if (xheu[xpos(i, j, inst)] > 0.5) {
+  for (int i = 0; i < inst->nnodes; i++)
+  {
+    for (int j = i + 1; j < inst->nnodes; j++)
+    {
+      if (xheu[xpos(i, j, inst)] > 0.5)
+      {
         ind[i] = xpos(i, j, inst);
         bd[i] = 0.0;
         if (CPXchgbds(env, lp, 1, &ind[i], "L", &bd[i]))
@@ -227,21 +263,25 @@ void repristinate_radius_edges(const CPXENVptr env, const CPXLPptr lp,
 }
 
 bool isConstraintNotValidForCurrOpt(Instance *inst, double *xstar, int *rmatind,
-                                    int nzcnt, int rhs) {
+                                    int nzcnt, int rhs)
+{
   int sum = 1;
-  for (int i = 0; i < nzcnt; i++) {
+  for (int i = 0; i < nzcnt; i++)
+  {
     sum += xstar[rmatind[i]];
   }
   INFO_COMMENT("utilscplex.c:isConstraintNotValidForCurrOpt",
                "sum = %d, rhs = %d", sum, rhs);
-  if (sum <= rhs) {
+  if (sum <= rhs)
+  {
     return false;
   }
   return true;
 }
 
 int addSubtourConstraints(CPXENVptr env, CPXLPptr lp, int nnodes, int *comp,
-                          Instance *inst, int *counter, double *xstar) {
+                          Instance *inst, int *counter, double *xstar)
+{
   DEBUG_COMMENT("utilscplex.c:addSubtourConstraints",
                 "Adding subtour constraints");
   // INIT
@@ -251,12 +291,14 @@ int addSubtourConstraints(CPXENVptr env, CPXLPptr lp, int nnodes, int *comp,
   int nNodeSubTour = 0;
   // Allocate memory for the double array
   double rmatval[inst->ncols];
-  for (size_t i = 0; i < inst->ncols; i++) {
+  for (size_t i = 0; i < inst->ncols; i++)
+  {
     rmatval[i] = 1.0;
   }
 
   // SCAN ALL NODES
-  for (int i = 0; i < nnodes; i++) {
+  for (int i = 0; i < nnodes; i++)
+  {
     nNodeSubTour = 0;
     if (component[i] < 0)
       continue; // node "i" was already visited, just skip it
@@ -265,8 +307,10 @@ int addSubtourConstraints(CPXENVptr env, CPXLPptr lp, int nnodes, int *comp,
     component[i] = -1; // mark node "i" as visited
 
     // LOOK WITHING COMPONENT
-    for (int j = 0; j < nnodes; j++) {
-      if (component[j] == current_component) {
+    for (int j = 0; j < nnodes; j++)
+    {
+      if (component[j] == current_component)
+      {
         component[j] = -1; // mark node "j" as visited
         nodeSubTour[nNodeSubTour] = j;
         nNodeSubTour++;
@@ -276,7 +320,8 @@ int addSubtourConstraints(CPXENVptr env, CPXLPptr lp, int nnodes, int *comp,
     INFO_COMMENT("utilscplex.c:addSubtourConstraints",
                  "current component has %d nodes", nNodeSubTour);
 
-    if (nNodeSubTour > 2) { // A subtour has at least 3 nodes
+    if (nNodeSubTour > 2)
+    { // A subtour has at least 3 nodes
       // PARAM FOR CPXaddrows
       int ccnt = 0;
       int rcnt = 1;
@@ -299,14 +344,16 @@ int addSubtourConstraints(CPXENVptr env, CPXLPptr lp, int nnodes, int *comp,
       DEBUG_COMMENT("utilscplex.c:addSubtourConstraints", "nzcnt = %d", nzcnt);
       // debug list of rmatval != 1
 
-      if (!isConstraintNotValidForCurrOpt(inst, xstar, rmatind, nzcnt, rhs)) {
+      if (!isConstraintNotValidForCurrOpt(inst, xstar, rmatind, nzcnt, rhs))
+      {
         ERROR_COMMENT("utilscplex.c:addSubtourConstraints",
                       "constraint valid for current opt");
         return ERROR_NODES;
       }
       int status = CPXaddrows(env, lp, ccnt, rcnt, nzcnt, &rhs, &sense, rmatbeg,
                               rmatind, rmatval, NULL, cname);
-      if (status) {
+      if (status)
+      {
         ERROR_COMMENT("utilscplex.c:addSubtourConstraints",
                       "CPXaddrows(): error 1");
         return status;
@@ -326,17 +373,20 @@ int addSubtourConstraints(CPXENVptr env, CPXLPptr lp, int nnodes, int *comp,
 }
 
 void build_sol(const double *xstar, Instance *inst, int *succ, int *comp,
-               int *ncomp) {
+               int *ncomp)
+{
   // INITIALIZATION
   INFO_COMMENT("utilscplex.c:build_sol", "Building solution");
   *ncomp = 0;
-  for (int i = 0; i < inst->nnodes; i++) {
+  for (int i = 0; i < inst->nnodes; i++)
+  {
     succ[i] = -1;
     comp[i] = -1;
   }
 
   // BUILDING THE SOLUTION
-  for (int start = 0; start < inst->nnodes; start++) {
+  for (int start = 0; start < inst->nnodes; start++)
+  {
     if (comp[start] >= 0)
       continue; // node "start" was already visited, just skip it
 
@@ -344,13 +394,16 @@ void build_sol(const double *xstar, Instance *inst, int *succ, int *comp,
     (*ncomp)++;
     int i = start;
     int done = 0;
-    while (!done) {
+    while (!done)
+    {
       // go and visit the current component
       comp[i] = *ncomp;
       done = 1;
-      for (int j = 0; j < inst->nnodes; j++) {
+      for (int j = 0; j < inst->nnodes; j++)
+      {
         // the edge [i,j] is selected in xstar and j was not visited before
-        if (i != j && xstar[xpos(i, j, inst)] > 0.5 && comp[j] == -1) {
+        if (i != j && xstar[xpos(i, j, inst)] > 0.5 && comp[j] == -1)
+        {
           succ[i] = j;
           i = j;
           done = 0;
@@ -362,7 +415,8 @@ void build_sol(const double *xstar, Instance *inst, int *succ, int *comp,
   }
   INFO_COMMENT("utilscplex.c:build_sol", "Solution built, ncomp = %d", *ncomp);
 }
-void build_model(Instance *inst, const CPXENVptr env, const CPXLPptr lp) {
+void build_model(Instance *inst, const CPXENVptr env, const CPXLPptr lp)
+{
   INFO_COMMENT("utilscplex.c:build_model", "Building model");
 
   char **cname =
@@ -380,8 +434,10 @@ void build_model(Instance *inst, const CPXENVptr env, const CPXLPptr lp) {
 
   int c = 0;
   inst->ecount = 0;
-  for (int i = 0; i < inst->nnodes - 1; i++) {
-    for (int j = i + 1; j < inst->nnodes; j++) {
+  for (int i = 0; i < inst->nnodes - 1; i++)
+  {
+    for (int j = i + 1; j < inst->nnodes; j++)
+    {
       cname[c] = (char *)calloc(20, sizeof(char));
       sprintf(cname[c], "x(%d,%d)", i + 1,
               j + 1); // (i+1,j+1) because CPLEX starts from 1 (not 0)
@@ -392,7 +448,8 @@ void build_model(Instance *inst, const CPXENVptr env, const CPXLPptr lp) {
   }
   if (c != inst->ncols)
     ERROR_COMMENT("utilscplex.c:build_model", "wrong number of columns");
-  for (int i = 0; i < inst->ncols; i++) {
+  for (int i = 0; i < inst->ncols; i++)
+  {
     // lb[i] = 0.0;
     ub[i] = 1.0;
     xctype[i] = CPX_BINARY;
@@ -424,13 +481,15 @@ void build_model(Instance *inst, const CPXENVptr env, const CPXLPptr lp) {
   int *index = (int *)calloc(inst->nnodes, sizeof(int));
   double *value = (double *)calloc(inst->nnodes, sizeof(double));
 
-  for (int i = 0; i < inst->nnodes; i++) {
+  for (int i = 0; i < inst->nnodes; i++)
+  {
     double rhs = 2.0;
     char sense = 'E';                       // 'E' for equality constraint
     sprintf(cname[0], "degree(%d)", i + 1); // rowname
-    int nnz = 0; // number of non zero constraints to be added to constraint
-                 // matrix length of array rmatind rmatval
-    for (int j = 0; j < inst->nnodes; j++) {
+    int nnz = 0;                            // number of non zero constraints to be added to constraint
+                                            // matrix length of array rmatind rmatval
+    for (int j = 0; j < inst->nnodes; j++)
+    {
       if (j == i)
         continue;
       index[nnz] = xpos(j, i, inst); // rmatind
@@ -461,13 +520,15 @@ void build_model(Instance *inst, const CPXENVptr env, const CPXLPptr lp) {
 }
 
 int patchPath(Instance *inst, double *xstar, int *succ, int *comp, int *path,
-              double *obj_value) {
+              double *obj_value)
+{
   DEBUG_COMMENT("utilscplex.c:patchPath", "Patching path");
   xstarToPath(inst, xstar, inst->ncols, path);
   int component[inst->nnodes];
   memcpy(component, comp, inst->nnodes * sizeof(int));
   int counter = 0;
-  for (int i = 0; i < inst->nnodes; i++) {
+  for (int i = 0; i < inst->nnodes; i++)
+  {
     if (component[i] < 0)
       continue;
     int current_component = component[i];
@@ -475,13 +536,15 @@ int patchPath(Instance *inst, double *xstar, int *succ, int *comp, int *path,
     component[i] = -1;
 
     int succ_node = succ[i];
-    while (component[succ_node] == current_component) {
+    while (component[succ_node] == current_component)
+    {
       path[counter++] = succ_node;
       component[succ_node] = -1;
       succ_node = succ[succ_node];
     }
   }
-  if (counter != inst->nnodes) {
+  if (counter != inst->nnodes)
+  {
     ERROR_COMMENT("utilscplex.c:patchPath", "counter != inst->nnodes");
     return ERROR;
   }
