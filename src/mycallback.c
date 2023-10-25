@@ -122,15 +122,18 @@ int my_callback_relaxation(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, voi
   DEBUG_COMMENT("tspcplex.c:my_callback_relaxation", "calling CCcut_connect_components");
   if (CCcut_connect_components(inst->nnodes, ecount, elist, xstar, &ncomp, comp_count, comp))
     ERROR_COMMENT("tspcplex.c:my_callback_relaxation", "CCcut_connect_components error");
+  int position = 0;
   // print com_count and comp
-  for (int i = 0; i < inst->nnodes; i++)
+  for (int i = 0; i < ncomp; i++)
   {
-    DEBUG_COMMENT("tspcplex.c:my_callback_relaxation", "comp_count[%d] = %d", i, *comp_count[i]);
-    for (int j = 0; j < *comp_count[i]; j++)
+    DEBUG_COMMENT("tspcplex.c:my_callback_relaxation", "comp_count[0][%d] = %d", i, comp_count[0][i]);
+    for (int j = 0; j < comp_count[0][i]; j++)
     {
-      DEBUG_COMMENT("tspcplex.c:my_callback_relaxation", "comp[%d][%d] = %d", i, j, comp[i][j]);
+      DEBUG_COMMENT("tspcplex.c:my_callback_relaxation", "comp[%d][%d] = %d", 0, j, comp[0][position + j]);
     }
+    position += comp_count[0][i];
   }
+
   DEBUG_COMMENT("tspcplex.c:my_callback_relaxation", "ncomp= %d", ncomp);
 
   ParamsConcorde *params = (ParamsConcorde *)malloc(sizeof(ParamsConcorde));
@@ -149,18 +152,18 @@ int my_callback_relaxation(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, voi
   {
     DEBUG_COMMENT("tspcplex.c:my_callback_relaxation", "add SEC");
 
-    // for (int i = 0; i < ncomp; i++)
-    //{
-    int *succ = (int *)calloc(*comp_count[0], sizeof(int));
-
-    for (int j = 0; j < *comp_count[0]; j++)
+    for (int i = 0; i < ncomp; i++)
     {
-      succ[j] = comp[0][j];
+      int *succ = (int *)calloc(*comp_count[0], sizeof(int));
+
+      for (int j = 0; j < comp_count[0][i]; j++)
+      {
+        succ[j] = comp[i][j];
+      }
+      double cutval = 0.0;
+      relaxation_cuts(cutval, comp_count[0][i], succ, params);
+      free(succ);
     }
-    double cutval = 0;
-    relaxation_cuts(cutval, *comp_count[0], succ, params);
-    free(succ);
-    //}
   }
   // Free allocated memory
   for (int i = 0; i < inst->nnodes; i++)
