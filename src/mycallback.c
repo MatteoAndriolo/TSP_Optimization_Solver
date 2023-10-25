@@ -90,11 +90,6 @@ int my_callback_relaxation(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, voi
   int ncomp = 0;
   int *comp = (int *)malloc(inst->nnodes * sizeof(int)); // edges pertaining to each component
   int *comp_count = (int *)malloc(inst->nnodes * sizeof(int));
-  // for (int i = 0; i < inst->nnodes; i++)
-  //{
-  //   comp_count[i] = (int *)calloc(1, sizeof(int));      // Allocate memory for a single integer
-  //   comp[i] = (int *)calloc(inst->nnodes, sizeof(int)); // Allocate memory for a single integer
-  // }
 
   int *elist = (int *)malloc(inst->ncols * 2 * sizeof(int));
   int loader = 0;
@@ -123,17 +118,6 @@ int my_callback_relaxation(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, voi
   if (CCcut_connect_components(inst->nnodes, ecount, elist, xstar, &ncomp, &comp_count, &comp))
     ERROR_COMMENT("tspcplex.c:my_callback_relaxation", "CCcut_connect_components error");
   int position = 0;
-  // print com_count and comp
-  DEBUG_COMMENT("mycallback.c:my_callback_relaxation", "ncomp = %d", ncomp);
-  for (int i = 0; i < ncomp; i++)
-  {
-    DEBUG_COMMENT("tspcplex.c:my_callback_relaxation", "comp_count[%d] = %d", i, comp_count[i]);
-    for (int j = 0; j < comp_count[i]; j++)
-    {
-      DEBUG_COMMENT("tspcplex.c:my_callback_relaxation", "comp[%d] = %d", j, comp[position + j]);
-    }
-    position += comp_count[i];
-  }
 
   DEBUG_COMMENT("tspcplex.c:my_callback_relaxation", "ncomp= %d", ncomp);
 
