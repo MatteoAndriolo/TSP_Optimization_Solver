@@ -158,6 +158,7 @@ void set_mip_start(Instance *inst, const CPXENVptr env, const CPXLPptr lp,
 void fix_edges(const CPXENVptr env, const CPXLPptr lp, Instance *inst,
                double *xheu)
 {
+  printf("---------------------START FIX---------------------\n");
   DEBUG_COMMENT("utilscplex.c:fix_edges", "Fixing edges");
   int *ind = (int *)calloc(inst->nnodes, sizeof(int));
   double *bd = (double *)calloc(inst->nnodes, sizeof(double));
@@ -179,11 +180,13 @@ void fix_edges(const CPXENVptr env, const CPXLPptr lp, Instance *inst,
       }
     }
   }
+  printf("---------------------END FIX---------------------\n");
 }
 
 void unfix_edges(const CPXENVptr env, const CPXLPptr lp, Instance *inst,
                  double *xheu)
 {
+  printf("---------------------START UNFIX---------------------\n");
   INFO_COMMENT("utilscplex.c:fix_edges", "unfixing edges");
   int *ind = (int *)calloc(inst->nnodes, sizeof(int));
   double *bd = (double *)calloc(inst->nnodes, sizeof(double));
@@ -197,6 +200,7 @@ void unfix_edges(const CPXENVptr env, const CPXLPptr lp, Instance *inst,
         ERROR_COMMENT("utilscplex.c:fix_edges", "CPXchgbds() error");
     }
   }
+  printf("---------------------END UNFIX---------------------\n");
 }
 
 void eliminate_radius_edges(const CPXENVptr env, const CPXLPptr lp,
@@ -415,6 +419,7 @@ void build_sol(const double *xstar, Instance *inst, int *succ, int *comp,
   }
   INFO_COMMENT("utilscplex.c:build_sol", "Solution built, ncomp = %d", *ncomp);
 }
+
 void build_model(Instance *inst, const CPXENVptr env, const CPXLPptr lp)
 {
   INFO_COMMENT("utilscplex.c:build_model", "Building model");

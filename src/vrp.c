@@ -290,10 +290,15 @@ ErrorCode INSTANCE_assert(Instance *inst)
   {
     check_nnodes -= inst->path[i];
     found[inst->path[i]] = true;
-    if (inst->path[i] < 0 || inst->path[i] >= inst->nnodes)
+    if (inst->path[i] < 0)
     {
-      ERROR_COMMENT("vrp.c:INSTANCE_assert", "Node %d is not valid",
-                    inst->path[i]);
+      ERROR_COMMENT("vrp.c:INSTANCE_assert", "TourLenght is wrong");
+      pthread_mutex_unlock(&inst->mut_assert);
+      return ERROR_TOUR_LENGTH;
+    }
+    if (inst->path[i] >= inst->nnodes)
+    {
+      ERROR_COMMENT("vrp.c:INSTANCE_assert", "Node is not valid");
       pthread_mutex_unlock(&inst->mut_assert);
       return ERROR_NODES;
     }

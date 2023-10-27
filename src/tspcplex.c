@@ -123,10 +123,11 @@ int branch_and_cut(Instance *inst, const CPXENVptr env, const CPXLPptr lp,
   int error = CPXgetobjval(env, lp, &obj_val);
   if (error)
     ERROR_COMMENT("tspcplex.c:branch_and_cut", "CPXgetobjval() error\n");
-
+  printf("finished the run of branch and cut with value = %lf\n", obj_val);
   RUN(xstarToPath(inst, xstar, inst->ncols, inst->path));
 
   RUN(INSTANCE_pathCheckpoint(inst));
+
   // memcpy(inst->best_path, inst->path, sizeof(int) * inst->nnodes);
   //  free(comp);
   //  free(succ);
@@ -137,6 +138,7 @@ int branch_and_cut(Instance *inst, const CPXENVptr env, const CPXLPptr lp,
 
 int hard_fixing(const CPXENVptr env, const CPXLPptr lp, Instance *inst)
 {
+  printf("--------------  HARD FIXING  --------------\n");
   DEBUG_COMMENT("tspcplex.c:hard_fixing", "entering hard fixing");
   //----------------------------------------- set the time limit to run cplex
   //---------------------------------------------------------
@@ -145,16 +147,21 @@ int hard_fixing(const CPXENVptr env, const CPXLPptr lp, Instance *inst)
   //----------------------------------------- create the xheuristic soltion
   // from
   // a warm start ----------------------------------------
+  inst->best_tourlength = INFTY;
   double *xheu = (double *)calloc(inst->ncols, sizeof(double));
   // TODO: cerca dove aggiorna la path! in best_path e cambia create xheu da best a normale
   // two_opt(inst, inst->ncols);
   create_xheu(inst, xheu);
-  set_mip_start(inst, env, lp, xheu);
+  // set_mip_start(inst, env, lp, xheu);
 
   // double best_solution = INFTY;
-  bool no_improv = false;
-  while (!no_improv)
+
+  int iterations = 5;
+  // while (!no_improv)
+  bool ASD = false;
+  while (iterations-- > 0)
   {
+    printf("--------------  ITERATION %d  --------------\n", iterations);
     //----------------------------------------- fixing some edges
     //---------------------------------------------------------------
     fix_edges(env, lp, inst, xheu);
@@ -176,29 +183,41 @@ int hard_fixing(const CPXENVptr env, const CPXLPptr lp, Instance *inst)
     int error = CPXgetobjval(env, lp, &actual_solution);
     if (error)
       ERROR_COMMENT("tspcplex.c:hard_fixing", "CPXgetobjval() error\n");
+    printf("actual_solution = %lf\n,", actual_solution);
+    printf("inst->best_tourlength = %lf\n,", inst->best_tourlength);
+    xstarToPath(inst, xheu, inst->ncols, inst->path);
+    RUN(INSTANCE_pathCheckpoint(inst));
 
     if (actual_solution < inst->best_tourlength)
-    { // UPDATE path
+    {
+      DEBUG_COMMENT("tspcplex.c:hard_fixing", "ASDF");
       if (CPXgetx(env, lp, xheu, 0, inst->ncols - 1))
+      {
+        ASD = true;
         ERROR_COMMENT("tspcplex.c:hard_fixing", "CPXgetx() error");
+      }
+
       inst->best_tourlength = actual_solution;
       xstarToPath(inst, xheu, inst->ncols, inst->path);
-      memcpy(inst->best_path, inst->path, sizeof(int) * inst->ncols);
+      memcpy(inst->best_path, inst->path, sizeof(int) * inst->nnodes);
+      DEBUG_COMMENT("tspcplex.c:hard_fixing ", "path = ");
+
+      for (int i = 0; i < inst->nnodes; i++)
+      {
+        DEBUG_COMMENT("tspcplex.c:hard_fixing ", "path = %d ", inst->path[i]);
+        DEBUG_COMMENT("tspcplex.c:hard_fixing", "best_path = %d", inst->best_path[i]);
+      }
     }
-    //----------------------------------------- unfixing  edges
+    //----------------------------------------- unfixing   edges
     //---------------------------------------------------------------
     unfix_edges(env, lp, inst, xheu);
-
-    if (actual_solution >= inst->best_tourlength)
-      break;
   }
 
-  inst->solver = SOLVER_BRANCH_AND_CUT;
-  solve_problem(env, lp, inst);
-  if (CPXgetx(env, lp, xheu, 0, inst->ncols - 1))
+  // inst->solver = SOLVER_BASE;
+  // solve_problem(env, lp, inst);
+  if (!ASD && CPXgetx(env, lp, xheu, 0, inst->ncols - 1))
     ERROR_COMMENT("tspcplex.c:hard_fixing", "CPXgetx() error");
   xstarToPath(inst, xheu, inst->ncols, inst->path);
-
   free(xheu);
   return 0;
 }

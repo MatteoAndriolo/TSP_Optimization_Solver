@@ -241,10 +241,11 @@ int my_callback_candidate(CPXCALLBACKCONTEXTptr context, CPXLONG contextid,
   {
     RUN(xstarToPath(inst, xstar, inst->ncols, inst->path));
     inst->tour_length = INSTANCE_calculateTourLength(inst);
-    two_opt(inst, 5 * inst->nnodes);
+    // two_opt(inst, 5 * inst->nnodes);
 
     int indices[inst->ncols];
     double xheu[inst->ncols];
+
     for (int i = 0; i < inst->ncols; i++)
     {
       xheu[i] = 0;

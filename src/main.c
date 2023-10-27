@@ -121,7 +121,8 @@ int main(int argc, char **argv)
       }
       else if (strcmp(passagges[j], "cplexhf") == 0)
       {
-        inst->solver = SOLVER_MH_HARDFIX; // TODO not working
+        inst->percentageHF = 70;
+        inst->solver = SOLVER_MH_HARDFIX;
         TSPopt(inst);
       }
       else if (strcmp(passagges[j], "cplexlb") == 0)
