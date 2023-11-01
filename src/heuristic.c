@@ -17,99 +17,6 @@ void refine_pop(Instance *inst, GENETIC_POPULATION *population,
   }
 }
 
-int *matches(Instance *inst, GENETIC_INDIVIDUAL *ind1,
-             GENETIC_INDIVIDUAL *ind2) {
-  int windows_size = (int)inst->nnodes / 10;
-  int *matches_fw = (int *)calloc(inst->nnodes * 2, sizeof(int));
-  int *matches_bw = matches_fw + inst->nnodes;
-
-  for (int i = 0; i < inst->nnodes; i++) {
-    for (int j = 0; j < (int)windows_size / 2; j++) {
-      int p = (i + j) % inst->nnodes;
-      int m = i - j;
-      if (m < 0) {
-        m = inst->nnodes + m;
-      }
-
-      if (ind1->path[i] == ind2->path[p])
-        matches_fw[i] = 1;
-      else if (ind1->path[i] == ind2->path[m])
-        matches_bw[i] = 1;
-    }
-  }
-  return matches_fw;
-}
-
-int allineate_paths(GENETIC_SETUP *gen, GENETIC_INDIVIDUAL *ind1,
-                    GENETIC_INDIVIDUAL *ind2, int *matches) {
-  int *matches_fw = matches;
-  int *matches_bw = matches + gen->population_size;
-  int nnodes = gen->population_size;
-  int windows_size = gen->windows_size;
-
-  int *cumul_fw = (int *)calloc(nnodes, sizeof(int));
-  int *cumul_bw = (int *)calloc(nnodes, sizeof(int));
-
-  int best_fw = 0;
-  int best_bw = 0;
-  int best_fw_pos = 0;
-  int best_bw_pos = 0;
-
-  // init first and last
-  for (int i = 0; i < windows_size; i++) {
-    cumul_bw[0] += matches_bw[gen->population_size - i];
-    cumul_fw[gen->population_size - 1] += matches_fw[i];
-  }
-
-  if (cumul_bw[0] > best_bw) {
-    best_bw = cumul_bw[0];
-    best_bw_pos = 0;
-  }
-  if (cumul_fw[gen->population_size - 1] > best_fw) {
-    best_fw = cumul_fw[gen->population_size - 1];
-    best_fw_pos = gen->population_size - 1;
-  }
-
-  // do the first portion and last portion which use circularity of array
-  for (int i = 1; i < windows_size; i++) {
-    cumul_bw[i] = cumul_bw[i - 1] + matches_bw[i] -
-                  matches_bw[gen->population_size - windows_size + i];
-    cumul_fw[gen->population_size - 1 - i] =
-        cumul_fw[gen->population_size - i] + matches_fw[windows_size - i] -
-        matches_fw[windows_size - i];
-
-    if (cumul_bw[i] > best_bw) {
-      best_bw = cumul_bw[i];
-      best_bw_pos = i;
-    }
-    if (cumul_fw[gen->population_size - 1 - i] > best_fw) {
-      best_fw = cumul_fw[gen->population_size - 1 - i];
-      best_fw_pos = gen->population_size - 1 - i;
-    }
-  }
-
-  // do the rest
-  for (int i = windows_size; i < nnodes - windows_size; i++) {
-    cumul_bw[i] =
-        cumul_bw[i - 1] + matches_bw[i] - matches_bw[i - windows_size];
-    cumul_fw[nnodes - 1 - i] =
-        cumul_fw[nnodes - i] + matches_fw[i] - matches_fw[i + windows_size];
-
-    if (cumul_bw[i] > best_bw) {
-      best_bw = cumul_bw[i];
-      best_bw_pos = i;
-    }
-    if (cumul_fw[nnodes - 1 - i] > best_fw) {
-      best_fw = cumul_fw[nnodes - 1 - i];
-      best_fw_pos = nnodes - 1 - i;
-    }
-  }
-
-  if (best_fw < best_bw)
-    return best_bw_pos;
-  return best_fw_pos;
-}
-
 int _insert_node(GENETIC_INDIVIDUAL *src, GENETIC_INDIVIDUAL *dest,
                  bool *inserted, int *pos, int *iter, int *size) {
   int err = SUCCESS;
@@ -188,7 +95,6 @@ void crossover(Instance *inst, GENETIC_SETUP *gen) {
     p2 = (s2 + i2) % child.nnodes;
 
     bool isChampion = true;
-    // while (size < inst->nnodes) {
     while (i1 < inst->nnodes || i2 < inst->nnodes) {
       DEBUG_COMMENT("heuristic::crossover", "size %d", size);
       if (i1 >= inst->nnodes || i2 >= inst->nnodes) {
@@ -257,15 +163,14 @@ void crossover(Instance *inst, GENETIC_SETUP *gen) {
     // ------------------ ENDDEBUG ------------------
 
     child.fitness = calculateTourLenghtPath(inst, child.path);
-    // add_solution(gen->children->grasp_individuals, i, child.fitness);
 
-    // Copy the child to the population and free the allocated memory
     gen->children->individual[i] = child;
     free(inserted);
   }
 
   DEBUG_COMMENT("heuristic::crossover", "EXITING FUNCTION");
 }
+
 /*
  *  Start by generating populatin size random paths
  *  Run very briefly 2opt
@@ -281,7 +186,6 @@ int genetic_algorithm(Instance *inst) {
   DEBUG_COMMENT("heuristic::genetic_algorithm", "Starting genetic algorithm");
 
   // BASIC SETUP
-  // grasp size 6
   int n_prob = 6;
   double *temp_prob = malloc(sizeof(double) * n_prob);
   for (int i = 1; i <= n_prob; i++) {
@@ -295,7 +199,8 @@ int genetic_algorithm(Instance *inst) {
   GENETIC_SETUP *gen = inst->genetic_setup;
   genetic_setup(gen, inst->ngenerations, inst->population_size,
                 (int)(inst->nnodes / 10), n_prob, temp_prob);
-  // set best individual
+
+  // Set Best Individual
   gen->best_individual = malloc(sizeof(GENETIC_INDIVIDUAL));
   genetic_individual(gen->best_individual, inst->nnodes, NULL, INFINITY);
   DEBUG_COMMENT("heuristic::genetic_algorithm", "Best individual set");
@@ -309,23 +214,23 @@ int genetic_algorithm(Instance *inst) {
     int *tpath = malloc(sizeof(int) * inst->nnodes);
     double ttl = generate_random_path(inst, tpath);
     genetic_individual(&gen->parents->individual[i], inst->nnodes, tpath, ttl);
-    // add_solution(gen->parents->grasp_individuals, i,
-    // gen->parents->individual[i].fitness);
   }
 
   // QUICK REFINEMENT
   DEBUG_COMMENT("heuristic::genetic_algorithm", "Refining population");
-  refine_pop(inst, gen->parents, 3);
+  refine_pop(inst, gen->parents, 1);
   for (int i = 0; i < gen->population_size; i++) {
     add_solution(gen->parents->grasp_individuals, i,
                  gen->parents->individual[i].fitness);
   }
-  // DEBUG COMMENT grasp
+
+#ifndef PRODUCTION
   for (int i = 0; i < gen->grasp_n_probabilities; i++) {
     DEBUG_COMMENT("heuristic::genetic_algorithm", "Grasp %d - %d: %f", i,
                   gen->parents->grasp_individuals->solutions[i].solution,
                   gen->parents->grasp_individuals->solutions[i].value);
   }
+#endif /* ifndef PRODUCTION */
 
   // START GENERATIONS --------------------------------------------------------
   if (gen->children) {
