@@ -13,7 +13,7 @@ TARGET = $(BIN_DIR)/main
 
 dir_guard=@mkdir -p $(@D)
 
-.PHONY: all clean production coverage
+.PHONY: all clean production coverage asan
 
 #all: CFLAGS += -fprofile-arcs -ftest-coverage
 all: $(TARGET)
@@ -40,3 +40,7 @@ coverage: clean $(TARGET)
 	genhtml $(COVERAGE_DIR)/coverage.info --output-directory ./coverage/coverage_report
 	#lcov --capture --directory $(OBJ_DIR) --output-file $(COVERAGE_DIR)/coverage.info
 	#genhtml $(COVERAGE_DIR)/coverage.info --output-directory $(COVERAGE_DIR)/coverage_report
+
+asan: CFLAGS += $(ASAN_FLAGS)
+asan: LDFLAGS += $(ASAN_FLAGS)
+asan: all

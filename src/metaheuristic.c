@@ -5,7 +5,8 @@ double energy_probabilities(double cost_current, double cost_new, double T,
                             double coefficient) {
   // double delta = (cost_new - cost_current) / (cost_current + cost_new) *
   // coefficient;
-  if (cost_new < cost_current) return 1;
+  if (cost_new < cost_current)
+    return 1;
   return exp(-coefficient / T);
 }
 
@@ -46,9 +47,9 @@ int simulated_annealling(Instance *inst, double k_max) {
                   "k: %d, T: %f, energy: %f, rand_val: %f", k, T, energy,
                   rand_val);
 
-    if (rand_val < energy) {  // rejected !
+    if (rand_val < energy) { // rejected !
       restoreInstState(inst, path, tour_length);
-    } else {  // accepted
+    } else { // accepted
       backupInstState(inst, path, &tour_length);
       pathCheckpoint(inst);
     }
@@ -64,76 +65,69 @@ int simulated_annealling(Instance *inst, double k_max) {
 // ----------------------------------------------------------------------------
 // VNS
 // ----------------------------------------------------------------------------
-int vns_k(Instance *inst, int k)
-{
-    //TODO fix while loop
-    int c=0;
-    while (++c<1000)
-    {
-        INFO_COMMENT("heuristics.c:vnp_k", "starting the heuristics loop for vnp_k, iteration %d", c);
-        RUN(kick_function(inst, k));
-        RUN(two_opt_tabu(inst, 100, initializeTabuList(20,7)));
-        calculateTourLength(inst);
-        pathCheckpoint(inst);
-        CHECKTIME(inst, false);
-    }
-    INFO_COMMENT("heuristics.c:vnp_k", "finished the huristics loop for vnp_k");
-    DEBUG_COMMENT("heuristics.c:vnp_k", "best tourlength: %d", inst->best_tourlength);
-    return SUCCESS;
+int vns_k(Instance *inst, int k) {
+  // TODO fix while loop
+  int c = 0;
+  while (++c < 1000) {
+    INFO_COMMENT("heuristics.c:vnp_k",
+                 "starting the heuristics loop for vnp_k, iteration %d", c);
+    RUN(kick_function(inst, k));
+    RUN(two_opt_tabu(inst, 100, initializeTabuList(20, 7)));
+    calculateTourLength(inst);
+    pathCheckpoint(inst);
+    CHECKTIME(inst, false);
+  }
+  INFO_COMMENT("heuristics.c:vnp_k", "finished the huristics loop for vnp_k");
+  DEBUG_COMMENT("heuristics.c:vnp_k", "best tourlength: %d",
+                inst->best_tourlength);
+  return SUCCESS;
 }
 
-int kick_function(Instance *inst, int k)
-{
-    int found = 0;
-    int index_0, index_1, index_2, index_3, index_4;
-    while (found != 4)
-    {
-        found = 0;
-        index_0 = 1;
-        found++;
-        index_1 = randomBetween(index_0 + 1, inst->nnodes);
-        if (inst->nnodes - index_1 > 6)
-        {
-            index_2 = randomBetween(index_1 + 2, inst->nnodes);
-            found++;
-        }
-        if (inst->nnodes - index_2 > 4)
-        {
-            index_3 = randomBetween(index_2 + 2, inst->nnodes);
-            found++;
-        }
-        if (inst->nnodes - index_3 > 2)
-        {
-            index_4 = randomBetween(index_3 + 2, inst->nnodes);
-            found++;
-        }
-        if (found == 4)
-        {
-            index_0--;
-            index_1--;
-            index_2--;
-            index_3--;
-            index_4--;
-            // DEBUG_COMMENT("heuristics.c:kick_function", "found 5 indexes{%d, %d, %d, %d, %d}", index_0, index_1, index_2, index_3, index_4);
-        }
-        CHECKTIME(inst, false);
+int kick_function(Instance *inst, int k) {
+  int found = 0;
+  int index_0 = 0, index_1 = 0, index_2 = 0, index_3 = 0, index_4 = 0;
+  while (found != 4) {
+    found = 0;
+    index_0 = 1;
+    found++;
+    index_1 = randomBetween(index_0 + 1, inst->nnodes);
+    if (inst->nnodes - index_1 > 6) {
+      index_2 = randomBetween(index_1 + 2, inst->nnodes);
+      found++;
     }
-    //---------------------------------------------------------------------------------------
-    int *final_path = malloc(inst->nnodes * sizeof(int));
-    int count = 0;
-    for (int i = 0; i < index_1; i++)
-        final_path[count++] = inst->path[i];
-    for (int i = index_4; i < inst->nnodes; i++)
-        final_path[count++] = inst->path[i];
-    for (int i = index_4 - 1; i >= index_3; i--)
-        final_path[count++] = inst->path[i];
-    for (int i = index_2; i < index_3; i++)
-        final_path[count++] = inst->path[i];
-    for (int i = index_2 - 1; i >= index_1; i--)
-        final_path[count++] = inst->path[i];
-    free(inst->path);
-    inst->path = final_path;
-    return SUCCESS;
+    if (inst->nnodes - index_2 > 4) {
+      index_3 = randomBetween(index_2 + 2, inst->nnodes);
+      found++;
+    }
+    if (inst->nnodes - index_3 > 2) {
+      index_4 = randomBetween(index_3 + 2, inst->nnodes);
+      found++;
+    }
+    if (found == 4) {
+      index_0--;
+      index_1--;
+      index_2--;
+      index_3--;
+      index_4--;
+      // DEBUG_COMMENT("heuristics.c:kick_function", "found 5 indexes{%d, %d,
+      // %d, %d, %d}", index_0, index_1, index_2, index_3, index_4);
+    }
+    CHECKTIME(inst, false);
+  }
+  //---------------------------------------------------------------------------------------
+  int *final_path = malloc(inst->nnodes * sizeof(int));
+  int count = 0;
+  for (int i = 0; i < index_1; i++)
+    final_path[count++] = inst->path[i];
+  for (int i = index_4; i < inst->nnodes; i++)
+    final_path[count++] = inst->path[i];
+  for (int i = index_4 - 1; i >= index_3; i--)
+    final_path[count++] = inst->path[i];
+  for (int i = index_2; i < index_3; i++)
+    final_path[count++] = inst->path[i];
+  for (int i = index_2 - 1; i >= index_1; i--)
+    final_path[count++] = inst->path[i];
+  free(inst->path);
+  inst->path = final_path;
+  return SUCCESS;
 }
-
-
