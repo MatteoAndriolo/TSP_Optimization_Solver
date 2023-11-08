@@ -191,6 +191,7 @@ int my_callback_candidate(CPXCALLBACKCONTEXTptr context, CPXLONG contextid,
   {
     int rmatind[inst->ncols];
     double rmatval[inst->ncols];
+
     char sense = 'L'; // 'L' for less than or equal to constraint
     int izero = 0;
     int nnz = 0;
@@ -217,8 +218,9 @@ int my_callback_candidate(CPXCALLBACKCONTEXTptr context, CPXLONG contextid,
         }
       }
 
-      if (size_comp <= 2)
-        continue;
+      // TODO: check if size_comp <= 2
+      // if (size_comp <= 2)
+      //   continue;
 
       // build index and value
       for (int j = 0; j < size_comp; j++)
@@ -231,11 +233,17 @@ int my_callback_candidate(CPXCALLBACKCONTEXTptr context, CPXLONG contextid,
         }
       }
       double rhs = nnz - 1;
+      for (int i = 0; i < size_comp; i++)
+      {
+        printf("%d ", comp_nodes[i]);
+      }
+      // getchar();
 
       if (CPXcallbackrejectcandidate(context, 1, nnz, &rhs, &sense, &izero,
                                      rmatind, rmatval))
         ERROR_COMMENT("constraint.c:my_callback", "CPXaddrows(): error 1");
     }
+    printf("\n");
   }
   else if (ncomp == 1)
   {

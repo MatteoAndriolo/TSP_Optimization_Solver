@@ -1,5 +1,5 @@
 #include "../include/utilscplex.h"
-
+#include "../include/refinement.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -354,6 +354,7 @@ int addSubtourConstraints(CPXENVptr env, CPXLPptr lp, int nnodes, int *comp,
                       "constraint valid for current opt");
         return ERROR_NODES;
       }
+
       int status = CPXaddrows(env, lp, ccnt, rcnt, nzcnt, &rhs, &sense, rmatbeg,
                               rmatind, rmatval, NULL, cname);
       if (status)
@@ -362,11 +363,12 @@ int addSubtourConstraints(CPXENVptr env, CPXLPptr lp, int nnodes, int *comp,
                       "CPXaddrows(): error 1");
         return status;
       }
+
       DEBUG_COMMENT("utilscplex.c:addSubtourConstraints",
                     "constraint added, number rows is %d",
                     CPXgetnumrows(env, lp));
 
-      (*counter)++; // Increment the counter for the next subtour (if any)
+      (*counter)++;
       free(cname[0]);
       free(cname);
     }
@@ -525,34 +527,47 @@ void build_model(Instance *inst, const CPXENVptr env, const CPXLPptr lp)
 }
 
 int patchPath(Instance *inst, double *xstar, int *succ, int *comp, int *path,
-              double *obj_value)
+              double *obj_value, int *ncomp)
 {
-  DEBUG_COMMENT("utilscplex.c:patchPath", "Patching path");
-  xstarToPath(inst, xstar, inst->ncols, path);
-  int component[inst->nnodes];
-  memcpy(component, comp, inst->nnodes * sizeof(int));
-  int counter = 0;
-  for (int i = 0; i < inst->nnodes; i++)
+  while (*ncomp > 1)
   {
-    if (component[i] < 0)
-      continue;
-    int current_component = component[i];
-    path[counter++] = i;
-    component[i] = -1;
-
-    int succ_node = succ[i];
-    while (component[succ_node] == current_component)
+    double min_z = INFINITY;
+    int a = -1;
+    int b = -1;
+    // find the best delta_cost
+    for (int i = 0; i < inst->nnodes; i++)
     {
-      path[counter++] = succ_node;
-      component[succ_node] = -1;
-      succ_node = succ[succ_node];
+      for (int j = 0; j < inst->nnodes; j++)
+      {
+        if (comp[i] < comp[j])
+        {
+          double new_z = INSTANCE_getDistanceNodes(inst, i, succ[j]);
+          double actual_z = INSTANCE_getDistanceNodes(inst, j, succ[i]);
+          if (new_z - actual_z < min_z)
+          {
+            min_z = new_z - actual_z;
+            a = i;
+            b = j;
+          }
+        }
+      }
     }
+    // update the comp array
+    int node = succ[b];
+    int comp_a = comp[a];
+    while (node != b)
+    {
+      comp[node] = comp_a;
+      node = succ[node];
+    }
+    comp[b] = comp_a;
+    *ncomp = (*ncomp) - 1;
+    // update the successors array
+    int a_first = succ[a];
+    succ[a] = succ[b];
+    succ[b] = a_first;
   }
-  if (counter != inst->nnodes)
-  {
-    ERROR_COMMENT("utilscplex.c:patchPath", "counter != inst->nnodes");
-    return ERROR;
-  }
-
+  // we apply 2-opt in any case (also if we have 1 component)
+  RUN(two_opt(inst, INFINITY));
   return SUCCESS;
 }

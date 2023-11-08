@@ -114,5 +114,5 @@ int addSubtourConstraints(CPXENVptr env, CPXLPptr lp, int nnodes, int *comp,
                           Instance *inst, int *counter, double *xstar);
 
 int patchPath(Instance *inst, double *xstar, int *succ, int *comp, int *path,
-              double *obj_value);
+              double *obj_value, int *ncomp);
 #endif
