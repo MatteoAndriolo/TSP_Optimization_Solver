@@ -122,14 +122,16 @@ int my_callback_relaxation(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, voi
   free(xstar);
   free(elist);
   free(params);
-
-  return SUCCESS;
+  int status = INSTANCE_assert(inst);
+  if (status != SUCCESS)
+    exit(status);
+  return status;
 }
 
 int my_callback_candidate(CPXCALLBACKCONTEXTptr context, CPXLONG contextid,
                           void *userhandle)
 {
-  DEBUG_COMMENT("mycallback.c:my_callback_candidate", "Entering");
+  INFO_COMMENT("mycallback.c:my_callback_candidate", "Entering");
   Instance *inst = (Instance *)userhandle;
   double *xstar = (double *)malloc(sizeof(double) * inst->ncols);
   double objval = CPX_INFBOUND;
@@ -149,7 +151,6 @@ int my_callback_candidate(CPXCALLBACKCONTEXTptr context, CPXLONG contextid,
   int ncomp = 0;
 
   build_sol(xstar, inst, succ, comp, &ncomp);
-  // xstarToPath(inst, xstar, inst->ncols, inst->path); // done in ncomp==1
   DEBUG_COMMENT("mycallback.c:my_callback_candidate", "ncomp = %d", ncomp);
 
   if (ncomp > 1)
@@ -199,18 +200,21 @@ int my_callback_candidate(CPXCALLBACKCONTEXTptr context, CPXLONG contextid,
       }
       double rhs = nnz - 1;
 
-      // getchar();
-
       if (CPXcallbackrejectcandidate(context, 1, nnz, &rhs, &sense, &izero,
                                      rmatind, rmatval))
         ERROR_COMMENT("constraint.c:my_callback", "CPXaddrows(): error 1");
     }
-    printf("\n");
   }
+
   else if (ncomp == 1)
   {
+    DEBUG_COMMENT("mycallback.c:my_callback_candidate", "DIOSCANNATO");
     RUN(xstarToPath(inst, xstar, inst->ncols, inst->path));
     inst->tour_length = INSTANCE_calculateTourLength(inst);
+
+    for (int i = 0; i < inst->nnodes; i++)
+      printf("%d ", inst->path[i]);
+
     RUN(two_opt(inst, inst->ncols));
 
     int indices[inst->ncols];
@@ -234,8 +238,6 @@ int my_callback_candidate(CPXCALLBACKCONTEXTptr context, CPXLONG contextid,
                     "CPXcallbackpostheursoln error %d", status);
   }
 
-  // free(succ);
-  // free(comp);
   free(xstar);
   DEBUG_COMMENT("mycallback.c:my_callback_candidate", "Exiting");
   return 0;

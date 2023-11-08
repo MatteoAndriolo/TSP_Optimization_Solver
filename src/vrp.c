@@ -344,28 +344,25 @@ ErrorCode INSTANCE_assert(Instance *inst)
 ErrorCode INSTANCE_pathCheckpoint(Instance *inst)
 {
   pthread_mutex_lock(&inst->mut_pathCheckpoint);
-  DEBUG_COMMENT("vrp.c:INSTANCE_pathCheckpoint", "Entering ");
+  INFO_COMMENT("vrp.c:INSTANCE_pathCheckpoint", "Entering ");
 
   INSTANCE_calculateTourLength(inst);
 
   RUN(INSTANCE_assert(inst));
-  DEBUG_COMMENT("vrp.c:INSTANCE_pathCheckpoint", "Check if path is the best");
   if (inst->tour_length < inst->best_tourlength)
   {
-    DEBUG_COMMENT("vrp.c:INSTANCE_pathCheckpoint", "This path is the best");
     memcpy(inst->best_path, inst->path, inst->nnodes * sizeof(int));
     inst->best_tourlength = inst->tour_length;
-    INFO_COMMENT("vrp.c:pathCheckpoint", "New best path found: %lf",
-                 inst->best_tourlength);
+    DEBUG_COMMENT("vrp.c:pathCheckpoint", "New best path found: %lf",
+                  inst->best_tourlength);
   }
   else
   {
-    INFO_COMMENT("vrp.c:INSTANCE_pathCheckpoint", "This path is not the best");
     DEBUG_COMMENT("vrp.c:INSTANCE_pathCheckpoint",
                   "Current path: %lf,Best path: %lf", inst->tour_length,
                   inst->best_tourlength);
   }
-  DEBUG_COMMENT("vrp.c:INSTANCE_pathCheckpoint", "Exit ");
+  INFO_COMMENT("vrp.c:INSTANCE_pathCheckpoint", "Exit ");
   pthread_mutex_unlock(&inst->mut_pathCheckpoint);
   return SUCCESS;
 }
