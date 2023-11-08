@@ -9,6 +9,16 @@
 #include "../include/utilscplex.h"
 #define EPS 1e-5
 
+int patch_heuristic(Instance *inst, double *xstar, int *succ, int *comp, int *path,
+                    double *obj_val, int *ncomp)
+{
+  RUN(patchPath(inst, xstar, succ, comp, inst->path, obj_val, ncomp));
+  RUN(two_opt(inst, inst->ncols));
+  printf("------------------------------------\n");
+  printf("patch tour lenght = %lf\n", inst->tour_length);
+  return SUCCESS;
+}
+
 int bender(const CPXENVptr env, const CPXLPptr lp, Instance *inst,
            bool patching)
 {
@@ -25,7 +35,7 @@ int bender(const CPXENVptr env, const CPXLPptr lp, Instance *inst,
   int iteration = 0;
   double lb = -INFINITY, ub = INFINITY;
 
-  double precision = 0.9999;
+  double precision = 0.99;
   bool end = false;
   while (lb < precision * ub)
   {
@@ -36,6 +46,7 @@ int bender(const CPXENVptr env, const CPXLPptr lp, Instance *inst,
     build_sol(xstar, inst, succ, comp, &ncomp);
     DEBUG_COMMENT("tspcplex.c:bender", "ncomp = %d", ncomp);
     DEBUG_COMMENT("tspcplex.c:bender", "addSubtourConstraints");
+    xstarToPath(inst, xstar, inst->ncols, inst->path);
 
     if (ncomp > 1)
     {
@@ -44,23 +55,25 @@ int bender(const CPXENVptr env, const CPXLPptr lp, Instance *inst,
       sprintf(name, "benders_%d.lp", iteration);
       iteration++;
       CPXwriteprob(env, lp, name, NULL);
-      RUN(patchPath(inst, xstar, succ, comp, inst->path, &obj_val, &ncomp));
-      RUN(INSTANCE_pathCheckpoint(inst));
+
+      if (patching == true)
+        patch_heuristic(inst, xstar, succ, comp, inst->path, &obj_val, &ncomp);
     }
     else
     {
-      RUN(INSTANCE_pathCheckpoint(inst));
+      xstarToPath(inst, xstar, inst->ncols, inst->path);
       end = true;
     }
-    INFO_COMMENT(
-        "tspcplex.c:bender",
-        "checking time -------------------------------------------------");
-    ub = inst->best_tourlength;
+    RUN(INSTANCE_saveBestPath(inst));
     if (lb >= precision * ub)
       DEBUG_COMMENT("tspcplex.c:bender", "Exiting because of lb ub");
+
     if (end)
+    {
       break;
+    }
     CHECKTIME(inst, false);
+    ub = inst->best_tourlength;
   }
   CRITICAL_COMMENT("tspcplex.c:bender", "------------------------------------");
   // xstarToPath(inst, xstar, inst->ncols, inst->path);
@@ -78,12 +91,9 @@ int branch_and_cut(Instance *inst, const CPXENVptr env, const CPXLPptr lp,
   // FROM CHATGPT
   CPXmipopt(env, lp);
 
-  // double *xstar = (double *)calloc(inst->ncols, sizeof(double));
   double xstar[inst->ncols];
   CPXgetx(env, lp, xstar, 0, inst->ncols - 1);
 
-  // int *succ = (int *)calloc(inst->nnodes, sizeof(int));
-  // int *comp = (int *)calloc(inst->nnodes, sizeof(int));
   int succ[inst->nnodes];
   int comp[inst->nnodes];
   int ncomp;
@@ -97,12 +107,6 @@ int branch_and_cut(Instance *inst, const CPXENVptr env, const CPXLPptr lp,
   printf("finished the run of branch and cut with value = %lf\n", obj_val);
   RUN(xstarToPath(inst, xstar, inst->ncols, inst->path));
   RUN(INSTANCE_pathCheckpoint(inst));
-
-  // memcpy(inst->best_path, inst->path, sizeof(int) * inst->nnodes);
-  //  free(comp);
-  //  free(succ);
-  //  free(xstar);
-
   return 0;
 }
 
@@ -135,7 +139,7 @@ int hard_fixing(const CPXENVptr env, const CPXLPptr lp, Instance *inst)
     char modelname[30];
     sprintf(modelname, "mipopt_%d.lp", iterations);
     CPXwriteprob(env, lp, modelname, NULL);
-    getchar();
+
 #endif
 
     inst->solver = SOLVER_BRANCH_AND_CUT;

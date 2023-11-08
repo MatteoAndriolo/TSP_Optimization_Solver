@@ -567,7 +567,14 @@ int patchPath(Instance *inst, double *xstar, int *succ, int *comp, int *path,
     succ[a] = succ[b];
     succ[b] = a_first;
   }
+
   // we apply 2-opt in any case (also if we have 1 component)
-  RUN(two_opt(inst, INFINITY));
+  path[0] = 0;
+  for (int i = 1; i < inst->nnodes; i++)
+  {
+    path[i] = succ[path[i - 1]];
+  }
+  INSTANCE_calculateTourLength(inst);
+
   return SUCCESS;
 }

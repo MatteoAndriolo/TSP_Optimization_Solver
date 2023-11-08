@@ -45,41 +45,6 @@ int relaxation_cuts(double cutval, int cutcount, int *cut, void *inparam)
   return SUCCESS;
 }
 
-// int doit_fn_concorde(double cutval, int cutcount, int *cut, void *inparam) {
-//   // Input *param = (Input *)inparam;
-//   ParamsConcorde *param = (ParamsConcorde *)inparam;
-//   Instance *inst = param->inst;
-//   CPXCALLBACKCONTEXTptr context = param->context;
-//   double *xstart = param->xstar;
-//
-//   int ecount = inst->nnodes * (inst->nnodes - 1) / 2;
-//   double *value = (double *)calloc(ecount, sizeof(double));
-//   int *index = (int *)calloc(ecount, sizeof(int));
-//   char sense = 'L';
-//   double rhs = cutcount - 1;
-//   int purgeable = CPX_USECUT_FILTER;
-//   int local = 0;
-//   int izero = 0;
-//   int nnz = 0;
-//   for (int ipos = 0; ipos < cutcount; ipos++) {
-//     for (int jpos = ipos + 1; jpos < cutcount; jpos++) {
-//       index[nnz] = xpos(cut[ipos], cut[jpos], inst);
-//       value[nnz] = 1.0;
-//       nnz++;
-//     }
-//     // TODO: go single thread clone the model env(env2, lp2) put the poiters
-//     // the instance data structure when I am in a callback add subtour
-//     // elimination constrain addrowsfunction and print the model } if
-//     (CPXcallbackaddusercuts(context, 1, nnz, &rhs, &sense, &izero, index,
-//                              value, &purgeable, &local))
-//     ERROR_COMMENT("tspcplex.c:doit_fn_concorde",
-//                   "CPXcallbackaddusercuts() error");
-//   printf("rhs = %10.0f, nnz = %2d, cutcount = %d \n", rhs, nnz, cutcount);
-//   free(value);
-//   free(index);
-//   return 0;
-// }
-
 // CUT CALLBACK
 int my_callback_relaxation(CPXCALLBACKCONTEXTptr context, CPXLONG contextid, void *userhandle)
 {
@@ -233,10 +198,7 @@ int my_callback_candidate(CPXCALLBACKCONTEXTptr context, CPXLONG contextid,
         }
       }
       double rhs = nnz - 1;
-      for (int i = 0; i < size_comp; i++)
-      {
-        printf("%d ", comp_nodes[i]);
-      }
+
       // getchar();
 
       if (CPXcallbackrejectcandidate(context, 1, nnz, &rhs, &sense, &izero,
@@ -249,7 +211,7 @@ int my_callback_candidate(CPXCALLBACKCONTEXTptr context, CPXLONG contextid,
   {
     RUN(xstarToPath(inst, xstar, inst->ncols, inst->path));
     inst->tour_length = INSTANCE_calculateTourLength(inst);
-    // two_opt(inst, 5 * inst->nnodes);
+    RUN(two_opt(inst, inst->ncols));
 
     int indices[inst->ncols];
     double xheu[inst->ncols];
@@ -265,9 +227,8 @@ int my_callback_candidate(CPXCALLBACKCONTEXTptr context, CPXLONG contextid,
       xheu[xpos(i, succ[i], inst)] = 1;
     }
 
-    int status =
-        CPXcallbackpostheursoln(context, inst->ncols, indices, xheu,
-                                inst->tour_length, CPXCALLBACKSOLUTION_NOCHECK);
+    int status = CPXcallbackpostheursoln(context, inst->ncols, indices, xheu, inst->tour_length, CPXCALLBACKSOLUTION_NOCHECK);
+
     if (status)
       ERROR_COMMENT("mycallback.c:my_callback_candidate",
                     "CPXcallbackpostheursoln error %d", status);
