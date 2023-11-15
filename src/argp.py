@@ -18,7 +18,9 @@ def parse_arguments():
     addarg("-v", "--verbose", action="store_true", help="Enable verbose output")
     addarg("--ttenure", type=int, default=0, help="Tabu tenure")
     addarg("--tsize", type=int, default=0, help="Tabu size")
-    addarg("--cplex_perchf", type=float, default=0.5, help="CPLEX percentual for Heuristic")
+    addarg(
+        "--cplex_perchf", type=float, default=0.5, help="CPLEX percentual for Heuristic"
+    )
 
     args = parser.parse_args()
 

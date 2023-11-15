@@ -3,7 +3,7 @@
 #include <math.h>
 #include <stdbool.h>
 #include <string.h>
-
+#include <time.h>
 #include "../include/mycallback.h"
 #include "../include/refinement.h"
 #include "../include/utilscplex.h"
@@ -209,7 +209,7 @@ int local_branching(const CPXENVptr env, const CPXLPptr lp, Instance *inst)
 {
   inst->best_tourlength = INFTY;
   // TODO: create a function set the param of cplex
-  CPXsetdblparam(env, CPXPARAM_TimeLimit, 15);
+
   double *xheu = (double *)calloc(inst->ncols, sizeof(double));
   two_opt(inst, inst->ncols);
   INSTANCE_pathCheckpoint(inst);
@@ -217,14 +217,46 @@ int local_branching(const CPXENVptr env, const CPXLPptr lp, Instance *inst)
   set_mip_start(inst, env, lp, xheu);
   double previous_solution_found = INFTY;
   inst->best_tourlength = INFTY;
+
   int iterations = 0;
-  int iteration = 0;
-  while (iteration++ < 5)
+  int iteration = 1;
+
+  int *indexes = (int *)malloc(inst->ncols * sizeof(int));
+  double *values = (double *)malloc(inst->ncols * sizeof(double));
+
+  while (iteration++ < 6)
   {
+    CPXsetdblparam(env, CPXPARAM_TimeLimit, 100);
 
     previous_solution_found = inst->best_tourlength;
 
-    eliminate_radius_edges(env, lp, inst, xheu, inst->percentageLB);
+    // eliminate_radius_edges(env, lp, inst, xheu, inst->percentageLB);
+
+    int nrows = CPXgetnumrows(env, lp);
+
+    // Add new constraints according to the radius: SUM_{x_e=1}{x_e}>=n-radius
+    int nnz = 0;
+    for (int i = 0; i < inst->ncols; i++)
+    {
+      if (xheu[i] > 0.5)
+      {
+        indexes[nnz] = i;
+        values[nnz] = 1.0;
+        nnz++;
+      }
+    }
+    // double rhs = inst->nnodes - K;
+    // in case change all the edges
+    double rhs = inst->nnodes - inst->nnodes * inst->percentageLB;
+    char **cname = malloc(sizeof(char *));
+    cname[0] = malloc(30 * sizeof(char));
+    sprintf(cname[0], "subtour_LB(%d)", iteration);
+    char sense = 'L';
+    int rmatbeg[] = {0};
+    int status = CPXaddrows(env, lp, 0, 1, nnz, &rhs, &sense, rmatbeg, indexes, values, NULL, cname);
+
+    if (status)
+      printf("CPXaddrows() error");
 
 #ifndef PRODUCTION
     char modelname[30];
@@ -233,11 +265,16 @@ int local_branching(const CPXENVptr env, const CPXLPptr lp, Instance *inst)
 #endif
 
     inst->solver = SOLVER_BRANCH_AND_CUT;
-    int status = solve_problem(env, lp, inst);
+
+    status = solve_problem(env, lp, inst);
+
     if (status)
       ERROR_COMMENT("tspcplex.c:local_branching", "Execution FAILED");
 
-    repristinate_radius_edges(env, lp, inst, xheu);
+    if (CPXdelrows(env, lp, nrows, nrows))
+      printf("CPXdelrows() error");
+
+      // repristinate_radius_edges(env, lp, inst, xheu);
 
 #ifndef PRODUCTION
     sprintf(modelname, "mipopt_%d_repri.lp", iterations++);
@@ -247,10 +284,11 @@ int local_branching(const CPXENVptr env, const CPXLPptr lp, Instance *inst)
     if (previous_solution_found <= inst->best_tourlength)
     {
       printf("previous_solution_found = %lf\n", previous_solution_found);
-      break;
+      // break;
     }
     CHECKTIME(inst, false);
-  }
+    // memcpy(inst->path, inst->best_path, inst->nnodes * sizeof(int));
+    }
 
   xstarToPath(inst, xheu, inst->ncols, inst->path);
   free(xheu);

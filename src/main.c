@@ -128,8 +128,7 @@ int main(int argc, char **argv)
       else if (strcmp(passagges[j], "cplexlb") == 0)
       {
         inst->solver = SOLVER_MH_LOCBRANCH;
-
-        inst->percentageLB = 0.2;
+        inst->percentageLB = 0.1;
         TSPopt(inst);
         DEBUG_COMMENT("main.c:main", "back to main");
       }

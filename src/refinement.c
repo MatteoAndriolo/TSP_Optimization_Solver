@@ -5,7 +5,6 @@
 
 ErrorCode two_opt(Instance *inst, double iterations)
 {
-  return SUCCESS;
   INFO_COMMENT("refinement.c:2opt", "starting 2opt");
   int foundImprovement = 1;
   double cost_old_edge, cost_new_edge, cost_new_edge2, cost_old_edge2;
