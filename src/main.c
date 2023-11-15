@@ -129,7 +129,8 @@ int main(int argc, char **argv)
       {
         inst->solver = SOLVER_MH_LOCBRANCH;
 
-        two_opt(inst, INFINITY);
+        inst->percentageLB = 0.9;
+        // two_opt(inst, INFINITY);
         TSPopt(inst);
         DEBUG_COMMENT("main.c:main", "back to main");
       }

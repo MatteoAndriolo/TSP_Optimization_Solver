@@ -65,7 +65,7 @@ typedef struct
 
   int ecount;
   int *edgeList; // pairs node to node for each edge in list
-
+  double percentageLB;
   int percentageHF;
   void *params;
 

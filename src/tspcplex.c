@@ -138,7 +138,6 @@ int hard_fixing(const CPXENVptr env, const CPXLPptr lp, Instance *inst)
     char modelname[30];
     sprintf(modelname, "mipopt_%d.lp", iterations);
     CPXwriteprob(env, lp, modelname, NULL);
-
 #endif
 
     inst->solver = SOLVER_BRANCH_AND_CUT;
@@ -146,24 +145,11 @@ int hard_fixing(const CPXENVptr env, const CPXLPptr lp, Instance *inst)
                                inst);
     if (status)
       ERROR_COMMENT("tspcplex.c:hard_fixing", "Execution FAILED");
+    unfix_edges(env, lp, inst, xheu);
 
     if (previous_solution_found <= inst->best_tourlength)
-    {
-
-      for (int i = 0; i < inst->nnodes; i++)
-      {
-        DEBUG_COMMENT("tspcplex.c:hard_fixing ", "path = %d ", inst->path[i]);
-        DEBUG_COMMENT("tspcplex.c:hard_fixing", "best_path = %d", inst->best_path[i]);
-      }
       break;
-    }
-    unfix_edges(env, lp, inst, xheu);
   }
-
-  inst->solver = SOLVER_BASE;
-  solve_problem(env, lp, inst);
-  // if (!ASD && CPXgetx(env, lp, xheu, 0, inst->ncols - 1))
-  //   ERROR_COMMENT("tspcplex.c:hard_fixing", "CPXgetx() error");
   xstarToPath(inst, xheu, inst->ncols, inst->path);
   free(xheu);
   return 0;
@@ -219,65 +205,53 @@ int base_cplex(const CPXENVptr env, const CPXLPptr lp, Instance *inst)
 
 int local_branching(const CPXENVptr env, const CPXLPptr lp, Instance *inst)
 {
-  //----------------------------------------- set the time limit to run cplex
-  //---------------------------------------------------------
+  inst->best_tourlength = INFTY;
   // TODO: create a function set the param of cplex
   CPXsetdblparam(env, CPXPARAM_TimeLimit, 15);
-  //----------------------------------------- create the xheuristic soltion
-  // from
-  // a warm start ----------------------------------------
   double *xheu = (double *)calloc(inst->ncols, sizeof(double));
+  two_opt(inst, inst->ncols);
+  INSTANCE_pathCheckpoint(inst);
   create_xheu(inst, xheu);
   set_mip_start(inst, env, lp, xheu);
 
-  double best_solution = INFTY;
+  // double best_solution = INFTY;
   int no_improv = 0;
+  int iterations = 0;
   while (no_improv < 1)
   {
-    //------------------------------------------ take current solution and
-    // eliminate some solutions -------------------------------
-    eliminate_radius_edges(env, lp, inst, xheu, (double)0.90);
+    eliminate_radius_edges(env, lp, inst, xheu, inst->percentageLB);
+    // addSubtourConstraintsCustom(env, lp, inst->nnodes, inst->path, inst,
+    //                             inst->percentageLB,  );
+
 #ifndef PRODUCTION
-    CPXwriteprob(env, lp, "mipopt.lp", NULL);
+    char modelname[30];
+    sprintf(modelname, "mipopt_%d.lp", iterations++);
+    CPXwriteprob(env, lp, modelname, NULL);
 #endif
-    //--------------------------------- calling the branch and cut solution
-    //-------------------------------------------------------
-    inst->solver = 2;
+    inst->solver = SOLVER_BRANCH_AND_CUT;
     int status = solve_problem(env, lp,
-                               inst); // branch_and_cut(inst, env, lp,
-                                      // CPX_CALLBACKCONTEXT_CANDIDATE |
-                                      // CPX_CALLBACKCONTEXT_RELAXATION);
+                               inst);
     if (status)
       ERROR_COMMENT("tspcplex.c:local_branching", "Execution FAILED");
-    // ---------------------------------- check if the solution is better
-    // than the previous one ---------------------------------
-    double actual_solution;
-    int error = CPXgetobjval(env, lp, &actual_solution);
+
+    double previous_solution_found;
+    int error = CPXgetobjval(env, lp, &previous_solution_found);
     if (error)
       ERROR_COMMENT("tspcplex.c:local_branching", "CPXgetobjval() error\n");
-
-    if (actual_solution < best_solution)
-    { // UPDATE path
-      if (CPXgetx(env, lp, xheu, 0, inst->ncols - 1))
-        ERROR_COMMENT("tspcplex.c:local_branching", "CPXgetx() error");
-      best_solution = actual_solution;
-      xstarToPath(inst, xheu, inst->ncols, inst->path);
-    }
-    //---------------------------------- Unfix the edges and calling
-    // thesolution
-    //--------------------------------------------------
     repristinate_radius_edges(
         env, lp, inst,
-        xheu); // FIXME remove fixing the boundary and add a contraint row
-    if (actual_solution >= best_solution)
+        xheu);
+
+    if (previous_solution_found < inst->best_tourlength)
+    {
+      printf("previous_solution_found = %lf\n", previous_solution_found);
       break;
+    }
+    CHECKTIME(inst, false);
   }
-  //--------------------------------- calling the branch and cut solution
-  //-------------------------------------------------------
-  // inst->solver = 2;
-  // solve_problem(env, lp, inst);
-  // if (CPXgetx(env, lp, xheu, 0, inst->ncols - 1))
-  //   ERROR_COMMENT("tspcplex.c:local_branching", "CPXgetx() error");
+  inst->solver = SOLVER_BRANCH_AND_CUT;
+  solve_problem(env, lp, inst);
+
   xstarToPath(inst, xheu, inst->ncols, inst->path);
   free(xheu);
 

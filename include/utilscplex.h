@@ -70,7 +70,7 @@ void unfix_edges(CPXENVptr env, CPXLPptr lp, Instance *inst, double *xheu);
  * @param inst the instance of the problem to be solved
  */
 void eliminate_radius_edges(CPXENVptr env, CPXLPptr lp, Instance *inst,
-                            double *xheu, int radious);
+                            double *xheu, double radious);
 
 /**
  * @brief generate the variables to be eliminate from the current solution
@@ -112,7 +112,8 @@ void build_model(Instance *inst, const CPXENVptr env,
                  const CPXLPptr lp); // CPXENVptr env, CPXLPptr lp);
 int addSubtourConstraints(CPXENVptr env, CPXLPptr lp, int nnodes, int *comp,
                           Instance *inst, int *counter, double *xstar);
-
+int addSubtourConstraintsCustom(CPXENVptr env, CPXLPptr lp, int nnodes, int *comp,
+                                Instance *inst, int *counter, double *xstar, int rhsc);
 int patchPath(Instance *inst, double *xstar, int *succ, int *comp, int *path,
               double *obj_value, int *ncomp);
 #endif

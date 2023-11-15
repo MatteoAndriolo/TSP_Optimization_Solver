@@ -170,42 +170,27 @@ void unfix_edges(const CPXENVptr env, const CPXLPptr lp, Instance *inst,
 }
 
 void eliminate_radius_edges(const CPXENVptr env, const CPXLPptr lp,
-                            Instance *inst, double *xheu, int radious)
+                            Instance *inst, double *xheu, double radious)
 {
   INFO_COMMENT("utilscplex.c:eliminate_fix_edges",
                "eliminating fixed edges form xheu for local branching");
   int *ind = (int *)calloc(inst->nnodes, sizeof(int));
   double *bd = (double *)calloc(inst->nnodes, sizeof(double));
   // radious should be expressed in a value between 0 and 1
-  int percentage = (int)(inst->nnodes * radious);
-  int count = 0;
-  int flag = 0;
-  while (count < percentage)
+
+  for (int i = 0; i < inst->nnodes; i++)
   {
-    for (int i = 0; i < inst->nnodes; i++)
+    for (int j = 0; j < inst->nnodes; j++)
     {
-      for (int j = 0; j < inst->nnodes; j++)
+      if (xheu[xpos(i, j, inst)] > 0.5 && rand() % 100 < radious * 100)
       {
-        if (xheu[xpos(i, j, inst)] > 0.5 && (rand() % 100) < 50)
-        {
-          ind[i] = xpos(i, j, inst);
-          bd[i] = 1.0;
-          if (CPXchgbds(env, lp, 1, &ind[i], "L", &bd[i]))
-            ERROR_COMMENT("utilscplex.c:eliminate_fix_edges",
-                          "CPXchgbds() error");
-          count++;
-          if (count >= percentage)
-          {
-            flag = 1;
-            break;
-          }
-        }
+        ind[i] = xpos(i, j, inst);
+        bd[i] = 0.0;
+        if (CPXchgbds(env, lp, 1, &ind[i], "U", &bd[i]))
+          ERROR_COMMENT("utilscplex.c:eliminate_fix_edges",
+                        "CPXchgbds() error");
       }
-      if (flag)
-        break;
     }
-    if (flag)
-      break;
   }
 }
 
@@ -220,14 +205,14 @@ void repristinate_radius_edges(const CPXENVptr env, const CPXLPptr lp,
   {
     for (int j = i + 1; j < inst->nnodes; j++)
     {
-      if (xheu[xpos(i, j, inst)] > 0.5)
-      {
-        ind[i] = xpos(i, j, inst);
-        bd[i] = 0.0;
-        if (CPXchgbds(env, lp, 1, &ind[i], "L", &bd[i]))
-          ERROR_COMMENT("utilscplex.c:repristinate_fix_edges",
-                        "CPXchgbds() error");
-      }
+      // if (xheu[xpos(i, j, inst)] > 0.5)
+      //{
+      ind[i] = xpos(i, j, inst);
+      bd[i] = 1.0;
+      if (CPXchgbds(env, lp, 1, &ind[i], "U", &bd[i]))
+        ERROR_COMMENT("utilscplex.c:repristinate_fix_edges",
+                      "CPXchgbds() error");
+      //}
     }
   }
 }
@@ -297,6 +282,102 @@ int addSubtourConstraints(CPXENVptr env, CPXLPptr lp, int nnodes, int *comp,
       int rcnt = 1;
       int nzcnt = 0;
       double rhs = nNodeSubTour - 1;
+      char sense = 'L';
+      int rmatbeg[] = {0};
+      // double rmatval = {all 1};
+
+      int rmatind[inst->ncols];
+      for (int j = 0; j < nNodeSubTour; j++)
+        for (int k = j + 1; k < nNodeSubTour; k++)
+          rmatind[nzcnt++] = xpos(nodeSubTour[j], nodeSubTour[k], inst);
+
+      char **cname = malloc(sizeof(char *));
+      cname[0] = malloc(30 * sizeof(char));
+      sprintf(cname[0], "subtour(%d)", *counter);
+
+      // debug comment number of nzcnt
+      DEBUG_COMMENT("utilscplex.c:addSubtourConstraints", "nzcnt = %d", nzcnt);
+      // debug list of rmatval != 1
+
+      if (!isConstraintNotValidForCurrOpt(inst, xstar, rmatind, nzcnt, rhs))
+      {
+        ERROR_COMMENT("utilscplex.c:addSubtourConstraints",
+                      "constraint valid for current opt");
+        return ERROR_NODES;
+      }
+
+      int status = CPXaddrows(env, lp, ccnt, rcnt, nzcnt, &rhs, &sense, rmatbeg,
+                              rmatind, rmatval, NULL, cname);
+      if (status)
+      {
+        ERROR_COMMENT("utilscplex.c:addSubtourConstraints",
+                      "CPXaddrows(): error 1");
+        return status;
+      }
+
+      DEBUG_COMMENT("utilscplex.c:addSubtourConstraints",
+                    "constraint added, number rows is %d",
+                    CPXgetnumrows(env, lp));
+
+      (*counter)++;
+      free(cname[0]);
+      free(cname);
+    }
+  }
+  free(component);
+  component = NULL;
+  return SUCCESS;
+}
+
+int addSubtourConstraintsCustom(CPXENVptr env, CPXLPptr lp, int nnodes, int *comp,
+                                Instance *inst, int *counter, double *xstar, int rhsc)
+{
+  DEBUG_COMMENT("utilscplex.c:addSubtourConstraints",
+                "Adding subtour constraints");
+  // INIT
+  int *component = malloc(nnodes * sizeof(int));
+  memcpy(component, comp, nnodes * sizeof(int));
+  int nodeSubTour[nnodes];
+  int nNodeSubTour = 0;
+  // Allocate memory for the double array
+  double rmatval[inst->ncols];
+  for (size_t i = 0; i < inst->ncols; i++)
+  {
+    rmatval[i] = 1.0;
+  }
+
+  // SCAN ALL NODES
+  for (int i = 0; i < nnodes; i++)
+  {
+    nNodeSubTour = 0;
+    if (component[i] < 0)
+      continue; // node "i" was already visited, just skip it
+    int current_component = component[i];
+    nodeSubTour[nNodeSubTour++] = i;
+    component[i] = -1; // mark node "i" as visited
+
+    // LOOK WITHING COMPONENT
+    for (int j = 0; j < nnodes; j++)
+    {
+      if (component[j] == current_component)
+      {
+        component[j] = -1; // mark node "j" as visited
+        nodeSubTour[nNodeSubTour] = j;
+        nNodeSubTour++;
+      }
+    }
+
+    INFO_COMMENT("utilscplex.c:addSubtourConstraints",
+                 "current component has %d nodes", nNodeSubTour);
+
+    if (nNodeSubTour > 2)
+    { // A subtour has at least 3 nodes
+      // PARAM FOR CPXaddrows
+      int ccnt = 0;
+      int rcnt = 1;
+      int nzcnt = 0;
+      // double rhs = nNodeSubTour - 1;
+      double rhs = rhsc;
       char sense = 'L';
       int rmatbeg[] = {0};
       // double rmatval = {all 1};

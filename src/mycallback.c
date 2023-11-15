@@ -212,9 +212,6 @@ int my_callback_candidate(CPXCALLBACKCONTEXTptr context, CPXLONG contextid,
     RUN(xstarToPath(inst, xstar, inst->ncols, inst->path));
     inst->tour_length = INSTANCE_calculateTourLength(inst);
 
-    for (int i = 0; i < inst->nnodes; i++)
-      printf("%d ", inst->path[i]);
-
     RUN(two_opt(inst, inst->ncols));
 
     int indices[inst->ncols];
