@@ -180,7 +180,7 @@ void eliminate_radius_edges(const CPXENVptr env, const CPXLPptr lp,
 
   for (int i = 0; i < inst->nnodes; i++)
   {
-    for (int j = 0; j < inst->nnodes; j++)
+    for (int j = i + 1; j < inst->nnodes; j++)
     {
       if (xheu[xpos(i, j, inst)] > 0.5 && rand() % 100 < radious * 100)
       {
@@ -205,14 +205,11 @@ void repristinate_radius_edges(const CPXENVptr env, const CPXLPptr lp,
   {
     for (int j = i + 1; j < inst->nnodes; j++)
     {
-      // if (xheu[xpos(i, j, inst)] > 0.5)
-      //{
       ind[i] = xpos(i, j, inst);
       bd[i] = 1.0;
       if (CPXchgbds(env, lp, 1, &ind[i], "U", &bd[i]))
         ERROR_COMMENT("utilscplex.c:repristinate_fix_edges",
                       "CPXchgbds() error");
-      //}
     }
   }
 }

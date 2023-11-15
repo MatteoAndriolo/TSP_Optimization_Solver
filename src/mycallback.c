@@ -11,8 +11,6 @@ int relaxation_cuts(double cutval, int cutcount, int *cut, void *inparam)
   DEBUG_COMMENT("mycallback.c:relaxation_cuts", "entering relaxation_cuts");
   ParamsConcorde *param = (ParamsConcorde *)inparam;
   Instance *inst = param->inst;
-  // CPXCALLBACKCONTEXTptr context = param->context;
-  //  double objval = CPX_INFBOUND;
   int index[inst->ecount];
   double value[inst->ecount];
   char sense = 'L';
@@ -135,6 +133,7 @@ int my_callback_candidate(CPXCALLBACKCONTEXTptr context, CPXLONG contextid,
   Instance *inst = (Instance *)userhandle;
   double *xstar = (double *)malloc(sizeof(double) * inst->ncols);
   double objval = CPX_INFBOUND;
+
   if (CPXcallbackgetcandidatepoint(context, xstar, 0, inst->ncols - 1, &objval))
     ERROR_COMMENT("tspcplex.c:my_callback_candidate",
                   "CPXcallbackgetcandidatepoint error");

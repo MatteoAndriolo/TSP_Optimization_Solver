@@ -132,6 +132,7 @@ int hard_fixing(const CPXENVptr env, const CPXLPptr lp, Instance *inst)
   {
     double previous_solution_found;
     previous_solution_found = inst->best_tourlength;
+
     fix_edges(env, lp, inst, xheu);
 
 #ifndef PRODUCTION
@@ -145,6 +146,7 @@ int hard_fixing(const CPXENVptr env, const CPXLPptr lp, Instance *inst)
                                inst);
     if (status)
       ERROR_COMMENT("tspcplex.c:hard_fixing", "Execution FAILED");
+
     unfix_edges(env, lp, inst, xheu);
 
     if (previous_solution_found <= inst->best_tourlength)
@@ -213,48 +215,45 @@ int local_branching(const CPXENVptr env, const CPXLPptr lp, Instance *inst)
   INSTANCE_pathCheckpoint(inst);
   create_xheu(inst, xheu);
   set_mip_start(inst, env, lp, xheu);
-
-  // double best_solution = INFTY;
-  int no_improv = 0;
+  double previous_solution_found = INFTY;
+  inst->best_tourlength = INFTY;
   int iterations = 0;
-  while (no_improv < 1)
+  int iteration = 0;
+  while (iteration++ < 5)
   {
+
+    previous_solution_found = inst->best_tourlength;
+
     eliminate_radius_edges(env, lp, inst, xheu, inst->percentageLB);
-    // addSubtourConstraintsCustom(env, lp, inst->nnodes, inst->path, inst,
-    //                             inst->percentageLB,  );
 
 #ifndef PRODUCTION
     char modelname[30];
     sprintf(modelname, "mipopt_%d.lp", iterations++);
     CPXwriteprob(env, lp, modelname, NULL);
 #endif
+
     inst->solver = SOLVER_BRANCH_AND_CUT;
-    int status = solve_problem(env, lp,
-                               inst);
+    int status = solve_problem(env, lp, inst);
     if (status)
       ERROR_COMMENT("tspcplex.c:local_branching", "Execution FAILED");
 
-    double previous_solution_found;
-    int error = CPXgetobjval(env, lp, &previous_solution_found);
-    if (error)
-      ERROR_COMMENT("tspcplex.c:local_branching", "CPXgetobjval() error\n");
-    repristinate_radius_edges(
-        env, lp, inst,
-        xheu);
+    repristinate_radius_edges(env, lp, inst, xheu);
 
-    if (previous_solution_found < inst->best_tourlength)
+#ifndef PRODUCTION
+    sprintf(modelname, "mipopt_%d_repri.lp", iterations++);
+    CPXwriteprob(env, lp, modelname, NULL);
+#endif
+
+    if (previous_solution_found <= inst->best_tourlength)
     {
       printf("previous_solution_found = %lf\n", previous_solution_found);
       break;
     }
     CHECKTIME(inst, false);
   }
-  inst->solver = SOLVER_BRANCH_AND_CUT;
-  solve_problem(env, lp, inst);
 
   xstarToPath(inst, xheu, inst->ncols, inst->path);
   free(xheu);
-
   return 0;
 }
 

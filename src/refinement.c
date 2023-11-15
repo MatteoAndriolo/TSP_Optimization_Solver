@@ -3,15 +3,20 @@
 #include "../include/tabu.h"
 #include "../include/utils.h"
 
-ErrorCode two_opt(Instance *inst, double iterations) {
+ErrorCode two_opt(Instance *inst, double iterations)
+{
+  return SUCCESS;
   INFO_COMMENT("refinement.c:2opt", "starting 2opt");
   int foundImprovement = 1;
   double cost_old_edge, cost_new_edge, cost_new_edge2, cost_old_edge2;
   double c_iter = 0;
-  while (c_iter < iterations && foundImprovement) {
+  while (c_iter < iterations && foundImprovement)
+  {
     foundImprovement = 0;
-    for (int i = 0; i < inst->nnodes - 2; i++) {
-      for (int j = i + 1; j < inst->nnodes; j++) {
+    for (int i = 0; i < inst->nnodes - 2; i++)
+    {
+      for (int j = i + 1; j < inst->nnodes; j++)
+      {
         int j1 = (j + 1) % inst->nnodes;
         cost_old_edge = INSTANCE_getDistancePos(inst, i, i + 1);
         cost_new_edge = INSTANCE_getDistancePos(inst, i, j);
@@ -20,7 +25,8 @@ ErrorCode two_opt(Instance *inst, double iterations) {
         double delta = -(cost_old_edge + cost_old_edge2) +
                        (cost_new_edge + cost_new_edge2);
 
-        if (delta < 0) {
+        if (delta < 0)
+        {
           foundImprovement = 1;
           two_opt_move(inst, i, j);
         }
@@ -29,7 +35,8 @@ ErrorCode two_opt(Instance *inst, double iterations) {
         // CHECKTIME(inst, false);
       }
       c_iter++;
-      if (c_iter > iterations) {
+      if (c_iter > iterations)
+      {
         foundImprovement = false;
         break;
       }
@@ -41,17 +48,21 @@ ErrorCode two_opt(Instance *inst, double iterations) {
   return SUCCESS;
 }
 
-ErrorCode two_opt_tabu(Instance *inst, double iterations, TabuList *tabuList) {
+ErrorCode two_opt_tabu(Instance *inst, double iterations, TabuList *tabuList)
+{
   INFO_COMMENT("refinement.c:2opt_tabu", "starting 2opt");
   bool foundImprovement = true;
   double cost_old_edge, cost_new_edge, cost_new_edge2, cost_old_edge2;
   double c_iter = 0;
-  while (c_iter < iterations && foundImprovement) {
+  while (c_iter < iterations && foundImprovement)
+  {
     foundImprovement = false;
 
-    for (int i = 0; i < inst->nnodes - 2; i++) {
+    for (int i = 0; i < inst->nnodes - 2; i++)
+    {
       c_iter++;
-      for (int j = i + 1; j < inst->nnodes; j++) {
+      for (int j = i + 1; j < inst->nnodes; j++)
+      {
         // get distances
         int j1 = (j + 1) % inst->nnodes;
         cost_old_edge = INSTANCE_getDistancePos(inst, i, i + 1);
@@ -63,7 +74,8 @@ ErrorCode two_opt_tabu(Instance *inst, double iterations, TabuList *tabuList) {
 
         if (delta < 0 &&
             !areAnyValuesTabu(tabuList, inst->path[i], inst->path[j],
-                              inst->path[i + 1], inst->path[j1])) {
+                              inst->path[i + 1], inst->path[j1]))
+        {
           two_opt_move(inst, i, j);
           INSTANCE_calculateTourLength(inst);
 
