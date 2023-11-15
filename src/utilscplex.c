@@ -27,7 +27,6 @@ void init_mip(const CPXENVptr env, const CPXLPptr lp, Instance *inst)
   free(xheu);
   xheu = NULL;
 }
-////////////////////
 
 int xpos(int i, int j, Instance *inst)
 {
@@ -45,35 +44,14 @@ ErrorCode xstarToPath(Instance *inst, const double *xstar, int dim_xstar,
   DEBUG_COMMENT("utilscplex.c:xstarToPath", "xstarToPath");
 
   dim_xstar = inst->ncols;
-  // double *temp_path = malloc(inst->nnodes * 2 * sizeof(double));
   double temp_path[inst->ncols];
   memcpy(temp_path, xstar, inst->ncols * sizeof(double));
   qsort(temp_path, inst->ncols, sizeof(int), cmpfunc);
-  // DEBUG_COMMENT("utilscplex.c:xstarToPath", "Path: ");
-  // int count = 0;
-  // for (int i = 0; i < dim_xstar; i++) {
-  //   if (temp_path[i] > 0.5) {
-  //     count++;
-  //     DEBUG_COMMENT("utilscplex.c:xstarToPath", "%d/%d | %d -> %lf ", i,
-  //                   dim_xstar, count, temp_path[i]);
-  //   }
-  // }
-  // free(temp_path);
-  // temp_path = NULL;
-
   int succ[inst->nnodes];
   int comp[inst->nnodes];
-  // int *succ = (int *)malloc(sizeof(int) * inst->nnodes);
-  // int *comp = (int *)malloc(sizeof(int) * inst->nnodes);
   int ncomp = 0;
 
   build_sol(xstar, inst, succ, comp, &ncomp);
-  // DEBUG_COMMENT("utilscplex.c:xstarToPath", "succ:");
-  // for (int i = 0; i < inst->nnodes; i++) {
-  //   DEBUG_COMMENT("utilscplex.c:xstarToPath", "%d -> %d", i, succ[i]);
-  // }
-
-  // int *new_path = (int *)malloc(sizeof(int) * inst->nnodes);
   int new_path[inst->nnodes];
   int size = 0;
   int succ_node;
@@ -125,15 +103,6 @@ void create_xheu(Instance *inst, double *xheu)
     xheu[xpos(inst->best_path[i], inst->best_path[i + 1], inst)] = 1.0;
   }
   xheu[xpos(inst->best_path[inst->nnodes - 1], inst->best_path[0], inst)] = 1.0;
-
-  // DEBUG_COMMENT("utilscplex.c:create_xheu", "xheu: ");
-  // for (int i = 0; i < inst->nnodes; i++) {
-  //   for (int j = i + 1; j < inst->nnodes; j++) {
-  //     if (xheu[xpos(i, j, inst)] > 0.5)
-  //       DEBUG_COMMENT("utilscplex.c:create_xheu", "xheu[%d,%d] = %lf", i, j,
-  //                     xheu[xpos(i, j, inst)]);
-  //   }
-  // }
 }
 
 void set_mip_start(Instance *inst, const CPXENVptr env, const CPXLPptr lp,
@@ -158,7 +127,6 @@ void set_mip_start(Instance *inst, const CPXENVptr env, const CPXLPptr lp,
 void fix_edges(const CPXENVptr env, const CPXLPptr lp, Instance *inst,
                double *xheu)
 {
-  printf("---------------------START FIX---------------------\n");
   DEBUG_COMMENT("utilscplex.c:fix_edges", "Fixing edges");
   int *ind = (int *)calloc(inst->nnodes, sizeof(int));
   double *bd = (double *)calloc(inst->nnodes, sizeof(double));
@@ -180,13 +148,12 @@ void fix_edges(const CPXENVptr env, const CPXLPptr lp, Instance *inst,
       }
     }
   }
-  printf("---------------------END FIX---------------------\n");
 }
 
 void unfix_edges(const CPXENVptr env, const CPXLPptr lp, Instance *inst,
                  double *xheu)
 {
-  printf("---------------------START UNFIX---------------------\n");
+
   INFO_COMMENT("utilscplex.c:fix_edges", "unfixing edges");
   int *ind = (int *)calloc(inst->nnodes, sizeof(int));
   double *bd = (double *)calloc(inst->nnodes, sizeof(double));
@@ -200,7 +167,6 @@ void unfix_edges(const CPXENVptr env, const CPXLPptr lp, Instance *inst,
         ERROR_COMMENT("utilscplex.c:fix_edges", "CPXchgbds() error");
     }
   }
-  printf("---------------------END UNFIX---------------------\n");
 }
 
 void eliminate_radius_edges(const CPXENVptr env, const CPXLPptr lp,

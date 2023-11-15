@@ -112,7 +112,6 @@ int branch_and_cut(Instance *inst, const CPXENVptr env, const CPXLPptr lp,
 
 int hard_fixing(const CPXENVptr env, const CPXLPptr lp, Instance *inst)
 {
-  printf("--------------  HARD FIXING  --------------\n");
   DEBUG_COMMENT("tspcplex.c:hard_fixing", "entering hard fixing");
 
   // TODO: create a function set the param of cplex
@@ -123,7 +122,7 @@ int hard_fixing(const CPXENVptr env, const CPXLPptr lp, Instance *inst)
 
   // TODO: cerca dove aggiorna la path! in best_path e cambia create xheu da best a normale
 
-  two_opt(inst, 3);
+  two_opt(inst, inst->ncols);
   INSTANCE_pathCheckpoint(inst); // save best path
   create_xheu(inst, xheu);
   set_mip_start(inst, env, lp, xheu);
@@ -144,35 +143,12 @@ int hard_fixing(const CPXENVptr env, const CPXLPptr lp, Instance *inst)
 
     inst->solver = SOLVER_BRANCH_AND_CUT;
     int status = solve_problem(env, lp,
-                               inst); // branch_and_cut(inst, env, lp,
-                                      // CPX_CALLBACKCONTEXT_CANDIDATE |
-                                      // CPX_CALLBACKCONTEXT_RELAXATION);
+                               inst);
     if (status)
       ERROR_COMMENT("tspcplex.c:hard_fixing", "Execution FAILED");
-    // ---------------------------------- check if the solution is better
-    // than the previous one ---------------------------------
-    // double actual_solution;
-    // int error = CPXgetobjval(env, lp, &actual_solution);
-    // if (error)
-    //   ERROR_COMMENT("tspcplex.c:hard_fixing", "CPXgetobjval() error\n");
-    // printf("actual_solution = %lf\n,", actual_solution);
-    // printf("inst->best_tourlength = %lf\n,", inst->best_tourlength);
-    // xstarToPath(inst, xheu, inst->ncols, inst->path);
-    // RUN(INSTANCE_pathCheckpoint(inst));
 
     if (previous_solution_found <= inst->best_tourlength)
     {
-      // DEBUG_COMMENT("tspcplex.c:hard_fixing", "ASDF");
-      // if (CPXgetx(env, lp, xheu, 0, inst->ncols - 1))
-      // {
-      //   ASD = true;
-      //   ERROR_COMMENT("tspcplex.c:hard_fixing", "CPXgetx() error");
-      // }
-
-      // inst->best_tourlength = actual_solution;
-      // xstarToPath(inst, xheu, inst->ncols, inst->path);
-      // memcpy(inst->best_path, inst->path, sizeof(int) * inst->nnodes);
-      // DEBUG_COMMENT("tspcplex.c:hard_fixing ", "path = ");
 
       for (int i = 0; i < inst->nnodes; i++)
       {
@@ -181,8 +157,6 @@ int hard_fixing(const CPXENVptr env, const CPXLPptr lp, Instance *inst)
       }
       break;
     }
-    //----------------------------------------- unfixing   edges
-    //---------------------------------------------------------------
     unfix_edges(env, lp, inst, xheu);
   }
 
