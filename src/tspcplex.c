@@ -211,6 +211,7 @@ int local_branching(const CPXENVptr env, const CPXLPptr lp, Instance *inst)
   // TODO: create a function set the param of cplex
 
   double *xheu = (double *)calloc(inst->ncols, sizeof(double));
+
   two_opt(inst, inst->ncols);
   INSTANCE_pathCheckpoint(inst);
   create_xheu(inst, xheu);
@@ -226,7 +227,7 @@ int local_branching(const CPXENVptr env, const CPXLPptr lp, Instance *inst)
 
   while (iteration++ < 6)
   {
-    CPXsetdblparam(env, CPXPARAM_TimeLimit, 100);
+    CPXsetdblparam(env, CPXPARAM_TimeLimit, 200);
 
     previous_solution_found = inst->best_tourlength;
 
@@ -247,7 +248,7 @@ int local_branching(const CPXENVptr env, const CPXLPptr lp, Instance *inst)
     }
     // double rhs = inst->nnodes - K;
     // in case change all the edges
-    double rhs = inst->nnodes - inst->nnodes * inst->percentageLB;
+    double rhs = inst->nnodes - (int)(inst->nnodes * inst->percentageLB);
     char **cname = malloc(sizeof(char *));
     cname[0] = malloc(30 * sizeof(char));
     sprintf(cname[0], "subtour_LB(%d)", iteration);
@@ -260,7 +261,7 @@ int local_branching(const CPXENVptr env, const CPXLPptr lp, Instance *inst)
 
 #ifndef PRODUCTION
     char modelname[30];
-    sprintf(modelname, "mipopt_%d.lp", iterations++);
+    sprintf(modelname, "mipopt_%d.lp", iterations);
     CPXwriteprob(env, lp, modelname, NULL);
 #endif
 
@@ -271,13 +272,18 @@ int local_branching(const CPXENVptr env, const CPXLPptr lp, Instance *inst)
     if (status)
       ERROR_COMMENT("tspcplex.c:local_branching", "Execution FAILED");
 
+#ifndef PRODUCTION
+    sprintf(modelname, "mipopt_%d_solver.lp", iterations);
+    CPXwriteprob(env, lp, modelname, NULL);
+#endif
+
     if (CPXdelrows(env, lp, nrows, nrows))
       printf("CPXdelrows() error");
 
       // repristinate_radius_edges(env, lp, inst, xheu);
 
 #ifndef PRODUCTION
-    sprintf(modelname, "mipopt_%d_repri.lp", iterations++);
+    sprintf(modelname, "mipopt_%d_repri.lp", iterations);
     CPXwriteprob(env, lp, modelname, NULL);
 #endif
 
@@ -286,9 +292,9 @@ int local_branching(const CPXENVptr env, const CPXLPptr lp, Instance *inst)
       printf("previous_solution_found = %lf\n", previous_solution_found);
       // break;
     }
+    create_xheu(inst, xheu);
     CHECKTIME(inst, false);
-    // memcpy(inst->path, inst->best_path, inst->nnodes * sizeof(int));
-    }
+  }
 
   xstarToPath(inst, xheu, inst->ncols, inst->path);
   free(xheu);
