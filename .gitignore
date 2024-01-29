@@ -241,7 +241,7 @@ src/*.p
 plot/*
 .vscode/
 bin/main
-data/ALL_tsp.tar.gz
+!data/ALL_tsp.tar.gz
 plot/*
 bin/*
 concorde
