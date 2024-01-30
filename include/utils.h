@@ -6,8 +6,8 @@
 
 #include "vrp.h"
 
-#define FREE(ptr)                                                              \
-  free(ptr);                                                                   \
+#define FREE(ptr) \
+  free(ptr);      \
   ptr = NULL;
 
 /**
@@ -19,8 +19,11 @@
  */
 void swap(int *arr, int i, int j);
 
+void shuffle(int *arr, int n);
+
 /**
- * Swaps two elements in an integer array and shifts all elements between them.
+ * Swaps two elements in an integer array and shifts all elements between
+ * them.
  *
  * @param arr The array containing the elements to swap.
  * @param i The index of the first element to swap.
@@ -31,8 +34,8 @@ void swap(int *arr, int i, int j);
 void swap_and_shift(int *arr, int i, int j, int n);
 
 /**
- * Insert new_entry into the ranking array if it is better than the worst entry.
- * The ranking array is sorted in ascending order.
+ * Insert new_entry into the ranking array if it is better than the worst
+ * entry. The ranking array is sorted in ascending order.
  *
  * @param ranking The ranking array.
  * @param n_ranks The number of entries in the ranking array.

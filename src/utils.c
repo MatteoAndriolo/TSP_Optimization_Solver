@@ -8,6 +8,13 @@ void swap(int *arr, int i, int j) {
   arr[j] = temp;
 }
 
+void shuffle(int *arr, int n) {
+  for (int i = n - 1; i > 0; i--) {
+    int j = rand() % (i + 1);
+    swap(arr, i, j);
+  }
+}
+
 void print_nodes(double *x, double *y, int nnodes) {
   for (int i = 0; i < nnodes; i++) {
     INFO_COMMENT("print_nodes", "%d: (%lf, %lf)", i, x[i], y[i]);

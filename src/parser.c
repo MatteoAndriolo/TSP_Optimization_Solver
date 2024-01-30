@@ -1,7 +1,10 @@
 #include "../include/parser.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "../include/utils.h"
 
 void read_input(Args *args) {
   FILE *fin = fopen(args->input_file, "r");
@@ -58,8 +61,9 @@ void read_input(Args *args) {
 }
 
 void print_arguments(const Args *args) {
-  printf("\n\navailable parameters (vers. 16-may-2015) "
-         "--------------------------------------------------\n");
+  printf(
+      "\n\navailable parameters (vers. 16-may-2015) "
+      "--------------------------------------------------\n");
   printf("-input %s\n", args->input_file);
   printf("-m %s\n", args->model_type);
   printf("--seed %d\n", args->randomseed);
@@ -68,6 +72,8 @@ void print_arguments(const Args *args) {
   if (strcmp(args->grasp, "1") != 0)
     for (int i = 0; i < args->n_probabilities; i++)
       printf("--grasp %lf\n", args->grasp_probabilities[i]);
+  printf("--perfprof %s\n", args->perfprof ? "true" : "false");
+  if (args->paths_file) printf("--pathin %s\n", args->paths_file);
   printf(
       "------------------------------------------------------------------------"
       "----------------------\n\n");
@@ -97,42 +103,37 @@ void parse_model_name(char *model_type, char ***passagges, int *n_passagges) {
 
 void parse_command_line(int argc, char **argv, Args *args) {
   // DEFAULTS
-  args->num_instances = 1;
+  args->num_instances = 0;
   args->integer_costs = 0;
-  args->randomseed = -1;
-  args->timelimit = -1;
+  args->randomseed = 1;
+  args->timelimit = 9999999;
   args->toplot = 0;
   args->n_probabilities = 1;
   args->grasp_probabilities = (double *)malloc(sizeof(double));
   args->grasp_probabilities[0] = 1;
+  args->perfprof = false;
+  args->paths_file = NULL;
   strcpy(args->input_file, "\0");
   strcpy(args->log_file, "\0");
   strcpy(args->grasp, "1");
 
   int help = 0;
-  if (argc < 1)
-    help = 1;
+  if (argc < 1) help = 1;
   for (int i = 1; i < argc; i++) {
     // model type
     if ((strcmp(argv[i], "--model") == 0) | (strcmp(argv[i], "-m") == 0)) {
       strcpy(args->model_type, argv[++i]);
-      continue;
-    } // model type
-    if (strcmp(argv[i], "--int") == 0) {
-      args->integer_costs = 1;
-      continue;
-    } // integer costs
-    if (strcmp(argv[i], "--seed") == 0) {
+    } else if (strcmp(argv[i], "--int") == 0) {
+      args->integer_costs = true;
+    } else if (strcmp(argv[i], "--seed") == 0) {
       args->randomseed = abs(atoi(argv[++i]));
-      continue;
-    }
-    if ((strcmp(argv[i], "-file") == 0) | (strcmp(argv[i], "-input") == 0) |
-        (strcmp(argv[i], "-f") == 0)) {
+    } else if ((strcmp(argv[i], "-file") == 0) |
+               (strcmp(argv[i], "-input") == 0) |
+               (strcmp(argv[i], "-f") == 0)) {
       strcpy(args->input_file, argv[++i]);
       fflush(stdout);
-      continue;
-    } // input file
-    if ((strcmp(argv[i], "--grasp") == 0) | (strcmp(argv[i], "-g") == 0)) {
+    } else if ((strcmp(argv[i], "--grasp") == 0) |
+               (strcmp(argv[i], "-g") == 0)) {
       args->n_probabilities = 0;
       free(args->grasp_probabilities);
       args->grasp_probabilities = (double *)calloc(10, sizeof(double));
@@ -149,33 +150,31 @@ void parse_command_line(int argc, char **argv, Args *args) {
           sprintf(args->str_probabilities + strlen(args->str_probabilities),
                   "%.1f", args->grasp_probabilities[i]);
         else
-          sprintf(args->str_probabilities + strlen(args->str_probabilities),
-                  "%.1f_",
-                  args->grasp_probabilities[i] -
-                      args->grasp_probabilities[i - 1]);
+          sprintf(
+              args->str_probabilities + strlen(args->str_probabilities),
+              "%.1f_",
+              args->grasp_probabilities[i] - args->grasp_probabilities[i - 1]);
       }
-      continue;
-    }
-    if ((strcmp(argv[i], "--maxtime") == 0) ||
-        (strcmp(argv[i], "--time") == 0) || (strcmp(argv[i], "-t") == 0)) {
+    } else if ((strcmp(argv[i], "--maxtime") == 0) ||
+               (strcmp(argv[i], "--time") == 0) ||
+               (strcmp(argv[i], "-t") == 0)) {
       args->timelimit = atol(argv[++i]);
-      continue;
-    } // total time limit
-    if ((strcmp(argv[i], "-n") == 0) ||
-        (strcmp(argv[i], "--numinstances") == 0)) {
+    } else if ((strcmp(argv[i], "-n") == 0) ||
+               (strcmp(argv[i], "--numinstances") == 0)) {
       args->num_instances = atoi(argv[++i]);
-      continue;
-    }
-    if ((strcmp(argv[i], "-help") == 0) || (strcmp(argv[i], "--help") == 0)) {
+    } else if ((strcmp(argv[i], "-help") == 0) ||
+               (strcmp(argv[i], "--help") == 0)) {
       help = 1;
-      continue;
-    } // help
-    if (strcmp(argv[i], "--plot") == 0) {
+    } else if (strcmp(argv[i], "--plot") == 0) {
       args->toplot = 1;
       printf("PUTTING PLOTTING AT 1");
-    }
-    // CPLEX
-    if (strcmp(argv[i], "--cperchf") == 0) {
+    } else if (strcmp(argv[i], "--perfprof") == 0) {
+      args->perfprof = true;
+    } else if (strcmp(argv[i], "--pathin") == 0) {
+      char *pathin = argv[++i];
+      args->paths_file = (char *)malloc(strlen(pathin) * sizeof(char));
+      args->paths_file = pathin;
+    } else if (strcmp(argv[i], "--cperchf") == 0) {
       args->cplex_perchf = atof(argv[++i]);
       if (args->cplex_perchf < 1 || args->cplex_perchf > 100) {
         FATAL_COMMENT("parser.c:parse_command_line",
@@ -185,8 +184,7 @@ void parse_command_line(int argc, char **argv, Args *args) {
     }
   }
 
-  if (help)
-    exit(1);
+  if (help) exit(1);
 }
 
 void parse_grasp_probabilities(char *grasp, double *probabilities,
@@ -234,5 +232,157 @@ void parse_grasp_probabilities(char *grasp, double *probabilities,
     probabilities[i] += probabilities[i - 1];
     DEBUG_COMMENT("parser.c:parser_grasp_probabilities",
                   "probabilities[%d]=%lf", i, probabilities[i]);
+  }
+}
+
+void readPermutations(const char *filename, int ***array, int *pn, int *ps) {
+  FILE *file;
+  int i, j;
+  int n = -1, s = -1;
+
+  // Open the file
+  file = fopen(filename, "r");
+  if (file == NULL) {
+    perror("Error opening file");
+    return;
+  }
+
+  // first line contains "s n"
+  if (fscanf(file, "%d %d", &n, &s) != 2) {
+    fprintf(stderr, "Error reading file at line 1\n");
+    fclose(file);
+    return;
+  }
+
+  // Allocate memory for the array
+  *array = (int **)malloc(s * sizeof(int *));
+  for (i = 0; i < s; i++) {
+    (*array)[i] = (int *)malloc(n * sizeof(int));
+  }
+
+  // Read the file and store the values in the array
+  for (i = 0; i < s; i++) {
+    for (j = 0; j < n; j++) {
+      if (fscanf(file, "%d", &(*array)[i][j]) != 1) {
+        fprintf(stderr, "Error reading file at line %d\n", i + 1);
+        // Free allocated memory in case of error
+        for (int k = 0; k <= i; k++) {
+          free((*array)[k]);
+        }
+        free(*array);
+        fclose(file);
+        return;
+      }
+    }
+  }
+
+  // Close the file
+  fclose(file);
+  *pn = n;
+  *ps = s;
+}
+
+void writePermutationsToFile(const char *filename) {
+  char *file_dimensions = "data/dimensionMaps";
+  FILE *file_dimensions_ptr = fopen(file_dimensions, "r");
+  int num_dimensions = -1;
+  fscanf(file_dimensions_ptr, "number; %d", &num_dimensions);
+
+  for (int i = 0; i < num_dimensions; i++) {
+    int n = -1, s = -1;
+    fscanf(file_dimensions_ptr, "%d; %d", &n, &s);
+    char *filename = (char *)malloc(100 * sizeof(char));
+    sprintf(filename, "data/permutations/%d", n);
+    FILE *file = fopen(filename, "w");
+    int *array = (int *)malloc(n * sizeof(int));
+    if (array == NULL) {
+      perror("Memory allocation failed");
+      fclose(file);
+      return;
+    }
+    if (file == NULL) {
+      perror("Error opening file");
+      return;
+    }
+
+    // Initialize the array with 1 to n
+    for (int i = 0; i < n; i++) {
+      array[i] = i;
+    }
+
+    fprintf(file, "%d %d\n", n, s);
+    // Generate and write s permutations
+    for (int i = 0; i < s; i++) {
+      shuffle(array, n);
+      for (int j = 0; j < n; j++) {
+        fprintf(file, "%d ", array[j]);
+      }
+      fprintf(file, "\n");
+    }
+
+    free(array);
+    free(filename);
+    fclose(file);
+  }
+
+  fclose(file_dimensions_ptr);
+}
+void freePermutations(int n, int s, int ***array) {
+  for (int i = 0; i < s; i++) {
+    free(array[i]);
+  }
+  free(array);
+}
+
+char *sprintHeaderOutput(Output *output) {
+  char *header = (char *)malloc(sizeof(char) * 1000);
+  header[0] = '\0';
+  char *intermediate = (char *)malloc(sizeof(char) * 1000);
+  intermediate[0] = '\0';
+  char *buffer = (char *)malloc(sizeof(char) * 1000);
+  buffer[0] = '\0';
+
+  for (int i = 0; i < output->n_passagges; i++) {
+    sprintf(buffer, "passagge %d; ", i);
+    strcat(intermediate, buffer);
+  }
+  intermediate[strlen(intermediate) - 2] = '\0';
+
+  sprintf(header, "iteration; tlstart; n_passagges; %s; tlfinal; time",
+          intermediate);
+
+  free(intermediate);
+  free(buffer);
+
+  return header;
+}
+
+char *sprintOutput(Output *output) {
+  char *str = (char *)malloc(sizeof(char) * 1000);
+  str[0] = '\0';
+  char *intermediate = (char *)malloc(sizeof(char) * 1000);
+  intermediate[0] = '\0';
+  char *buffer = (char *)malloc(sizeof(char) * 1000);
+  buffer[0] = '\0';
+
+  for (int i = 0; i < output->n_passagges; i++) {
+    sprintf(buffer, "%lf; ", output->intermediate_tour_length[i]);
+    strcat(intermediate, buffer);
+  }
+  intermediate[strlen(intermediate) - 2] = '\0';
+
+  sprintf(str, "%d; %f; %d; %s; %f; %lf\n", output->iteration, output->tlstart,
+          output->n_passagges, intermediate, output->tlfinal, output->duration);
+
+  free(intermediate);
+  free(buffer);
+
+  return str;
+}
+
+void writeOutput(Output **output, FILE *fp, int num_iterations) {
+  fprintf(fp, "%s\n", sprintHeaderOutput(output[0]));
+  for (int i = 0; i < num_iterations; i++) {
+    fprintf(fp, "%s\n", sprintOutput(output[i]));
   }
 }
