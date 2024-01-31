@@ -86,7 +86,7 @@ ErrorCode vns_k(Instance *inst, int start, int end, int iterations) {
   double ttl = -1, ttl2 = -1;
 
   if (start < 0 || end < 0 || start > end) {
-    ERROR_COMMENT("heuristics.c:vnp_k",
+    ERROR_COMMENT("metaheuristic.c:vnp_k",
                   "invalid start and end values for vns_k");
   }
 
@@ -113,7 +113,7 @@ ErrorCode vns_k(Instance *inst, int start, int end, int iterations) {
   while (++c < niterations) {
     totiter++;
     k = jumpDimension(start, end, c, niterations);
-    INFO_COMMENT("heuristics.c:vnp_k",
+    INFO_COMMENT("metaheuristic.c:vnp_k",
                  "starting the heuristics loop for vnp_k, iteration %d", c);
     ttl = inst->best_tourlength;
     RUN(kick_function(inst, k));
@@ -138,13 +138,13 @@ ErrorCode vns_k(Instance *inst, int start, int end, int iterations) {
     } else {
       restart = 0;
     }
-    INFO_COMMENT("heuristics.c:vnp_k", "vns iter %d, k=%d, ttl= %lf", c, k,
+    INFO_COMMENT("metaheuristic.c:vnp_k", "vns iter %d, k=%d, ttl= %lf", c, k,
                  ttl2);
     INFO_COMMENT("metaheuristic.c:vns_k", "tot iter %d", totiter);
   }
-  INFO_COMMENT("heuristics.c:vnp_k",
+  INFO_COMMENT("metaheuristic.c:vnp_k",
                "finished the huristics loop for vnp_k, tot iter %d", totiter);
-  DEBUG_COMMENT("heuristics.c:vnp_k", "best tourlength: %lf",
+  DEBUG_COMMENT("metaheuristic.c:vnp_k", "best tourlength: %lf",
                 inst->best_tourlength);
   return SUCCESS;
 }
@@ -175,7 +175,7 @@ int kick_function(Instance *inst, int k) {
       index_2--;
       index_3--;
       index_4--;
-      // DEBUG_COMMENT("heuristics.c:kick_function", "found 5 indexes{%d, %d,
+      // DEBUG_COMMENT("metaheuristic.c:kick_function", "found 5 indexes{%d, %d,
       // %d, %d, %d}", index_0, index_1, index_2, index_3, index_4);
     }
     CHECKTIME(inst, false);
