@@ -40,4 +40,7 @@ ErrorCode vns_k(Instance *inst, int start, int end, int iterations);
  * @param k: number of blocks
  */
 int kick_function(Instance *inst, int k);
+
+// --------------------------- GENETIC  ---------------------------
+ErrorCode genetic_algorithm(Instance *inst);
 #endif

@@ -163,4 +163,6 @@ bool simpleCorrectness(int *path, int nnodes);
 
 void print_nodes(double *x, double *y, int nnodes);
 
+double generate_random_path(Instance *inst, int *path);
+
 #endif

@@ -113,7 +113,9 @@ int main(int argc, char **argv) {
       } else if (strcmp(passagges[j], "sa") == 0) {
         RUN_MAIN(simulated_annealling(inst, 1000));
       } else if (strcmp(passagges[j], "gen") == 0) {
-        ERROR_COMMENT("main.c:main", "Genetic algorithm not implemented yet");
+        inst->population_size = 100;
+        inst->ngenerations = 300;
+        RUN_MAIN(genetic_algorithm(inst));
       } else if (strcmp(passagges[j], "nn") == 0) {
         RUN_MAIN(nearest_neighboor(inst));
       } else if (strcmp(passagges[j], "cplex") == 0) {

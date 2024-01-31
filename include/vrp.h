@@ -11,8 +11,9 @@
 
 // #include "../tmpcplex/cplex.h"
 
-#include "errors.h"
-#include "grasp.h"
+#include "../include/errors.h"
+#include "../include/genetic.h"
+#include "../include/grasp.h"
 
 #define XSMALL 1e-5
 #define EPSILON 1e-9
@@ -66,6 +67,11 @@ typedef struct {
   int percentageHF;
   void *params;
 
+  // GENETIC parameters
+  GENETIC_SETUP *genetic_setup;
+  int ngenerations;
+  int population_size;
+
   // global data
   char input_file[1000];  // input file
   char log_file[1000];    // output log file
@@ -113,4 +119,9 @@ ErrorCode INSTANCE_pathCheckpoint(Instance *inst);
 
 ErrorCode INSTANCE_assert(Instance *inst);
 
+// ----------------------------------------------------------------------------
+// FROM GENETIC
+// ----------------------------------------------------------------------------
+Instance *temp_instance(Instance *inst, int *path);
+double calculateTourLenghtPath(Instance *inst, int *path);
 #endif /* VRP_H_ */

@@ -95,3 +95,12 @@ void GRASP_resetSolutions(GRASP_Framework *grasp) {
   }
   grasp->count = 0;
 }
+
+bool GRASP_isInGrasp(GRASP_Framework *grasp, int solution) {
+  for (int i = 0; i < grasp->count; i++) {
+    if (grasp->solutions[i].solution == solution) {
+      return true;
+    }
+  }
+  return false;
+}

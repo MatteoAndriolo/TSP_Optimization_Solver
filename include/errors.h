@@ -1,7 +1,8 @@
 #ifndef ERROR_CODES_H
 #define ERROR_CODES_H
-#include "../include/logger.h"
 #include <stdio.h>
+
+#include "../include/logger.h"
 
 typedef enum {
   SUCCESS = 0,
@@ -13,6 +14,7 @@ typedef enum {
   ERROR_NODES = -5,
   ERROR_TOUR_LENGTH = -6,
   ERROR_TIME_LIMIT = -99,
+  ERROR_ALLOCATION = -98,
 } ErrorCode;
 
 /*
@@ -30,34 +32,33 @@ typedef enum {
     if (err_code != SUCCESS) {                                                 \
       char err_name[40] = "";                                                  \
       switch (err_code) {                                                      \
-      case FAILURE:                                                            \
-        sprintf(err_name, "Failure");                                          \
-        break;                                                                 \
-      case ERROR_FILE_NOT_FOUND:                                               \
-        sprintf(err_name, "File Not Found");                                   \
-        break;                                                                 \
-      case ERROR_INVALID_ARGUMENT:                                             \
-        sprintf(err_name, "Invalid Argument");                                 \
-        break;                                                                 \
-      case ERROR_INVALID_PATH:                                                 \
-        sprintf(err_name, "Invalid Path");                                     \
-        break;                                                                 \
-      case ERROR_NODES:                                                        \
-        sprintf(err_name, "Node Error");                                       \
-        break;                                                                 \
-      case ERROR_TOUR_LENGTH:                                                  \
-        sprintf(err_name, "Tour Length Error");                                \
-        break;                                                                 \
-      case ERROR_TIME_LIMIT:                                                   \
-        sprintf(err_name, "Time Limit Reached");                               \
-        break;                                                                 \
-      default:                                                                 \
-        sprintf(err_name, "Unknown Error");                                    \
-        break;                                                                 \
+        case FAILURE:                                                          \
+          sprintf(err_name, "Failure");                                        \
+          break;                                                               \
+        case ERROR_FILE_NOT_FOUND:                                             \
+          sprintf(err_name, "File Not Found");                                 \
+          break;                                                               \
+        case ERROR_INVALID_ARGUMENT:                                           \
+          sprintf(err_name, "Invalid Argument");                               \
+          break;                                                               \
+        case ERROR_INVALID_PATH:                                               \
+          sprintf(err_name, "Invalid Path");                                   \
+          break;                                                               \
+        case ERROR_NODES:                                                      \
+          sprintf(err_name, "Node Error");                                     \
+          break;                                                               \
+        case ERROR_TOUR_LENGTH:                                                \
+          sprintf(err_name, "Tour Length Error");                              \
+          break;                                                               \
+        case ERROR_TIME_LIMIT:                                                 \
+          sprintf(err_name, "Time Limit Reached");                             \
+          break;                                                               \
+        default:                                                               \
+          sprintf(err_name, "Unknown Error");                                  \
+          break;                                                               \
       }                                                                        \
       printf("Error '%s' in %s:%d | %s \n", #x, __FILE__, __LINE__, err_name); \
-      if (!ismain || err_code != ERROR_TIME_LIMIT)                             \
-        return err_code;                                                       \
+      if (!ismain || err_code != ERROR_TIME_LIMIT) return err_code;            \
     }                                                                          \
   } while (false)
 

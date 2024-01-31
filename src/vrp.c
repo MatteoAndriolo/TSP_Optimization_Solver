@@ -376,3 +376,30 @@ ErrorCode checkTime(Instance *inst, bool saveBest) {
 
   return OK;
 }
+
+// FROM GENETIC
+
+double calculateTourLenghtPath(Instance *inst, int *path) {
+  double tour_length =
+      inst->distance_matrix[path[0] * inst->nnodes + path[inst->nnodes - 1]];
+  for (int i = 0; i < inst->nnodes - 1; i++) {
+    tour_length += inst->distance_matrix[path[i] * inst->nnodes + path[i + 1]];
+  }
+  return tour_length;
+}
+
+Instance *temp_instance(Instance *inst, int *path) {
+  Instance *I = malloc(sizeof(Instance));
+  I->nnodes = inst->nnodes;
+  I->starting_node = inst->starting_node;
+  I->x = inst->x;
+  I->y = inst->y;
+  I->distance_matrix = inst->distance_matrix;
+  I->path = path;
+  I->tour_length = calculateTourLenghtPath(inst, path);
+  I->best_path = I->path;
+  I->best_tourlength = I->tour_length;
+  I->grasp = inst->grasp;
+
+  return I;
+}
