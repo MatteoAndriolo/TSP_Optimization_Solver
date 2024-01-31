@@ -1,14 +1,13 @@
 #ifndef VRP_H_
 #define VRP_H_
 
+#include <cplex.h>
 #include <getopt.h>
 #include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include <cplex.h>
 
 // #include "../tmpcplex/cplex.h"
 
@@ -19,8 +18,7 @@
 #define EPSILON 1e-9
 #define INFTY 1e+30
 
-typedef enum
-{
+typedef enum {
   SOLVER_BASE = 0,
   SOLVER_BENDER = 1,
   SOLVER_PATCHING_HEURISTIC = 2,
@@ -30,13 +28,12 @@ typedef enum
   SOLVER_MH_LOCBRANCH = 6,
 } TSPSolvers;
 
-typedef struct
-{
+typedef struct {
   // execution parameters
-  double max_time; // overall time limit, in sec.s
-  time_t tstart;   // starting time
-  time_t tend;     // end time
-  pthread_mutex_t mut_calcTourLenght, mut_assert, mut_pathCheckpoint;
+  double max_time;  // overall time limit, in sec.s
+  time_t tstart;    // starting time
+  time_t tend;      // end time
+  // pthread_mutex_t mut_calcTourLenght, mut_assert, mut_pathCheckpoint;
 
   // MODEL
   int integer_costs;
@@ -52,7 +49,7 @@ typedef struct
   int *path;
   int *best_path;
   double tour_length;
-  double best_tourlength; // best sol. available
+  double best_tourlength;  // best sol. available
 
   // GRASP parameters
   GRASP_Framework *grasp;
@@ -64,20 +61,20 @@ typedef struct
   TSPSolvers solver;
 
   int ecount;
-  int *edgeList; // pairs node to node for each edge in list
+  int *edgeList;  // pairs node to node for each edge in list
   double percentageLB;
   int percentageHF;
   void *params;
 
   // global data
-  char input_file[1000]; // input file
-  char log_file[1000];   // output log file
+  char input_file[1000];  // input file
+  char log_file[1000];    // output log file
 } Instance;
 
 void INSTANCE_initialize(Instance *inst, double max_time, int integer_costs,
                          int nnodes, double *x, double *y,
                          int grasp_n_probabilities, double *grasp_probabilities,
-                         char *input_file, char *log_file);
+                         char *input_file, char *log_file, bool perfprof);
 
 void INSTANCE_free(Instance *inst);
 
@@ -99,6 +96,8 @@ void INSTANCE_setTourLenght(Instance *inst, double newLength);
 void INSTANCE_addToTourLenght(Instance *inst, double toAdd);
 
 ErrorCode INSTANCE_saveBestPath(Instance *inst);
+
+ErrorCode INSTANCE_setPath(Instance *inst, int *newPath);
 
 ErrorCode checkTime(Instance *inst, bool saveBest);
 
