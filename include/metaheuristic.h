@@ -1,35 +1,42 @@
 #ifndef METAHEURISTICS_H
 #define METAHEURISTICS_H
 #include "../include/vrp.h"
+#include "errors.h"
 
 /**
  * @brief Simulated annealing
- * @param distance_matrix Distance matrix
- * @param path Path
- * @param nnodes Number of nodes
- * @param tour_length Tour length
- * @param k_max Maximum number of iterations
- * @param duration Duration
+ *
+ * @param inst Instance
+ * @param k_max max jump
  */
 int simulated_annealling(Instance *inst, double k_max);
 
 /**
  * @brief Energy probabilities
+ *
  * @param cost_current Current cost
  * @param cost_new New cost
  * @param T Temperature
+ * @param coefficient Coefficient
  */
 double energy_probabilities(double cost_current, double cost_new, double T,
                             double coefficient);
 
 // --------------------------- VNS ---------------------------
-int vns_k(Instance *inst, int k);
+/**
+ * @brief vns_k
+ *
+ * @param inst: instance
+ * @param start: max jump
+ * @param end: min jump
+ * @param iterations: number of iterations
+ */
+ErrorCode vns_k(Instance *inst, int start, int end, int iterations);
 
-/** Kick function
+/**
  * @param distance_matrix: distance matrix
- * @param path: path to be filled
- * @param nnodes: number of nodes
- * @param tour_length: tour length
+ *
+ * @param inst: instance
  * @param k: number of blocks
  */
 int kick_function(Instance *inst, int k);

@@ -106,7 +106,10 @@ int main(int argc, char **argv) {
         }
         RUN_MAIN(two_opt_tabu(inst, INFINITY, initializeTabuList(10, 4)));
       } else if (strcmp(passagges[j], "vns") == 0) {
-        RUN_MAIN(vns_k(inst, 4));
+        int maxJump = (int)(inst->nnodes / 3);
+        int minJump = 4;
+        int iterations = inst->nnodes * 2;
+        RUN_MAIN(vns_k(inst, maxJump, minJump, iterations));
       } else if (strcmp(passagges[j], "sa") == 0) {
         RUN_MAIN(simulated_annealling(inst, 1000));
       } else if (strcmp(passagges[j], "gen") == 0) {
