@@ -328,6 +328,7 @@ ErrorCode INSTANCE_pathCheckpoint(Instance *inst) {
                   "Current path: %lf,Best path: %lf", inst->tour_length,
                   inst->best_tourlength);
   }
+
   INFO_COMMENT("vrp.c:INSTANCE_pathCheckpoint", "Exit ");
   // pthread_mutex_unlock(&inst->mut_pathCheckpoint);
   return SUCCESS;
@@ -402,4 +403,13 @@ Instance *temp_instance(Instance *inst, int *path) {
   I->grasp = inst->grasp;
 
   return I;
+}
+
+void writeCosts(Instance *inst) {
+  FILE *fp;
+  fp = fopen("costs.txt", "w");
+  for (int i = 0; i < inst->ngenerations; i++) {
+    fprintf(fp, "%d; %d; %lf\n", i, inst->costs[i], inst->times[i]);
+  }
+  fclose(fp);
 }

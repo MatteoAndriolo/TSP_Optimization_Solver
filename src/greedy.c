@@ -65,7 +65,6 @@ ErrorCode extra_mileage(Instance *inst) {
   // write nodes
 
   //--------------- START SEARCH -------------------------------------------
-  inst->tend = clock() + inst->max_time;
   int node_3[3] = {-1, -1, -1};
   double min_nts = INFINITY;
 

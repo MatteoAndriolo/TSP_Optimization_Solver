@@ -188,12 +188,12 @@ int main(int argc, char **argv) {
     //                inst->best_tourlength, duration);
 
     INSTANCE_free(inst);
-    if (out) {
-      FREE(out);
-    }
-    if (intermediate_tour_length) {
-      FREE(intermediate_tour_length);
-    }
+    // true if (out) {
+    //    FREE(out);
+    //  }
+    //      if (intermediate_tour_length) {
+    //        FREE(intermediate_tour_length);
+    //      }
   }
 
   if (args.perfprof) {

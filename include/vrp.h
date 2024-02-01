@@ -73,6 +73,9 @@ typedef struct {
   int population_size;
 
   // global data
+  int iterations[200000];
+  int costs[200000];
+  double times[200000];
   char input_file[1000];  // input file
   char log_file[1000];    // output log file
 } Instance;
@@ -118,6 +121,8 @@ void swapPathPoints(Instance *inst, int i, int j);
 ErrorCode INSTANCE_pathCheckpoint(Instance *inst);
 
 ErrorCode INSTANCE_assert(Instance *inst);
+
+void writeCosts(Instance *inst);
 
 // ----------------------------------------------------------------------------
 // FROM GENETIC

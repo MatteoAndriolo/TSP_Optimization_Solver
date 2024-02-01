@@ -82,6 +82,29 @@ int jumpDimension(int start, int end, int curriter, int maxiter) {
   return jump;
 }
 
+typedef struct {
+  bool best_improved;
+  bool decreasing;
+  int start;
+  int end;
+  int maxiter;
+  int curriter;
+} AdaP;
+
+int linear_parameters(AdaP *adp, double improvement) {
+  if (improvement < 1e-3) {
+    if (adp->decreasing) {
+      adp->curriter = (int)(adp->curriter / 2);
+    } else {
+      adp->curriter = adp->maxiter - (int)(adp->curriter / 4);
+    }
+    adp->decreasing = !adp->decreasing;
+  } else {
+    adp->curriter = (int)(adp->curriter * 1.5);
+  }
+  return adp->curriter;
+}
+
 ErrorCode vns_k(Instance *inst, int start, int end, int iterations) {
   int c = 0, k = -1, totiter = 0;
   int niterations = inst->nnodes * 2;
@@ -112,6 +135,10 @@ ErrorCode vns_k(Instance *inst, int start, int end, int iterations) {
    *   OR
    *   the number of iterations without improvement is reached
    */
+  AdaP adp;
+  adp.best_improved = false;
+  adp.decreasing = true;
+
   while (++c < niterations) {
     totiter++;
     k = jumpDimension(start, end, c, niterations);
@@ -124,21 +151,21 @@ ErrorCode vns_k(Instance *inst, int start, int end, int iterations) {
     INSTANCE_calculateTourLength(inst);
     INSTANCE_pathCheckpoint(inst);
     CHECKTIME(inst, false);
-    if (ttl2 >= ttl && ++nWorst > iterations / 10) {
-      if (restart == 0) {
-        c = niterations - (int)(c / 4);
-        restart = 1;
-      } else if (restart == 1) {
-        c = (int)(c / 2);
-        restart = 2;
-      } else if (restart == 2) {
-        break;
+
+    c = linear_parameters(&adp, (ttl - ttl2) / ttl);
+    if (fabs(ttl2 - ttl) <
+        1e-3) {  // ++nWorst > iterations / 10) {   // if found many worst
+      if (decreasing) {
+        c = (int)(c / 2);  // increase jump
+      } else {
+        c = niterations - (int)(c / 4);  // make jump smaller
       }
-      nWorst = 0;
-    } else if (restart && ttl2 - ttl < 0.005 * ttl) {
+      decreasing = !decreasing;
+    } else if (restart && fabs(ttl2 - ttl) < 1e-3 * ttl) {
       break;
     } else {
       restart = 0;
+      nWorst = 0;
     }
     INFO_COMMENT("metaheuristic.c:vnp_k", "vns iter %d, k=%d, ttl= %lf", c, k,
                  ttl2);

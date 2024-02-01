@@ -181,9 +181,11 @@ void parse_command_line(int argc, char **argv, Args *args) {
                       "cplex_perchf must be in [1,100]");
       }
       continue;
+    } else if (strcmp(argv[i], "--tabu") == 0) {
+      args->tabu_size = atoi(argv[++i]);
+      continue;
     }
   }
-
   if (help) exit(1);
 }
 
@@ -371,8 +373,9 @@ char *sprintOutput(Output *output) {
   }
   intermediate[strlen(intermediate) - 2] = '\0';
 
-  sprintf(str, "%d; %f; %d; %s; %f; %lf\n", output->iteration, output->tlstart,
+  sprintf(str, "%d; %lf; %d; %s; %lf; %lf", output->iteration, output->tlstart,
           output->n_passagges, intermediate, output->tlfinal, output->duration);
+  printf("%s", str);
 
   free(intermediate);
   free(buffer);
