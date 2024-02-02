@@ -59,7 +59,8 @@ int bender(const CPXENVptr env, const CPXLPptr lp, Instance *inst,
       xstarToPath(inst, xstar, inst->ncols, inst->path);
       end = true;
     }
-    RUN(INSTANCE_saveBestPath(inst));
+    RUN(INSTANCE_pathCheckpoint(inst));
+    // INSTANCE_storeCost(inst,iter);
     if (lb >= precision * ub)
       DEBUG_COMMENT("tspcplex.c:bender", "Exiting because of lb ub");
 
@@ -72,6 +73,7 @@ int bender(const CPXENVptr env, const CPXLPptr lp, Instance *inst,
   CRITICAL_COMMENT("tspcplex.c:bender", "------------------------------------");
   // xstarToPath(inst, xstar, inst->ncols, inst->path);
   // RUN(INSTANCE_pathCheckpoint(inst));
+  // INSTANCE_storeCost(inst,iter);
   return 0;
 }
 
@@ -100,6 +102,7 @@ int branch_and_cut(Instance *inst, const CPXENVptr env, const CPXLPptr lp,
   printf("finished the run of branch and cut with value = %lf\n", obj_val);
   RUN(xstarToPath(inst, xstar, inst->ncols, inst->path));
   RUN(INSTANCE_pathCheckpoint(inst));
+  // INSTANCE_storeCost(inst,iter);
   return 0;
 }
 
@@ -116,7 +119,8 @@ int hard_fixing(const CPXENVptr env, const CPXLPptr lp, Instance *inst) {
   // best a normale
 
   two_opt(inst, inst->ncols);
-  INSTANCE_pathCheckpoint(inst);  // save best path
+  INSTANCE_pathCheckpoint(inst);
+  // INSTANCE_storeCost(inst,iter);
   create_xheu(inst, xheu);
   set_mip_start(inst, env, lp, xheu);
 
@@ -196,6 +200,7 @@ int local_branching(const CPXENVptr env, const CPXLPptr lp, Instance *inst) {
 
   two_opt(inst, inst->ncols);
   INSTANCE_pathCheckpoint(inst);
+  // INSTANCE_storeCost(inst,iter);
   create_xheu(inst, xheu);
   set_mip_start(inst, env, lp, xheu);
   double previous_solution_found = INFTY;
@@ -314,6 +319,7 @@ int solve_problem(const CPXENVptr env, const CPXLPptr lp, Instance *inst) {
   if (status != SUCCESS) {
     if (status == ERROR_TIME_LIMIT) {
       RUN(INSTANCE_pathCheckpoint(inst));
+      // INSTANCE_storeCost(inst,iter);
       INFO_COMMENT("tspcplex.c:solve_problem", "Time limit reached");
     } else {
       ERROR_COMMENT("tspcplex.c:solve_problem", "Execution FAILED");
@@ -348,6 +354,7 @@ void TSPopt(Instance *inst) {
 
   int status = solve_problem(env, lp, inst);
   INSTANCE_pathCheckpoint(inst);
+  // INSTANCE_storeCost(inst,iter);
   if (status) ERROR_COMMENT("tspcplex.c:TSPopt", "Execution FAILED");
 
   //------------------------ free and close cplex model

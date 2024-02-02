@@ -20,7 +20,7 @@ CFLAGS += -I${CPLEXDIR}/cplex/include/ilcplex -I${CPLEXDIR}/concert/includes -I$
 ASAN_FLAGS = -fsanitize=address -fno-omit-frame-pointer
 
 LDFLAGS = -lm -L${CPLEXDIR}/cplex/lib/x86-64_linux/static_pic -L${CPLEXDIR}/concert/lib/x86-64_linux/static_pic -L${CCDIR}
-LDFLAGS += -lilocplex -lcplex -lconcert -lpthread -ldl -lconcorde
+LDFLAGS += -lilocplex -lcplex -lconcert -lpthread -ldl -l:concorde.a
 
 SRC_DIR = ./src
 OBJ_DIR = ./obj

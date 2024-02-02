@@ -252,4 +252,8 @@ obj/
 **/*.gcno
 .clangd
 TODO.md
-tmpcplex/
+.tmpcplex/
+./co031219.tar
+data/out/*.csv
+data/tsp/test/
+data/cost
