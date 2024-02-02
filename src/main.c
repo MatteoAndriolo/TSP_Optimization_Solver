@@ -33,8 +33,6 @@ int main(int argc, char **argv) {
   // Read TLP library -------------------------------------------------------
   read_input(&args);
 
-  print_arguments(&args);
-
   // Manage model selection -------------------------------------------------
   int **array;
   int n = -1, s = -1;
@@ -53,9 +51,12 @@ int main(int argc, char **argv) {
     }
     args.num_instances = s;
   }
+  print_arguments(&args);
 
-  Instance instances[args.num_instances];  // array of instances
   Output **output = (Output **)malloc(args.num_instances * sizeof(Output *));
+  Instance *instances =
+      (Instance *)malloc(args.num_instances * sizeof(Instance));
+  //
   // RUN_MAIN
   for (int c_inst = 0; c_inst < args.num_instances; c_inst++) {
     Instance *inst = &instances[c_inst];
@@ -157,7 +158,8 @@ int main(int argc, char **argv) {
         FATAL_COMMENT("main.c:main", "Model %s not recognized", passagges[j]);
       }
 
-      INSTANCE_saveBestPath(inst);
+      INSTANCE_pathCheckpoint(inst);
+      // INSTANCE_storeCost(inst,iter);
       memcpy(inst->path, inst->best_path, inst->nnodes);
       inst->tour_length = inst->best_tourlength;
       strcat(title, passagges[j]);
@@ -187,6 +189,14 @@ int main(int argc, char **argv) {
     // OUTPUT_COMMENT("main.c:main", "Tour lenght: %lf , time elapsed %f",
     //                inst->best_tourlength, duration);
 
+    char *filename = (char *)malloc(sizeof(char) * 1000);
+    sprintf(filename, "data/cost/%s_%s_%02d.csv", args.model_type,
+            basename(args.input_file), c_inst);
+    FILE *fp = fopen(filename, "w");
+    writeCosts(inst, fp);
+    fclose(fp);
+    free(filename);
+
     INSTANCE_free(inst);
     // true if (out) {
     //    FREE(out);
@@ -210,5 +220,6 @@ int main(int argc, char **argv) {
   if (output) {
     FREE(output);
   }
+  free(instances);
   INFO_COMMENT("main.c:main", "EXIT");
 }

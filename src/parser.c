@@ -350,7 +350,7 @@ char *sprintHeaderOutput(Output *output) {
   }
   intermediate[strlen(intermediate) - 2] = '\0';
 
-  sprintf(header, "iteration; tlstart; n_passagges; %s; tlfinal; time",
+  sprintf(header, "iteration;tlstart;n_passagges;%s;tlfinal;time",
           intermediate);
 
   free(intermediate);
@@ -373,9 +373,8 @@ char *sprintOutput(Output *output) {
   }
   intermediate[strlen(intermediate) - 2] = '\0';
 
-  sprintf(str, "%d; %lf; %d; %s; %lf; %lf", output->iteration, output->tlstart,
+  sprintf(str, "%d;%lf;%d;%s;%lf;%lf", output->iteration, output->tlstart,
           output->n_passagges, intermediate, output->tlfinal, output->duration);
-  printf("%s", str);
 
   free(intermediate);
   free(buffer);

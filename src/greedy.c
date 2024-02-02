@@ -32,10 +32,11 @@ ErrorCode nearest_neighboor(Instance *inst) {
 
     swapPathPoints(inst, j, GRASP_getSolution(grasp));
     GRASP_resetSolutions(grasp);
+    INSTANCE_storeCost(inst, j);
   }
   INSTANCE_calculateTourLength(inst);
 
-  RUN(INSTANCE_saveBestPath(inst));
+  RUN(INSTANCE_pathCheckpoint(inst));
   return SUCCESS;
 }
 
@@ -126,8 +127,9 @@ ErrorCode extra_mileage(Instance *inst) {
     }
 
     CHECKTIME(inst, false);
+    RUN(INSTANCE_pathCheckpoint(inst));
+    INSTANCE_storeCost(inst, i);
   }
 
-  RUN(INSTANCE_saveBestPath(inst));
   return SUCCESS;
 }

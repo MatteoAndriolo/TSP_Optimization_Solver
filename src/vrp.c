@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+// #include <wchar.h>
 
 #include "../include/grasp.h"
 #include "../include/utils.h"
@@ -110,6 +111,12 @@ void INSTANCE_initialize(Instance *inst, double max_time, int integer_costs,
   strncpy(inst->log_file, log_file, sizeof(inst->log_file) - 1);
   inst->log_file[sizeof(inst->log_file) - 1] = '\0';
 
+  int dimension = 200000;
+  inst->curr_iter = 0;
+  inst->iterations = calloc(dimension, sizeof(int));
+  inst->iterations[0] = -1;
+  inst->costs = calloc(dimension, sizeof(int));
+  inst->times = malloc(dimension * sizeof(double));
   DEBUG_COMMENT("vrp.c:instance_initialize", "tstart: %ld", inst->tstart);
   DEBUG_COMMENT("vrp.c:instance_initialize", "max_time: %lf", max_time);
   DEBUG_COMMENT("vrp.c:instance_initialize", "tend: %ld", inst->tend);
@@ -335,16 +342,6 @@ ErrorCode INSTANCE_pathCheckpoint(Instance *inst) {
 }
 
 /*
- * Saves path as the best path
- *
- * @param inst The instance of the problem to be solved.
- */
-ErrorCode INSTANCE_saveBestPath(Instance *inst) {
-  RUN(INSTANCE_pathCheckpoint(inst));
-  return SUCCESS;
-}
-
-/*
  * Sets the path of the instance
  *
  * @param inst The instance of the problem to be solved.
@@ -369,7 +366,7 @@ ErrorCode INSTANCE_setPath(Instance *inst, int *newPath) {
 ErrorCode checkTime(Instance *inst, bool saveBest) {
   if (inst->tend < clock()) {
     if (saveBest) {
-      RUN(INSTANCE_pathCheckpoint(inst));
+      INSTANCE_pathCheckpoint(inst);
     }
     ERROR_COMMENT("vrp.c:checkTime", "Time limit reached");
     return ERROR_TIME_LIMIT;
@@ -405,11 +402,19 @@ Instance *temp_instance(Instance *inst, int *path) {
   return I;
 }
 
-void writeCosts(Instance *inst) {
-  FILE *fp;
-  fp = fopen("costs.txt", "w");
-  for (int i = 0; i < inst->ngenerations; i++) {
-    fprintf(fp, "%d; %d; %lf\n", i, inst->costs[i], inst->times[i]);
+void writeCosts(Instance *inst, FILE *fp) {
+  int c = 0;
+  while (inst->iterations[c] != -1) {
+    fprintf(fp, "%d;%d;%lf\n", c, inst->costs[c], inst->times[c]);
+    c++;
   }
-  fclose(fp);
+}
+
+void INSTANCE_storeCost(Instance *inst, int iteration) {
+  int curr_iter = inst->curr_iter;
+  inst->iterations[curr_iter] = curr_iter;
+  inst->costs[curr_iter] = inst->best_tourlength;
+  inst->times[curr_iter] = (clock() - inst->tstart) / (double)CLOCKS_PER_SEC;
+  inst->iterations[curr_iter + 1] = -1;
+  inst->curr_iter = inst->curr_iter + 1;
 }

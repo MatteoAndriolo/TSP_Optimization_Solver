@@ -73,9 +73,10 @@ typedef struct {
   int population_size;
 
   // global data
-  int iterations[200000];
-  int costs[200000];
-  double times[200000];
+  int curr_iter;
+  int *iterations;
+  int *costs;
+  double *times;
   char input_file[1000];  // input file
   char log_file[1000];    // output log file
 } Instance;
@@ -104,8 +105,6 @@ void INSTANCE_setTourLenght(Instance *inst, double newLength);
 
 void INSTANCE_addToTourLenght(Instance *inst, double toAdd);
 
-ErrorCode INSTANCE_saveBestPath(Instance *inst);
-
 ErrorCode INSTANCE_setPath(Instance *inst, int *newPath);
 
 ErrorCode checkTime(Instance *inst, bool saveBest);
@@ -122,11 +121,13 @@ ErrorCode INSTANCE_pathCheckpoint(Instance *inst);
 
 ErrorCode INSTANCE_assert(Instance *inst);
 
-void writeCosts(Instance *inst);
+void INSTANCE_storeCost(Instance *inst, int iter);
+
+void writeCosts(Instance *inst, FILE *fp);
 
 // ----------------------------------------------------------------------------
 // FROM GENETIC
-// ----------------------------------------------------------------------------
 Instance *temp_instance(Instance *inst, int *path);
+
 double calculateTourLenghtPath(Instance *inst, int *path);
 #endif /* VRP_H_ */

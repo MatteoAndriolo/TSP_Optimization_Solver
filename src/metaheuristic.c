@@ -115,8 +115,8 @@ ErrorCode vns_k(Instance *inst, int start, int end, int iterations) {
                   "invalid start and end values for vns_k");
   }
 
-  int nWorst = 0;
-  int restart = 0;
+  //  int nWorst = 0;
+  //  int restart = 0;
   /**
    * While loopd for the vns
    *
@@ -136,6 +136,8 @@ ErrorCode vns_k(Instance *inst, int start, int end, int iterations) {
    *   the number of iterations without improvement is reached
    */
   AdaP adp;
+  adp.curriter = niterations;
+  adp.maxiter = niterations;
   adp.best_improved = false;
   adp.decreasing = true;
 
@@ -150,23 +152,24 @@ ErrorCode vns_k(Instance *inst, int start, int end, int iterations) {
     ttl2 = inst->best_tourlength;
     INSTANCE_calculateTourLength(inst);
     INSTANCE_pathCheckpoint(inst);
+    INSTANCE_storeCost(inst, totiter);
     CHECKTIME(inst, false);
 
     c = linear_parameters(&adp, (ttl - ttl2) / ttl);
-    if (fabs(ttl2 - ttl) <
-        1e-3) {  // ++nWorst > iterations / 10) {   // if found many worst
-      if (decreasing) {
-        c = (int)(c / 2);  // increase jump
-      } else {
-        c = niterations - (int)(c / 4);  // make jump smaller
-      }
-      decreasing = !decreasing;
-    } else if (restart && fabs(ttl2 - ttl) < 1e-3 * ttl) {
-      break;
-    } else {
-      restart = 0;
-      nWorst = 0;
-    }
+    // if (fabs(ttl2 - ttl) <
+    //     1e-3) { // ++nWorst > iterations / 10) {   // if found many worst
+    //   if (decreasing) {
+    //     c = (int)(c / 2); // increase jump
+    //   } else {
+    //     c = niterations - (int)(c / 4); // make jump smaller
+    //   }
+    //   decreasing = !decreasing;
+    // } else if (restart && fabs(ttl2 - ttl) < 1e-3 * ttl) {
+    //   break;
+    // } else {
+    //   restart = 0;
+    //   nWorst = 0;
+    // }
     INFO_COMMENT("metaheuristic.c:vnp_k", "vns iter %d, k=%d, ttl= %lf", c, k,
                  ttl2);
     INFO_COMMENT("metaheuristic.c:vns_k", "tot iter %d", totiter);
