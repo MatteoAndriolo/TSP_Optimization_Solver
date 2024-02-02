@@ -1,7 +1,7 @@
 import pathlib 
 import pandas
 import numpy as np
-import matplotlib as plt
+import matplotlib.pyplot as plt
 
 # parameters
 defLW = 1.2  # default line width
@@ -25,7 +25,7 @@ class opt:
   plottitle=None
   xlabel='Time Ratio'
   bw=False
-  output='data/test.jpg'
+  output='data/test.pdf'
 
 if __name__=='__main__':
   folder = pathlib.Path("data/out")
@@ -42,11 +42,12 @@ if __name__=='__main__':
     # add row to table
     data[f.name.split("_")[0]]=df['time']
   print(data.head())
-  data=data.T
-
-  nrows, ncols = data.shape
   cnames = data.columns
   rnames = data.index
+  # transform data to matrix
+  data = data.to_numpy()
+
+  nrows, ncols = data.shape
   # add shift
   data = data + opt.shift
   # compute ratios
@@ -86,6 +87,10 @@ if __name__=='__main__':
       plt.title(opt.plottitle)
   plt.xlabel(opt.xlabel)
   plt.savefig(opt.output)
+
+
+
+
 
   
   
