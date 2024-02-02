@@ -19,6 +19,8 @@
  */
 void swap(int *arr, int i, int j);
 
+void swapPathPoints(Instance *inst, int i, int j);
+
 void shuffle(int *arr, int n);
 
 /**

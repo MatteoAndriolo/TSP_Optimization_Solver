@@ -16,6 +16,7 @@
  * @return void
  */
 ErrorCode two_opt(Instance *inst, double iterations);
+ErrorCode two_opt_noupdate(Instance *inst, double iterations);
 
 /**
  * Applies the 2-opt algorithm to a given distance matrix and node list (in
@@ -27,4 +28,5 @@ ErrorCode two_opt(Instance *inst, double iterations);
  * @param tabuList A pointer to the tabu list.
  */
 ErrorCode two_opt_tabu(Instance *inst, double iterations, TabuList *tabuList);
+ErrorCode tabu_search(Instance *inst, double iterations);
 #endif

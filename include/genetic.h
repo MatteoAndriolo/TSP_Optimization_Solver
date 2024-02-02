@@ -38,11 +38,11 @@ ErrorCode genetic_setup(GENETIC_SETUP *setup, int ngenerations,
                         int population_size, int windows_size,
                         int grasp_n_probabilities, double *grasp_probabilities);
 
-ErrorCode genetic_population(GENETIC_POPULATION *population,
-                             GENETIC_SETUP *setup);
+ErrorCode GENETIC_initPopulation(GENETIC_POPULATION *population,
+                                 GENETIC_SETUP *setup);
 
-ErrorCode genetic_individual(GENETIC_INDIVIDUAL *individual, int nnodes,
-                             int *path, double tour_length);
+ErrorCode GENETIC_initIndividual(GENETIC_INDIVIDUAL *individual, int nnodes,
+                                 int *path, double tour_length);
 
 ErrorCode genetic_destroy(GENETIC_SETUP *setup);
 

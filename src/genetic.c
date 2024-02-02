@@ -19,9 +19,10 @@ ErrorCode genetic_setup(GENETIC_SETUP *gen, int ngenerations,
   return OK;
 }
 
-ErrorCode genetic_population(GENETIC_POPULATION *popul, GENETIC_SETUP *gen) {
+ErrorCode GENETIC_initPopulation(GENETIC_POPULATION *popul,
+                                 GENETIC_SETUP *gen) {
   if (!popul) {
-    FATAL_COMMENT("genetic.c:genetic_population", "popul is NULL");
+    FATAL_COMMENT("genetic.c:GENETIC_initPopulation", "popul is NULL");
     exit(-1);
   }
   popul->individual = malloc(gen->population_size * sizeof(GENETIC_INDIVIDUAL));
@@ -32,8 +33,8 @@ ErrorCode genetic_population(GENETIC_POPULATION *popul, GENETIC_SETUP *gen) {
   return SUCCESS;
 }
 
-ErrorCode genetic_individual(GENETIC_INDIVIDUAL *indiv, int nnodes, int *path,
-                             double tour_lenght) {
+ErrorCode GENETIC_initIndividual(GENETIC_INDIVIDUAL *indiv, int nnodes,
+                                 int *path, double tour_lenght) {
   if (!indiv) {
     FATAL_COMMENT("genetic.c:genetic_individual", "indiv is NULL");
   }
@@ -49,7 +50,7 @@ ErrorCode genetic_individual(GENETIC_INDIVIDUAL *indiv, int nnodes, int *path,
 ErrorCode genetic_destroy_population(GENETIC_POPULATION *popul) {
   if (!popul) {
     ERROR_COMMENT("genetic.c:genetic_destroy_population", "popul is NULL");
-    exit(-1);
+    return OK;
   }
   GRASP_free(popul->grasp_individuals);
   for (int i = 0; i < popul->population_size; i++) {

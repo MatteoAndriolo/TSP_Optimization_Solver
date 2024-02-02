@@ -14,6 +14,7 @@
 #include "../include/errors.h"
 #include "../include/genetic.h"
 #include "../include/grasp.h"
+#include "../include/tabu.h"
 
 #define XSMALL 1e-5
 #define EPSILON 1e-9
@@ -54,6 +55,9 @@ typedef struct {
 
   // GRASP parameters
   GRASP_Framework *grasp;
+
+  // TABU Framework
+  // TABU_Framework *tabu;
 
   // TSP MODEL
   CPXENVptr env;
@@ -121,7 +125,7 @@ ErrorCode INSTANCE_pathCheckpoint(Instance *inst);
 
 ErrorCode INSTANCE_assert(Instance *inst);
 
-void INSTANCE_storeCost(Instance *inst, int iter);
+void INSTANCE_storeCost(Instance *inst);
 
 void writeCosts(Instance *inst, FILE *fp);
 

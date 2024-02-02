@@ -39,7 +39,8 @@ ErrorCode vns_k(Instance *inst, int start, int end, int iterations);
  * @param inst: instance
  * @param k: number of blocks
  */
-int kick_function(Instance *inst, int k);
+ErrorCode kick_function(Instance *inst, int k);
+ErrorCode kick_function_tabu(Instance *inst, int k, TabuList *tabu);
 
 // --------------------------- GENETIC  ---------------------------
 ErrorCode genetic_algorithm(Instance *inst);

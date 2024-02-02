@@ -2,18 +2,6 @@
 
 #include <time.h>
 
-// #include "../include/errors.h"
-// #include "../include/grasp.h"
-// #include "../include/logger.h"
-// #include "../include/refinement.h"
-// #include "../include/utils.h"
-
-void swapPathPoints(Instance *inst, int i, int j) {
-  int temp = inst->path[i];
-  inst->path[i] = inst->path[j];
-  inst->path[j] = temp;
-}
-
 ErrorCode nearest_neighboor(Instance *inst) {
   INFO_COMMENT("greedy.c:nearest_neighboor", "start nearest neighboor");
   int current_node;
@@ -32,10 +20,8 @@ ErrorCode nearest_neighboor(Instance *inst) {
 
     swapPathPoints(inst, j, GRASP_getSolution(grasp));
     GRASP_resetSolutions(grasp);
-    INSTANCE_storeCost(inst, j);
+    RUN(INSTANCE_pathCheckpoint(inst));
   }
-  INSTANCE_calculateTourLength(inst);
-
   RUN(INSTANCE_pathCheckpoint(inst));
   return SUCCESS;
 }
@@ -63,6 +49,7 @@ ErrorCode extra_mileage(Instance *inst) {
 
   swapPathPoints(inst, 1, max_index);
   INSTANCE_setTourLenght(inst, 2 * max_distance);
+  INSTANCE_storeCost(inst);
   // write nodes
 
   //--------------- START SEARCH -------------------------------------------
@@ -108,6 +95,7 @@ ErrorCode extra_mileage(Instance *inst) {
         min_nts - INSTANCE_getDistancePos(inst, node_3[0], node_3[1]);
 
     INSTANCE_addToTourLenght(inst, new_cost);
+    INSTANCE_storeCost(inst);
 
     // SWAP - ADJUST PATH ----------------------------------------------------
     // Save the value at position j in a temporary variable
@@ -126,9 +114,8 @@ ErrorCode extra_mileage(Instance *inst) {
       inst->path[node_3[1]] = tmp;
     }
 
-    CHECKTIME(inst, false);
     RUN(INSTANCE_pathCheckpoint(inst));
-    INSTANCE_storeCost(inst, i);
+    CHECKTIME(inst, false);
   }
 
   return SUCCESS;

@@ -2,6 +2,7 @@
 #define GREEDY_H
 
 #include "errors.h"
+#include "utils.h"
 #include "vrp.h"
 
 /**

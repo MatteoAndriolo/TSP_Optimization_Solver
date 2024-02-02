@@ -1,6 +1,7 @@
 #include "../include/metaheuristic.h"
 
 #include <math.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "../include/errors.h"
@@ -10,13 +11,15 @@
 
 double energy_probabilities(double cost_current, double cost_new, double T,
                             double coefficient) {
-  // double delta = (cost_new - cost_current) / (cost_current + cost_new) *
-  // coefficient;
+  // *coefficient;
   if (cost_new < cost_current) return 1;
-  return exp(-coefficient / T);
+  double delta = fabs(cost_current - cost_new) /
+                 cost_current;  // (cost_current + cost_new);
+  return exp(-delta / T);
+  // return exp(-coefficient / T);
 }
 
-void backupInstState(const Instance *inst, int *path, int *tour_length) {
+void backupInstState(const Instance *inst, int *path, double *tour_length) {
   memcpy(path, inst->path, inst->nnodes * sizeof(int));
   *tour_length = inst->tour_length;
 }
@@ -31,33 +34,35 @@ int simulated_annealling(Instance *inst, double k_max) {
                "Starting simulated annealing metaheuristic");
   double T, rand_val, energy;
 
+  two_opt_noupdate(inst, INFINITY);
   // backup the current state
   int *path = (int *)malloc(inst->nnodes * sizeof(int));
-  int tour_length;
+  double tour_length;
   backupInstState(inst, path, &tour_length);
-
   // Main loop iterating through k_max iterations
   for (int k = 0; k < k_max; k++) {
-    T = 1 - ((double)k / k_max);
+    T = 1 - ((double)(k + 1) / k_max);
 
     // Modify and optimize current solution
-    RUN(kick_function(inst, 4));
-    RUN(two_opt(inst, INFINITY));
+    RUN(kick_function(inst, k_max - k));
+    RUN(two_opt_noupdate(inst, INFINITY));
 
     // Calculate acceptance probability and generate a rand_val number
+    // printf("tour_length: %lf, inst->tour_length: %lf, T: %f\n", tour_length,
+    //       inst->tour_length, T);
     energy = energy_probabilities(tour_length, inst->tour_length, T, 0.8);
     rand_val = randomBetween_d(0, 1);
-
+    INSTANCE_pathCheckpoint(inst);
     // Debugging output
     DEBUG_COMMENT("metaheuristic.c:simulate_anealling",
                   "k: %d, T: %f, energy: %f, rand_val: %f", k, T, energy,
                   rand_val);
-
-    if (rand_val < energy) {  // rejected !
+    // printf("k: %d, T: %f, energy: %f, rand_val: %f\n", k, T, energy,
+    // rand_val);
+    if (energy < rand_val) {  // rejected !
       restoreInstState(inst, path, tour_length);
     } else {  // accepted
       backupInstState(inst, path, &tour_length);
-      INSTANCE_pathCheckpoint(inst);
     }
     CHECKTIME(inst, false);
   }
@@ -72,160 +77,156 @@ int simulated_annealling(Instance *inst, double k_max) {
 // VNS
 // ----------------------------------------------------------------------------
 
-int jumpDimension(int start, int end, int curriter, int maxiter) {
-  int jump = start - (int)((start - end) * (double)curriter / (double)maxiter);
-  jump = jump == 0 ? 1 : jump;
-  if (jump < 0) {
-    FATAL_COMMENT("metaheuristic.c:jumpDimension", "jump < 0");
-  }
-  INFO_COMMENT("metaheuristic.c:jumpDimension", "jump: %d", jump);
-  return jump;
-}
+ErrorCode vns_k(Instance *inst, int maxJ, int minJ, int iterations) {
+  INFO_COMMENT("metaheuristic.c:simulate_anealling",
+               "Starting simulated annealing metaheuristic");
 
-typedef struct {
-  bool best_improved;
-  bool decreasing;
-  int start;
-  int end;
-  int maxiter;
-  int curriter;
-} AdaP;
+  two_opt_noupdate(inst, INFINITY);
+  // backup the current state
+  int *path = (int *)malloc(inst->nnodes * sizeof(int));
+  double tour_length;
+  backupInstState(inst, path, &tour_length);
 
-int linear_parameters(AdaP *adp, double improvement) {
-  if (improvement < 1e-3) {
-    if (adp->decreasing) {
-      adp->curriter = (int)(adp->curriter / 2);
-    } else {
-      adp->curriter = adp->maxiter - (int)(adp->curriter / 4);
-    }
-    adp->decreasing = !adp->decreasing;
-  } else {
-    adp->curriter = (int)(adp->curriter * 1.5);
-  }
-  return adp->curriter;
-}
-
-ErrorCode vns_k(Instance *inst, int start, int end, int iterations) {
-  int c = 0, k = -1, totiter = 0;
-  int niterations = inst->nnodes * 2;
-  double ttl = -1, ttl2 = -1;
-
-  if (start < 0 || end < 0 || start > end) {
-    ERROR_COMMENT("metaheuristic.c:vnp_k",
-                  "invalid start and end values for vns_k");
-  }
-
-  //  int nWorst = 0;
-  //  int restart = 0;
-  /**
-   * While loopd for the vns
-   *
-   * Jump lenght calculated based on
-   * - current iteration and it is used to calculate the coefficient for the
-   *   linear function used to calculate the jump lenght
-   *   - current iteration is changed when the number of iterations without
-   *     improvement is reached
-   *     - first it is reduced (smaller jumps)
-   *     - then it is enlarged (larger jumps)
-   *     - repeat until even when enlarged no improvements are made
-   *
-   *
-   * Ends when:
-   * - the number of iterations is reached
-   *   OR
-   *   the number of iterations without improvement is reached
-   */
-  AdaP adp;
-  adp.curriter = niterations;
-  adp.maxiter = niterations;
-  adp.best_improved = false;
-  adp.decreasing = true;
-
-  while (++c < niterations) {
-    totiter++;
-    k = jumpDimension(start, end, c, niterations);
-    INFO_COMMENT("metaheuristic.c:vnp_k",
-                 "starting the heuristics loop for vnp_k, iteration %d", c);
-    ttl = inst->best_tourlength;
-    RUN(kick_function(inst, k));
-    RUN(two_opt_tabu(inst, 100, initializeTabuList(20, 7)));
-    ttl2 = inst->best_tourlength;
-    INSTANCE_calculateTourLength(inst);
+  int jump = minJ;
+  // Main loop iterating through k_max iterations
+  while (jump <= maxJ) {
+    // Modify and optimize current solution
+    RUN(kick_function(inst, jump));
+    RUN(two_opt_noupdate(inst, INFINITY));
     INSTANCE_pathCheckpoint(inst);
-    INSTANCE_storeCost(inst, totiter);
-    CHECKTIME(inst, false);
 
-    c = linear_parameters(&adp, (ttl - ttl2) / ttl);
-    // if (fabs(ttl2 - ttl) <
-    //     1e-3) { // ++nWorst > iterations / 10) {   // if found many worst
-    //   if (decreasing) {
-    //     c = (int)(c / 2); // increase jump
-    //   } else {
-    //     c = niterations - (int)(c / 4); // make jump smaller
-    //   }
-    //   decreasing = !decreasing;
-    // } else if (restart && fabs(ttl2 - ttl) < 1e-3 * ttl) {
-    //   break;
-    // } else {
-    //   restart = 0;
-    //   nWorst = 0;
-    // }
-    INFO_COMMENT("metaheuristic.c:vnp_k", "vns iter %d, k=%d, ttl= %lf", c, k,
-                 ttl2);
-    INFO_COMMENT("metaheuristic.c:vns_k", "tot iter %d", totiter);
+    if (tour_length < inst->tour_length) {
+      restoreInstState(inst, path, tour_length);
+      jump++;
+    } else {
+      backupInstState(inst, path, &tour_length);
+      jump = minJ;
+    }
+    // Debugging output
+    CHECKTIME(inst, false);
   }
-  INFO_COMMENT("metaheuristic.c:vnp_k",
-               "finished the huristics loop for vnp_k, tot iter %d", totiter);
-  DEBUG_COMMENT("metaheuristic.c:vnp_k", "best tourlength: %lf",
-                inst->best_tourlength);
+
+  free(path);
+  INFO_COMMENT("metaheuristic.c:vns_k",
+               "Simulated annealing metaheuristic finished");
   return SUCCESS;
 }
 
-int kick_function(Instance *inst, int k) {
-  int found = 0;
-  int index_0 = 0, index_1 = 0, index_2 = 0, index_3 = 0, index_4 = 0;
-  while (found != 4) {
-    found = 0;
-    index_0 = 1;
-    found++;
-    index_1 = randomBetween(index_0 + 1, inst->nnodes);
-    if (inst->nnodes - index_1 > 6) {
-      index_2 = randomBetween(index_1 + 2, inst->nnodes);
+// ErrorCode vns_k(Instance *inst, int maxJ, int minJ, int iterations) {
+//   int c = 0, k = -1, totiter = 0;
+//   int niterations = inst->nnodes * 2;
+//   // double ttl = -1, ttl2 = -1;
+//
+//   if (maxJ < 0 || minJ < 0 || maxJ > minJ) {
+//     ERROR_COMMENT("metaheuristic.c:vnp_k",
+//                   "invalid start and end values for vns_k");
+//   }
+//
+//   while (totiter++ < niterations) {
+//     c++;
+//     k = maxJ - c;
+//     INFO_COMMENT("metaheuristic.c:vnp_k",
+//                  "starting the heuristics loop for vnp_k, iteration %d", c);
+//     // ttl = inst->best_tourlength;
+//
+//     printf("k: %d\n", k);
+//     RUN(kick_function(inst, k));
+//     // RUN(two_opt_tabu(inst, 10, initializeTabuList(20, 7)));
+//     RUN(two_opt_noupdate(inst, INFINITY));
+//     // ttl2 = inst->best_tourlength;
+//     RUN(INSTANCE_pathCheckpoint(inst));
+//     CHECKTIME(inst, false);
+//
+//     // c = linear_parameters(&adp, (ttl - ttl2) / ttl);
+//     //  if (fabs(ttl2 - ttl) <
+//     //      1e-3) { // ++nWorst > iterations / 10) {   // if found many worst
+//     //    if (decreasing) {
+//     //      c = (int)(c / 2); // increase jump
+//     //    } else {
+//     //      c = niterations - (int)(c / 4); // make jump smaller
+//     //    }
+//     //    decreasing = !decreasing;
+//     //  } else if (restart && fabs(ttl2 - ttl) < 1e-3 * ttl) {
+//     //    break;
+//     //  } else {
+//     //    restart = 0;
+//     //    nWorst = 0;
+//     //  }
+//     // INFO_COMMENT("metaheuristic.c:vnp_k", "vns iter %d, k=%d, ttl= %lf",
+//     c,
+//     // k,
+//     //             ttl2);
+//     INFO_COMMENT("metaheuristic.c:vns_k", "tot iter %d", totiter);
+//   }
+//   INFO_COMMENT("metaheuristic.c:vnp_k",
+//                "finished the huristics loop for vnp_k, tot iter %d",
+//                totiter);
+//   DEBUG_COMMENT("metaheuristic.c:vnp_k", "best tourlength: %lf",
+//                 inst->best_tourlength);
+//   return SUCCESS;
+// }
+
+int _kick_function(Instance *inst, int k, TabuList *tabu) {
+  for (int i = 0; i < k; i++) {
+    int found = 0;
+    int index_0 = 0, index_1 = 0, index_2 = 0, index_3 = 0, index_4 = 0;
+    while (found != 4) {
+      found = 0;
+      index_0 = 1;
       found++;
+      index_1 = randomBetween(index_0 + 1, inst->nnodes);
+      if (inst->nnodes - index_1 > 6) {
+        index_2 = randomBetween(index_1 + 2, inst->nnodes);
+        found++;
+      }
+      if (inst->nnodes - index_2 > 4) {
+        index_3 = randomBetween(index_2 + 2, inst->nnodes);
+        found++;
+      }
+      if (inst->nnodes - index_3 > 2) {
+        index_4 = randomBetween(index_3 + 2, inst->nnodes);
+        found++;
+      }
+      if (found == 4) {
+        index_0--;
+        index_1--;
+        index_2--;
+        index_3--;
+        index_4--;
+        // DEBUG_COMMENT("metaheuristic.c:kiint ck_function", "found 5
+        // indexes{%d, %d, %d, %d, %d}", index_0, index_1, index_2, index_3,
+        // index_4);
+      }
+      CHECKTIME(inst, false);
     }
-    if (inst->nnodes - index_2 > 4) {
-      index_3 = randomBetween(index_2 + 2, inst->nnodes);
-      found++;
+
+    if (tabu) {
+      addTabu(tabu, index_1);
+      addTabu(tabu, index_3);
     }
-    if (inst->nnodes - index_3 > 2) {
-      index_4 = randomBetween(index_3 + 2, inst->nnodes);
-      found++;
-    }
-    if (found == 4) {
-      index_0--;
-      index_1--;
-      index_2--;
-      index_3--;
-      index_4--;
-      // DEBUG_COMMENT("metaheuristic.c:kick_function", "found 5 indexes{%d, %d,
-      // %d, %d, %d}", index_0, index_1, index_2, index_3, index_4);
-    }
-    CHECKTIME(inst, false);
+    //---------------------------------------------------------------------------------------
+    int *final_path = malloc(inst->nnodes * sizeof(int));
+    int count = 0;
+    for (int i = 0; i < index_1; i++) final_path[count++] = inst->path[i];
+    for (int i = index_4; i < inst->nnodes; i++)
+      final_path[count++] = inst->path[i];
+    for (int i = index_4 - 1; i >= index_3; i--)
+      final_path[count++] = inst->path[i];
+    for (int i = index_2; i < index_3; i++) final_path[count++] = inst->path[i];
+    for (int i = index_2 - 1; i >= index_1; i--)
+      final_path[count++] = inst->path[i];
+    free(inst->path);
+    inst->path = final_path;
   }
-  //---------------------------------------------------------------------------------------
-  int *final_path = malloc(inst->nnodes * sizeof(int));
-  int count = 0;
-  for (int i = 0; i < index_1; i++) final_path[count++] = inst->path[i];
-  for (int i = index_4; i < inst->nnodes; i++)
-    final_path[count++] = inst->path[i];
-  for (int i = index_4 - 1; i >= index_3; i--)
-    final_path[count++] = inst->path[i];
-  for (int i = index_2; i < index_3; i++) final_path[count++] = inst->path[i];
-  for (int i = index_2 - 1; i >= index_1; i--)
-    final_path[count++] = inst->path[i];
-  free(inst->path);
-  inst->path = final_path;
+
   return SUCCESS;
+}
+ErrorCode kick_function_tabu(Instance *inst, int k, TabuList *tabu) {
+  return _kick_function(inst, k, tabu);
+}
+
+ErrorCode kick_function(Instance *inst, int k) {
+  return _kick_function(inst, k, NULL);
 }
 
 // ----------------------------------------------------------------------------
@@ -238,7 +239,7 @@ void refine_pop(Instance *inst, GENETIC_POPULATION *population,
     Instance *I =
         (Instance *)temp_instance(inst, population->individual[i].path);
     I->tend = time(NULL) + duration;
-    two_opt(I, pow(inst->nnodes, 2));
+    // two_opt_noupdate(I, INFINITY);
 
     population->individual[i].fitness = I->tour_length;
     GRASP_addSolution(population->grasp_individuals, i, I->tour_length);
@@ -436,19 +437,20 @@ ErrorCode genetic_algorithm(Instance *inst) {
 
   // Set Best Individual
   gen->best_individual = malloc(sizeof(GENETIC_INDIVIDUAL));
-  genetic_individual(gen->best_individual, inst->nnodes, NULL, INFINITY);
+  GENETIC_initIndividual(gen->best_individual, inst->nnodes, NULL, INFINITY);
   DEBUG_COMMENT("metaheuristic.c::genetic_algorithm", "Best individual set");
   temp_prob = NULL;
 
   // INIT FIRST GENERATION
   gen->parents = malloc(sizeof(GENETIC_POPULATION));
-  genetic_population(gen->parents, gen);
+  GENETIC_initPopulation(gen->parents, gen);
   DEBUG_COMMENT("metaheuristic.c::genetic_algorithm",
                 "Generating first population");
   for (int i = 0; i < gen->population_size; i++) {
     int *tpath = malloc(sizeof(int) * inst->nnodes);
     double ttl = generate_random_path(inst, tpath);
-    genetic_individual(&gen->parents->individual[i], inst->nnodes, tpath, ttl);
+    GENETIC_initIndividual(&gen->parents->individual[i], inst->nnodes, tpath,
+                           ttl);
   }
 
   // QUICK REFINEMENT
@@ -466,12 +468,13 @@ ErrorCode genetic_algorithm(Instance *inst) {
   }
 #endif /* ifndef PRODUCTION */
 
-  // START GENERATIONS --------------------------------------------------------
+  // START GENERATIONS
+  // --------------------------------------------------------
   if (gen->children) {
     gen->children = NULL;
     // genetic_destroy_population(gen->children);
   }
-  double last_best = INFINITY;
+  // double last_best = INFINITY;
 
   for (int iter = 0; iter < gen->ngenerations; iter++) {
     DEBUG_COMMENT("metaheuristic.c::genetic_algorithm",
@@ -482,7 +485,7 @@ ErrorCode genetic_algorithm(Instance *inst) {
       exit(-1);
     }
     gen->children = malloc(sizeof(GENETIC_POPULATION));
-    genetic_population(gen->children, gen);
+    GENETIC_initPopulation(gen->children, gen);
 
     // GENERATE CHILDRENS
     DEBUG_COMMENT("metaheuristic.c::genetic_algorithm", "Crossover");
@@ -492,23 +495,30 @@ ErrorCode genetic_algorithm(Instance *inst) {
     DEBUG_COMMENT("metaheuristic.c::genetic_algorithm", "Refining children");
     refine_pop(inst, gen->children, 3);
 
+    INSTANCE_setTourLenght(inst, gen->children->individual[0].fitness);
+    // printf("%d, best fitness %lf\n", iter,
+    // gen->children->individual[0].fitness);
+    INSTANCE_storeCost(inst);
     DEBUG_COMMENT("metaheuristic.c::genetic_algorithm",
                   "Selecting best children");
     genetic_destroy_population(gen->parents);
 
     gen->parents = gen->children;
     gen->children = NULL;
-    printf("finished generation %d\n", iter);
+    // printf("finished generation %d\n", iter);
     DEBUG_COMMENT("metaheuristic.c::genetic_algorithm",
                   "Selecting best solution");
-    printf("best fitness %lf\n",
-           gen->parents->grasp_individuals->solutions[0].value);
+    // printf("best fitness %lf\n",
+    //        gen->parents->grasp_individuals->solutions[0].value);
     DEBUG_COMMENT("metaheuristic.c::genetic_algorithm",
                   "Finished generation %d", iter);
-    if (fabs(gen->parents->grasp_individuals->solutions[0].value - last_best) <
-        1e-3)
-      break;
-    last_best = gen->parents->grasp_individuals->solutions[0].value;
+    // last_best = gen->parents->grasp_individuals->solutions[0].value;
+    //  stop condition
+    //  if (fabs(gen->parents->grasp_individuals->solutions[0].value -
+    //  last_best)
+    //       < 1e-3){
+    //   break;
+    //   }
   }
 
   DEBUG_COMMENT("metaheuristic.c::genetic_algorithm",

@@ -67,8 +67,6 @@ void INSTANCE_initialize(Instance *inst, double max_time, int integer_costs,
   // inst->model_type = model_type;
   inst->integer_costs = integer_costs;
 
-  printf("integer_costs: %d\n", inst->integer_costs);
-
   // Initialize Data
   inst->nnodes = nnodes;
   inst->starting_node = rand() % nnodes;
@@ -95,6 +93,9 @@ void INSTANCE_initialize(Instance *inst, double max_time, int integer_costs,
   // Initialize GRASP parameters
   inst->grasp = (GRASP_Framework *)malloc(sizeof(GRASP_Framework));
   GRASP_init(inst->grasp, grasp_probabilities, grasp_n_probabilities);
+
+  // Initialize TABU parameters
+  // inst->tabu = (TABU_Framework*) malloc(sizeof(TABU_Framework);
 
   inst->grasp->size = grasp_n_probabilities;
   inst->grasp->probabilities = grasp_probabilities;
@@ -336,6 +337,7 @@ ErrorCode INSTANCE_pathCheckpoint(Instance *inst) {
                   inst->best_tourlength);
   }
 
+  INSTANCE_storeCost(inst);
   INFO_COMMENT("vrp.c:INSTANCE_pathCheckpoint", "Exit ");
   // pthread_mutex_unlock(&inst->mut_pathCheckpoint);
   return SUCCESS;
@@ -410,10 +412,10 @@ void writeCosts(Instance *inst, FILE *fp) {
   }
 }
 
-void INSTANCE_storeCost(Instance *inst, int iteration) {
+void INSTANCE_storeCost(Instance *inst) {
   int curr_iter = inst->curr_iter;
   inst->iterations[curr_iter] = curr_iter;
-  inst->costs[curr_iter] = inst->best_tourlength;
+  inst->costs[curr_iter] = inst->tour_length;
   inst->times[curr_iter] = (clock() - inst->tstart) / (double)CLOCKS_PER_SEC;
   inst->iterations[curr_iter + 1] = -1;
   inst->curr_iter = inst->curr_iter + 1;

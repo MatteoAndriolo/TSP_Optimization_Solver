@@ -1,9 +1,12 @@
 #include "../include/refinement.h"
 
+#include <stdio.h>
+
+#include "../include/metaheuristic.h"
 #include "../include/tabu.h"
 #include "../include/utils.h"
 
-ErrorCode two_opt(Instance *inst, double iterations) {
+ErrorCode _two_opt(Instance *inst, double iterations, bool update) {
   INFO_COMMENT("refinement.c:2opt", "starting 2opt");
   int foundImprovement = 1;
   double cost_old_edge, cost_new_edge, cost_new_edge2, cost_old_edge2;
@@ -23,6 +26,9 @@ ErrorCode two_opt(Instance *inst, double iterations) {
         if (delta < 0) {
           foundImprovement = 1;
           two_opt_move(inst, i, j);
+          if (update) {
+            RUN(INSTANCE_pathCheckpoint(inst));
+          }
         }
         // DEBUG_COMMENT("refinement.c:2opt", "delta %lf, tl %lf", delta,
         // tour_length);
@@ -34,11 +40,27 @@ ErrorCode two_opt(Instance *inst, double iterations) {
         break;
       }
     }
-    INSTANCE_storeCost(inst, c_iter);
   }
-  RUN(INSTANCE_pathCheckpoint(inst));
   DEBUG_COMMENT("refinement.c:2opt", "attual tour length %lf",
                 inst->tour_length);
+  return SUCCESS;
+}
+ErrorCode two_opt(Instance *inst, double iterations) {
+  return _two_opt(inst, iterations, true);
+}
+
+ErrorCode two_opt_noupdate(Instance *inst, double iterations) {
+  return _two_opt(inst, iterations, false);
+}
+
+ErrorCode tabu_search(Instance *inst, double iterations) {
+  TabuList *tabu = initializeTabuList(inst->nnodes / 10, 4);
+
+  for (int i = 0; i < iterations; i++) {
+    kick_function_tabu(inst, (int)(inst->nnodes / 20), tabu);
+    two_opt_tabu(inst, INFINITY, tabu);
+    RUN(INSTANCE_pathCheckpoint(inst));
+  }
   return SUCCESS;
 }
 
@@ -66,14 +88,11 @@ ErrorCode two_opt_tabu(Instance *inst, double iterations, TabuList *tabuList) {
             !areAnyValuesTabu(tabuList, inst->path[i], inst->path[j],
                               inst->path[i + 1], inst->path[j1])) {
           two_opt_move(inst, i, j);
-          INSTANCE_calculateTourLength(inst);
 
           incAgeTabuList(tabuList);
           addTabu(tabuList, i);
 
           foundImprovement = true;
-          RUN(INSTANCE_pathCheckpoint(inst));
-          INSTANCE_storeCost(inst, c_iter);
           break;
         }
       }
@@ -81,8 +100,6 @@ ErrorCode two_opt_tabu(Instance *inst, double iterations, TabuList *tabuList) {
     CHECKTIME(inst, false);
   }
 
-  RUN(INSTANCE_pathCheckpoint(inst));
-  INSTANCE_storeCost(inst, c_iter);
   INFO_COMMENT("refinement.c:2opt_tabu", "finished - final tour length %lf",
                inst->tour_length);
   return SUCCESS;

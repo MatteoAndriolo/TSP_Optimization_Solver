@@ -8,6 +8,12 @@ void swap(int *arr, int i, int j) {
   arr[j] = temp;
 }
 
+void swapPathPoints(Instance *inst, int i, int j) {
+  int temp = inst->path[i];
+  inst->path[i] = inst->path[j];
+  inst->path[j] = temp;
+}
+
 void shuffle(int *arr, int n) {
   for (int i = n - 1; i > 0; i--) {
     int j = rand() % (i + 1);

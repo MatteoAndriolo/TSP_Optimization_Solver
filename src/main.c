@@ -105,17 +105,17 @@ int main(int argc, char **argv) {
           FATAL_COMMENT("main.c:main",
                         "Tabu search must be used with a starting point");
         }
-        RUN_MAIN(two_opt_tabu(inst, INFINITY, initializeTabuList(10, 4)));
+        RUN_MAIN(tabu_search(inst, 20));
       } else if (strcmp(passagges[j], "vns") == 0) {
-        int maxJump = (int)(inst->nnodes / 3);
-        int minJump = 4;
-        int iterations = inst->nnodes * 2;
+        int maxJump = (int)(inst->nnodes / 20);
+        int minJump = (int)(inst->nnodes / 100);
+        int iterations = 100;
         RUN_MAIN(vns_k(inst, maxJump, minJump, iterations));
       } else if (strcmp(passagges[j], "sa") == 0) {
-        RUN_MAIN(simulated_annealling(inst, 1000));
+        RUN_MAIN(simulated_annealling(inst, 100));
       } else if (strcmp(passagges[j], "gen") == 0) {
-        inst->population_size = 100;
-        inst->ngenerations = 300;
+        inst->population_size = 1000;
+        inst->ngenerations = 100;
         RUN_MAIN(genetic_algorithm(inst));
       } else if (strcmp(passagges[j], "nn") == 0) {
         RUN_MAIN(nearest_neighboor(inst));
@@ -193,6 +193,10 @@ int main(int argc, char **argv) {
     sprintf(filename, "data/cost/%s_%s_%02d.csv", args.model_type,
             basename(args.input_file), c_inst);
     FILE *fp = fopen(filename, "w");
+    if (fp == NULL) {
+      printf("esco");
+      return -5;
+    }
     writeCosts(inst, fp);
     fclose(fp);
     free(filename);
