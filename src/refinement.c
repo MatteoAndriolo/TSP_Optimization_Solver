@@ -54,10 +54,10 @@ ErrorCode two_opt_noupdate(Instance *inst, double iterations) {
 }
 
 ErrorCode tabu_search(Instance *inst, double iterations) {
-  TabuList *tabu = initializeTabuList(inst->nnodes / 10, 4);
+  TabuList *tabu = initializeTabuList(inst->nnodes / 5, 4);
 
   for (int i = 0; i < iterations; i++) {
-    kick_function_tabu(inst, (int)(inst->nnodes / 20), tabu);
+    kick_function_tabu(inst, (int)(inst->nnodes / 10), tabu);
     two_opt_tabu(inst, INFINITY, tabu);
     RUN(INSTANCE_pathCheckpoint(inst));
   }

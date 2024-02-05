@@ -30,6 +30,11 @@ int xpos(int i, int j, Instance *inst) {
   if (i == j) ERROR_COMMENT("utilscplex.c:xpos", "i == j");
   if (i > j) return xpos(j, i, inst);
   int pos = i * inst->nnodes + j - ((i + 1) * (i + 2)) / 2;
+  //  INFO_COMMENT("utilscplex.c:xpos", "i = %d, j = %d, pos = %d", i, j, pos);
+  //  INFO_COMMENT("utilscplex.c:xpos", "pos = %d", pos);
+  if (pos < 0 || pos >= inst->ncols)
+    ERROR_COMMENT("utilscplex.c:xpos", "pos %d pos < 0 || pos >= %d", pos,
+                  inst->ncols);
   return pos;
 }
 
@@ -412,55 +417,44 @@ void build_model(Instance *inst, const CPXENVptr env, const CPXLPptr lp) {
   INFO_COMMENT("utilscplex.c:build_model", "Building model");
 
   char **cname =
-      (char **)malloc(inst->nnodes * (inst->nnodes - 1) / 2 *
-                      sizeof(char *));  // (char **) required by cplex...
+      (char **)malloc(1 * sizeof(char *));  // (char **) required by cplex...
   if (!cname)
     ERROR_COMMENT("utilscplex.c:build_model", "wrong allocation of cname");
 
-  inst->ncols = inst->nnodes * (inst->nnodes - 1) / 2;
-  inst->edgeList = (int *)malloc(inst->ncols * 2 * sizeof(int));
-  double *obj = (double *)calloc(inst->ncols, sizeof(double));
-  double *lb = (double *)calloc(inst->ncols, sizeof(double));
-  double *ub = (double *)calloc(inst->ncols, sizeof(double));
-  char *xctype = (char *)calloc(inst->ncols, sizeof(char));
-
-  int c = 0;
-  inst->ecount = 0;
+  cname[0] = (char *)calloc(35, sizeof(char));
   for (int i = 0; i < inst->nnodes - 1; i++) {
     for (int j = i + 1; j < inst->nnodes; j++) {
-      cname[c] = (char *)calloc(35, sizeof(char));
-      sprintf(cname[c], "x(%d,%d)", i + 1,
-              j + 1);  // (i+1,j+1) because CPLEX starts from 1 (not 0)
-      obj[c++] = INSTANCE_getDistanceNodes(inst, i, j);
-      inst->edgeList[inst->ecount++] = i;
-      inst->edgeList[inst->ecount++] = j;
+      double obj = INSTANCE_getDistanceNodes(inst, i, j);
+      double lb = 0;
+      double ub = 1;
+      char xctype = CPX_BINARY;
+      sprintf(cname[0], "x(%d,%d)", i + 1, j + 1);
+
+      if (CPXnewcols(env, lp, 1, &obj, &lb, &ub, &xctype, cname)) {
+        ERROR_COMMENT("utilscplex.c:build_model", "CPXnewcols(): error 1");
+      }
+      int cols = CPXgetnumcols(env, lp);
+      if (cols - 1 != xpos(i, j, inst))
+        ERROR_COMMENT("utilscplex.c:build_model",
+                      "wrong number of columns in CPLEX after adding x var.s");
+
+      // int c = 0;
+      // inst->ecount = 0;
+      //         j + 1); // (i+1,j+1) because CPLEX starts from 1 (not 0)
+      // obj[c++] = INSTANCE_getDistanceNodes(inst, i, j);
+      // inst->edgeList[inst->ecount++] = i;
+      // inst->edgeList[inst->ecount++] = j;
     }
   }
-  if (c != inst->ncols)
-    ERROR_COMMENT("utilscplex.c:build_model", "wrong number of columns");
-  for (int i = 0; i < inst->ncols; i++) {
-    // lb[i] = 0.0;
-    ub[i] = 1.0;
-    xctype[i] = CPX_BINARY;
-  }
 
-  int status = -1;
-  status = CPXnewcols(env, lp, inst->ncols, obj, lb, ub, xctype, cname);
-  DEBUG_COMMENT("tspcplex.c:build_model", "status %d", status);
-  printf("status %d\n", status);
-  free(obj);
-  free(lb);
-  free(ub);
-  free(xctype);
+  inst->ncols = CPXgetnumcols(env, lp);
+  //  if (c != inst->ncols)
+  //    ERROR_COMMENT("utilscplex.c:build_model", "wrong number of columns");
+
   DEBUG_COMMENT("utilscplex.c:build_model",
                 "number of columns in CPLEX after adding x var.s %d",
                 CPXgetnumcols(env, lp));
 
-  if (inst->ncols != CPXgetnumcols(env, lp))
-    ERROR_COMMENT(
-        "utilscplex.c:build_model",
-        " wrong number of columns in CPLEX after adding x var.s %d vs %d",
-        inst->ncols, CPXgetnumcols(env, lp));
   if (inst->ncols != (inst->nnodes * (inst->nnodes - 1)) / 2)
     ERROR_COMMENT("utilscplex.c:build_model",
                   "wrong number of columns in CPLEX after adding x var.s");
@@ -471,13 +465,12 @@ void build_model(Instance *inst, const CPXENVptr env, const CPXLPptr lp) {
                "Adding degree constraints");
   int *index = (int *)calloc(inst->nnodes, sizeof(int));
   double *value = (double *)calloc(inst->nnodes, sizeof(double));
-
   for (int i = 0; i < inst->nnodes; i++) {
     double rhs = 2.0;
     char sense = 'E';                        // 'E' for equality constraint
     sprintf(cname[0], "degree(%d)", i + 1);  // rowname
     int nnz = 0;  // number of non zero constraints to be added to constraint
-                  // matrix length of array rmatind rmatval
+    // matrix length of array rmatind rmatval
     for (int j = 0; j < inst->nnodes; j++) {
       if (j == i) continue;
       index[nnz] = xpos(j, i, inst);  // rmatind
@@ -495,13 +488,9 @@ void build_model(Instance *inst, const CPXENVptr env, const CPXLPptr lp) {
       ERROR_COMMENT("constraint.c:add_degree_constraint",
                     "CPXaddrows(): error 1");
   }
-  DEBUG_COMMENT("constraint.c:add_degree_constraint",
-                "NUMBER OF ROW IN CPLEX after adding degree constraints %d",
-                CPXgetnumrows(env, lp));
 
   // FREE
-  for (int i = 0; i < inst->nnodes * (inst->nnodes - 1) / 2; i++)
-    free(cname[i]);
+  free(cname[0]);
   free(cname);
   free(index);
   free(value);
@@ -542,7 +531,7 @@ int patchPath(Instance *inst, double *xstar, int *succ, int *comp, int *path,
     succ[b] = a_first;
   }
 
-  // we apply 2-opt in any case (also if we have 1 component)
+  // we apply 2-opt in any case (even if we have 1 component)
   path[0] = 0;
   for (int i = 1; i < inst->nnodes; i++) {
     path[i] = succ[path[i - 1]];

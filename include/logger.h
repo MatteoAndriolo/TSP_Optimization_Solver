@@ -4,27 +4,28 @@
 #ifndef PRODUCTION
 #define DEBUG_COMMENT(position, ...) log_message(DEBUG, position, __VA_ARGS__)
 #define INFO_COMMENT(position, ...) log_message(INFO, position, __VA_ARGS__)
-#define WARNING_COMMENT(position, ...)                                         \
-  Args log_message(WARNING, position, __VA_ARGS__)
+#define WARNING_COMMENT(position, ...) \
+  log_message(WARNING, position, __VA_ARGS__)
 #define ERROR_COMMENT(position, ...) log_message(ERROR, position, __VA_ARGS__)
-#define CRITICAL_COMMENT(position, ...)                                        \
+#define CRITICAL_COMMENT(position, ...) \
   log_message(CRITICAL, position, __VA_ARGS__)
 #define OUTPUT_COMMENT(position, ...) log_message(OUTPUT, position, __VA_ARGS__)
-#define FATAL_COMMENT(position, ...)                                           \
-  log_message(FATAL, position, __VA_ARGS__);                                   \
+#define FATAL_COMMENT(position, ...)         \
+  log_message(FATAL, position, __VA_ARGS__); \
   exit(1);
 #else
 #define DEBUG_COMMENT(position, ...)
-#define INFO_COMMENT(position, ...) log_message(INFO, position, __VA_ARGS__)
+#define INFO_COMMENT(position, ...)
 #define WARNING_COMMENT(position, ...)
 #define ERROR_COMMENT(position, ...) log_message(ERROR, position, __VA_ARGS__)
 #define CRITICAL_COMMENT(position, ...)
 #define OUTPUT_COMMENT(position, ...) log_message(OUTPUT, position, __VA_ARGS__)
-#define FATAL_COMMENT(position, ...)                                           \
-  log_message(FATAL, position, __VA_ARGS__);                                   \
+#define FATAL_COMMENT(position, ...)         \
+  log_message(FATAL, position, __VA_ARGS__); \
   exit(1);
 #endif
 
+// #define INFO_COMMENT(position, ...) log_message(INFO, position, __VA_ARGS__)
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>

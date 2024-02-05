@@ -58,6 +58,19 @@ int main(int argc, char **argv) {
       (Instance *)malloc(args.num_instances * sizeof(Instance));
   //
   // RUN_MAIN
+  char *str_model = (char *)malloc(sizeof(char) * 1000);
+  str_model[0] = '\0';
+  for (int i = 0; i < n_passagges; i++) {
+    strcat(str_model, passagges[i]);
+    if (i != n_passagges - 1) {
+      strcat(str_model, ".");
+    } else {
+      strcat(str_model, "\0");
+    }
+  }
+  if (args.n_probabilities > 1) {
+    strcat(str_model, ".gr");
+  }
   for (int c_inst = 0; c_inst < args.num_instances; c_inst++) {
     Instance *inst = &instances[c_inst];
     INSTANCE_initialize(&instances[c_inst], args.timelimit, args.integer_costs,
@@ -75,8 +88,6 @@ int main(int argc, char **argv) {
     double *intermediate_tour_length =
         (double *)malloc(sizeof(double) * n_passagges);
 
-    char title[40] = "\0";
-
     inst->tstart = clock();
 
     Output *out = (Output *)malloc(sizeof(Output));
@@ -85,6 +96,8 @@ int main(int argc, char **argv) {
         -1,
     };
 
+    // store time
+    time_t timestart = time(NULL);
     for (int j = 0; j < n_passagges; j++) {
       intermediate_tour_length[j] = inst->best_tourlength;
 
@@ -97,7 +110,8 @@ int main(int argc, char **argv) {
           ERROR_COMMENT("main.c:main",
                         "Extra mileage not implemented for grasp");
         }
-        RUN_MAIN(extra_mileage(&instances[c_inst]));
+        RUN(extra_mileage(&instances[c_inst]));
+        // RUN(two_opt(inst, INFINITY));
       } else if (strcmp(passagges[j], "2opt") == 0) {
         RUN_MAIN(two_opt(inst, INFINITY));
       } else if (strcmp(passagges[j], "tabu") == 0) {
@@ -105,49 +119,49 @@ int main(int argc, char **argv) {
           FATAL_COMMENT("main.c:main",
                         "Tabu search must be used with a starting point");
         }
-        RUN_MAIN(tabu_search(inst, 20));
+        RUN_MAIN(tabu_search(inst, 100));
       } else if (strcmp(passagges[j], "vns") == 0) {
-        int maxJump = (int)(inst->nnodes / 20);
+        int maxJump = (int)(inst->nnodes / 10);
         int minJump = (int)(inst->nnodes / 100);
         int iterations = 100;
         RUN_MAIN(vns_k(inst, maxJump, minJump, iterations));
       } else if (strcmp(passagges[j], "sa") == 0) {
-        RUN_MAIN(simulated_annealling(inst, 100));
+        RUN_MAIN(simulated_annealling(inst, 80));
       } else if (strcmp(passagges[j], "gen") == 0) {
-        inst->population_size = 1000;
-        inst->ngenerations = 100;
+        inst->population_size = 100;
+        inst->ngenerations = 20;
         RUN_MAIN(genetic_algorithm(inst));
       } else if (strcmp(passagges[j], "nn") == 0) {
         RUN_MAIN(nearest_neighboor(inst));
       } else if (strcmp(passagges[j], "cplex") == 0) {
         inst->percentageHF = -1;
         inst->solver = SOLVER_BASE;
-        TSPopt(inst);
+        RUN_MAIN(TSPopt(inst));
       } else if (strcmp(passagges[j], "cplexbend") == 0) {
         inst->percentageHF = -1;
         inst->solver = SOLVER_BENDER;
-        TSPopt(inst);
+        RUN_MAIN(TSPopt(inst));
       } else if (strcmp(passagges[j], "cplexbc") == 0) {
         inst->percentageHF = -1;
         inst->solver = SOLVER_BRANCH_AND_CUT;
-        TSPopt(inst);
+        RUN_MAIN(TSPopt(inst));
       } else if (strcmp(passagges[j], "cplexpatch") == 0) {
         inst->percentageHF = -1;
         inst->percentageHF = 80;
         inst->solver = SOLVER_PATCHING_HEURISTIC;
-        TSPopt(inst);
+        RUN_MAIN(TSPopt(inst));
       } else if (strcmp(passagges[j], "cplexpost") == 0) {
         inst->percentageHF = -1;
         inst->solver = SOLVER_POSTINGHEU_UCUTFRACT;
-        TSPopt(inst);
+        RUN_MAIN(TSPopt(inst));
       } else if (strcmp(passagges[j], "cplexhf") == 0) {
         inst->percentageHF = 70;
         inst->solver = SOLVER_MH_HARDFIX;
-        TSPopt(inst);
+        RUN_MAIN(TSPopt(inst));
       } else if (strcmp(passagges[j], "cplexlb") == 0) {
         inst->solver = SOLVER_MH_LOCBRANCH;
         inst->percentageLB = 0.1;
-        TSPopt(inst);
+        RUN_MAIN(TSPopt(inst));
         DEBUG_COMMENT("main.c:main", "back to main");
       } else if (strcmp(passagges[j], "test") == 0) {
         testTabuList();
@@ -158,16 +172,14 @@ int main(int argc, char **argv) {
         FATAL_COMMENT("main.c:main", "Model %s not recognized", passagges[j]);
       }
 
-      INSTANCE_pathCheckpoint(inst);
-      // INSTANCE_storeCost(inst,iter);
-      memcpy(inst->path, inst->best_path, inst->nnodes);
-      inst->tour_length = inst->best_tourlength;
-      strcat(title, passagges[j]);
-      if (j == n_passagges - 1) strcat(title, "\0");
+      // INmax_timeSTANCE_pathCheckpoint(inst);
+      //  INSTANCE_storeCost(inst,iter);
+      // memcpy(inst->path, inst->best_path, inst->nnodes);
+      // inst->tour_length = inst->best_tourlength;
 
       if (args.toplot) {
         // print args toplot value
-        plot(inst->path, args.x, args.y, args.nnodes, title,
+        plot(inst->path, args.x, args.y, args.nnodes, str_model,
              inst->starting_node);
       }
 
@@ -179,8 +191,8 @@ int main(int argc, char **argv) {
     INFO_COMMENT("main.c:main", "exited passagges");
 
     double duration = (double)(clock() - inst->tstart) / CLOCKS_PER_SEC;
-    printf("tourlenght %lf , time elapsed %lf\n", inst->best_tourlength,
-           duration);
+    printf("tourlenght %lf , clock elapsed %lf, time elapsed %lf\n",
+           inst->best_tourlength, duration, difftime(time(NULL), timestart));
     out->tlfinal = inst->best_tourlength;
     out->duration = duration;
     output[c_inst] = out;
@@ -190,8 +202,9 @@ int main(int argc, char **argv) {
     //                inst->best_tourlength, duration);
 
     char *filename = (char *)malloc(sizeof(char) * 1000);
-    sprintf(filename, "data/cost/%s_%s_%02d.csv", args.model_type,
+    sprintf(filename, "data/cost/%s_%s_%02d.csv", str_model,
             basename(args.input_file), c_inst);
+    printf("writing to %s\n", filename);
     FILE *fp = fopen(filename, "w");
     if (fp == NULL) {
       printf("esco");
@@ -212,18 +225,20 @@ int main(int argc, char **argv) {
 
   if (args.perfprof) {
     char *filename = (char *)malloc(sizeof(char) * 1000);
-    sprintf(filename, "data/out/%s_%s.csv", args.model_type,
+    sprintf(filename, "data/out/%s_%s.csv", str_model,
             basename(args.input_file));
     FILE *fpout = fopen(filename, "w");
     if (fpout == NULL) {
       FATAL_COMMENT("main.c:main", "Error opening file output.csv");
     }
     writeOutput(output, fpout, args.num_instances);
+    printf("writing to %s\n", filename);
     free(filename);
   }
   if (output) {
     FREE(output);
   }
   free(instances);
+  free(str_model);
   INFO_COMMENT("main.c:main", "EXIT");
 }

@@ -51,6 +51,7 @@ ErrorCode extra_mileage(Instance *inst) {
   INSTANCE_setTourLenght(inst, 2 * max_distance);
   INSTANCE_storeCost(inst);
   // write nodes
+  RUN(INSTANCE_assert(inst));
 
   //--------------- START SEARCH -------------------------------------------
   int node_3[3] = {-1, -1, -1};
@@ -75,7 +76,6 @@ ErrorCode extra_mileage(Instance *inst) {
           node_3[1] = j + 1;
           node_3[2] = k;
         }
-        CHECKTIME(inst, false);
       }
     }
 
@@ -89,13 +89,11 @@ ErrorCode extra_mileage(Instance *inst) {
         node_3[2] = k;
         is_close_edge = true;
       }
-      CHECKTIME(inst, false);
     }
     double new_cost =
         min_nts - INSTANCE_getDistancePos(inst, node_3[0], node_3[1]);
 
     INSTANCE_addToTourLenght(inst, new_cost);
-    INSTANCE_storeCost(inst);
 
     // SWAP - ADJUST PATH ----------------------------------------------------
     // Save the value at position j in a temporary variable
@@ -115,7 +113,6 @@ ErrorCode extra_mileage(Instance *inst) {
     }
 
     RUN(INSTANCE_pathCheckpoint(inst));
-    CHECKTIME(inst, false);
   }
 
   return SUCCESS;

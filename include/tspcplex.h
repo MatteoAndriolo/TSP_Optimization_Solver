@@ -1,11 +1,12 @@
 #ifndef TSPCPLEX_H
 #define TSPCPLEX_H
+#include <cplex.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 
-#include <cplex.h>
+#include "../include/errors.h"
 // #include "../tmpcplex/cplex.h"
 
 #include "vrp.h"
@@ -21,8 +22,7 @@
 //   CPXCALLBACKCONTEXTptr context;
 // }CPLEX_MODEL;
 
-typedef struct
-{
+typedef struct {
   CPXCALLBACKCONTEXTptr context;
   Instance *inst;
   double *xstar;
@@ -32,7 +32,7 @@ typedef struct
  * @brief TSPopt
  * @param inst instance of the problem to be solved
  */
-void TSPopt(Instance *inst);
+ErrorCode TSPopt(Instance *inst);
 
 /**
  * @brief solve_problem
@@ -40,9 +40,10 @@ void TSPopt(Instance *inst);
  * @param lp CPLEX problem
  * @param inst instance of the problem to be solved
  */
-int solve_problem(const CPXENVptr env, const CPXLPptr lp, Instance *inst);
+ErrorCode solve_problem(const CPXENVptr env, const CPXLPptr lp, Instance *inst);
 
 int base_cplex(const CPXENVptr env, const CPXLPptr lp, Instance *inst);
+// INSTANCE_storeCost(inst,iter);
 
 /**
  * @brief branch_and_cut

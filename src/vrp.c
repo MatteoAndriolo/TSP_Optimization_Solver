@@ -266,20 +266,15 @@ void INSTANCE_addToTourLenght(Instance *inst, double toAdd) {
 ErrorCode INSTANCE_assert(Instance *inst) {
   // pthread_mutex_lock(&inst->mut_assert);
   DEBUG_COMMENT("vrp.c:INSTANCE_assert", "Enter assert");
-  bool found[inst->nnodes];
-  for (int i = 0; i < inst->nnodes; i++) found[i] = false;
+  int found[inst->nnodes];
+  for (int i = 0; i < inst->nnodes; i++) found[i] = 0;
 
   // ------ NODES
   int check_nnodes = (inst->nnodes * (inst->nnodes - 1)) / 2;
   for (int i = 0; i < inst->nnodes; i++) {
     check_nnodes -= inst->path[i];
-    found[inst->path[i]] = true;
-    if (inst->path[i] < 0) {
-      ERROR_COMMENT("vrp.c:INSTANCE_assert", "TourLenght is wrong");
-      // pthread_mutex_unlock(&inst->mut_assert);
-      return ERROR_TOUR_LENGTH;
-    }
-    if (inst->path[i] >= inst->nnodes) {
+    found[inst->path[i]]++;
+    if (inst->path[i] >= inst->nnodes || inst->path[i] < 0) {
       ERROR_COMMENT("vrp.c:INSTANCE_assert", "Node is not valid");
       // pthread_mutex_unlock(&inst->mut_assert);
       return ERROR_NODES;
@@ -288,13 +283,17 @@ ErrorCode INSTANCE_assert(Instance *inst) {
 
   bool isMissing = false;
   for (int i = 0; i < inst->nnodes; i++) {
-    if (!found[i]) {
+    if (found[i] == 0) {
       isMissing = true;
       ERROR_COMMENT("vrp.c:INSTANCE_assert", "Missing node %d ", i);
+    } else if (found[i] > 1) {
+      ERROR_COMMENT("vrp.c:INSTANCE_assert", "Node %d is repeated", i);
+      isMissing = true;
     }
   }
   if (isMissing) {
     // pthread_mutex_unlock(&inst->mut_assert);
+    FATAL_COMMENT("vrp.c:INSTANCE_assert", "Missing node");
     return ERROR_NODES;
   }
 
@@ -304,6 +303,7 @@ ErrorCode INSTANCE_assert(Instance *inst) {
     ERROR_COMMENT("vrp.c:INSTANCE_assert", "Tour length is not correct",
                   check_tour_length - inst->tour_length);
     // pthread_mutex_unlock(&inst->mut_assert);
+    FATAL_COMMENT("vrp.c:INSTANCE_assert", "Tour length is not correct");
     return ERROR_TOUR_LENGTH;
   }
 
@@ -366,7 +366,9 @@ ErrorCode INSTANCE_setPath(Instance *inst, int *newPath) {
  * @return SUCCESS if the path is correct, ERROR_NODES or ERROR_TOUR_LENGTH
  */
 ErrorCode checkTime(Instance *inst, bool saveBest) {
-  if (inst->tend < clock()) {
+  double elapsedSeconds = (double)(clock() - inst->tstart) / CLOCKS_PER_SEC;
+  if (elapsedSeconds > inst->max_time) {
+    printf("10 seconds have passed. Stopping the program.\n");
     if (saveBest) {
       INSTANCE_pathCheckpoint(inst);
     }

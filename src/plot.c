@@ -1,7 +1,8 @@
 #include "../include/plot.h"
 
-#include "../include/logger.h"
 #include <stdlib.h>
+
+#include "../include/logger.h"
 
 void plot(const int *path, const double *x, const double *y, const int nnodes,
           const char *title, const int starting_node) {
@@ -28,8 +29,7 @@ void plot(const int *path, const double *x, const double *y, const int nnodes,
   // Draw the line ---------------
   for (int i = 0; i < nnodes; i++) {
     node = path[i];
-    if (node == starting_node)
-      index_starting_node = i;
+    if (node == starting_node) index_starting_node = i;
     fprintf(gnuplotPipe, "%d %d\n", (int)x[node], (int)y[node]);
   }
   fprintf(gnuplotPipe, "%d %d\n", (int)x[path[0]], (int)y[path[0]]);
@@ -66,5 +66,6 @@ void plot(const int *path, const double *x, const double *y, const int nnodes,
   fclose(gnuplotPipe);
   DEBUG_COMMENT("plot.c:plot",
                 "write on the terminal the command to launch gnuplot");
+  printf("gnuplot -p src/script.p\n");
   system("gnuplot -p src/script.p");
 }

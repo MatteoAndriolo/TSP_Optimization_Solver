@@ -15,6 +15,9 @@ double energy_probabilities(double cost_current, double cost_new, double T,
   if (cost_new < cost_current) return 1;
   double delta = fabs(cost_current - cost_new) /
                  cost_current;  // (cost_current + cost_new);
+  INFO_COMMENT("metaheuristic.c:energy_probabilities",
+               "delta: %lf, T: %lf, exp(-delta / T): %lf", delta, T,
+               exp(-delta / T));
   return exp(-delta / T);
   // return exp(-coefficient / T);
 }
@@ -39,12 +42,16 @@ int simulated_annealling(Instance *inst, double k_max) {
   int *path = (int *)malloc(inst->nnodes * sizeof(int));
   double tour_length;
   backupInstState(inst, path, &tour_length);
+  INFO_COMMENT("metaheuristic.c:simulate_anealling", "Starting sa %lf",
+               tour_length);
   // Main loop iterating through k_max iterations
   for (int k = 0; k < k_max; k++) {
     T = 1 - ((double)(k + 1) / k_max);
 
     // Modify and optimize current solution
     RUN(kick_function(inst, k_max - k));
+    // INSTANCE_calculateTourLength(inst);
+    // INSTANCE_pathCheckpoint(inst);
     RUN(two_opt_noupdate(inst, INFINITY));
 
     // Calculate acceptance probability and generate a rand_val number
@@ -52,18 +59,22 @@ int simulated_annealling(Instance *inst, double k_max) {
     //       inst->tour_length, T);
     energy = energy_probabilities(tour_length, inst->tour_length, T, 0.8);
     rand_val = randomBetween_d(0, 1);
-    INSTANCE_pathCheckpoint(inst);
-    // Debugging output
+    // INSTANCE_pathCheckpoint(inst);
+    //  Debugging output
     DEBUG_COMMENT("metaheuristic.c:simulate_anealling",
                   "k: %d, T: %f, energy: %f, rand_val: %f", k, T, energy,
                   rand_val);
     // printf("k: %d, T: %f, energy: %f, rand_val: %f\n", k, T, energy,
     // rand_val);
     if (energy < rand_val) {  // rejected !
+      // printf("rejected\n");
+      INFO_COMMENT("metaheuristic.c:simulate_anealling", "rejected %d",
+                   inst->curr_iter);
       restoreInstState(inst, path, tour_length);
     } else {  // accepted
       backupInstState(inst, path, &tour_length);
     }
+    INSTANCE_pathCheckpoint(inst);
     CHECKTIME(inst, false);
   }
 
@@ -81,11 +92,12 @@ ErrorCode vns_k(Instance *inst, int maxJ, int minJ, int iterations) {
   INFO_COMMENT("metaheuristic.c:simulate_anealling",
                "Starting simulated annealing metaheuristic");
 
-  two_opt_noupdate(inst, INFINITY);
-  // backup the current state
+  // two_opt_noupdate(inst, INFINITY);
+  //  backup the current state
   int *path = (int *)malloc(inst->nnodes * sizeof(int));
   double tour_length;
   backupInstState(inst, path, &tour_length);
+  RUN(INSTANCE_pathCheckpoint(inst));
 
   int jump = minJ;
   // Main loop iterating through k_max iterations
@@ -102,7 +114,8 @@ ErrorCode vns_k(Instance *inst, int maxJ, int minJ, int iterations) {
       backupInstState(inst, path, &tour_length);
       jump = minJ;
     }
-    // Debugging output
+    RUN(INSTANCE_pathCheckpoint(inst));
+    //  Debugging output
     CHECKTIME(inst, false);
   }
 
@@ -239,10 +252,11 @@ void refine_pop(Instance *inst, GENETIC_POPULATION *population,
     Instance *I =
         (Instance *)temp_instance(inst, population->individual[i].path);
     I->tend = time(NULL) + duration;
-    // two_opt_noupdate(I, INFINITY);
+    two_opt_noupdate(I, inst->curr_iter * inst->curr_iter);
 
     population->individual[i].fitness = I->tour_length;
     GRASP_addSolution(population->grasp_individuals, i, I->tour_length);
+    // printf("%d %lf\n", inst->curr_iter, population->individual[i].fitness);
     FREE(I);
   }
 }
