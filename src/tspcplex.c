@@ -162,7 +162,7 @@ int hard_fixing(const CPXENVptr env, const CPXLPptr lp, Instance *inst) {
     CPXwriteprob(env, lp, modelname, NULL);
 #endif
 
-    inst->solver = SOLVER_BRANCH_AND_CUT;
+    inst->solver = SOLVER_POSTINGHEU_UCUTFRACT;
     int status = solve_problem(env, lp, inst);
     if (status) ERROR_COMMENT("tspcplex.c:hard_fixing", "Execution FAILED");
 
@@ -210,6 +210,15 @@ int base_cplex(const CPXENVptr env, const CPXLPptr lp, Instance *inst) {
   xstarToPath(inst, xstar, inst->ncols, inst->path);
   printf("------------------------------------\n");
   printf("ncomp = %d\n", ncomp);
+  printf("------------------------------------\n");
+
+  patch_heuristic(inst, xstar, succ, comp, inst->path, &obj_val, &ncomp);
+  INSTANCE_pathCheckpoint(inst);
+  obj_val = inst->best_tourlength;
+
+  printf("------------------------------------\n");
+  printf("ncomp = %d\n", ncomp);
+  printf("obj_val = %lf\n", obj_val);
   printf("------------------------------------\n");
 
   DEBUG_COMMENT("tspcplex.c:base_cplex", "CPXgetobjval() ");
@@ -281,7 +290,7 @@ int local_branching(const CPXENVptr env, const CPXLPptr lp, Instance *inst) {
     CPXwriteprob(env, lp, modelname, NULL);
 #endif
 
-    inst->solver = SOLVER_BENDER;
+    inst->solver = SOLVER_POSTINGHEU_UCUTFRACT;
 
     status = solve_problem(env, lp, inst);
 
@@ -381,8 +390,9 @@ ErrorCode TSPopt(Instance *inst) {
   CPXsetintparam(env, CPX_PARAM_SCRIND, CPX_ON);
   CPXsetintparam(env, CPX_PARAM_RANDOMSEED, 1234);
   CPXsetdblparam(env, CPX_PARAM_TILIM, inst->max_time);
-  // CPXsetdblparam(env, CPX_PARAM_TILIM, time(NULL) - inst->max_time);
-  //  CPXsetdblparam(env, CPX_PARAM_TILIM, 100);
+  // CPXsetintparam(env, CPX_PARAM_THREADS, 1);
+  //  CPXsetdblparam(env, CPX_PARAM_TILIM, time(NULL) - inst->max_time);
+  //   CPXsetdblparam(env, CPX_PARAM_TILIM, 100);
 
   RUN(solve_problem(env, lp, inst));
   // INSTANCE_storeCost(inst,iter);

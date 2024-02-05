@@ -69,29 +69,6 @@ int my_callback_relaxation(CPXCALLBACKCONTEXTptr context, CPXLONG contextid,
                            void *userhandle) {
   INFO_COMMENT("tspcplex.c:my_callback_relaxation",
                "entering relaxation callbacks");
-  Instance *inst = (Instance *)userhandle;
-  double *xstar = (double *)malloc(sizeof(double) * inst->ncols);
-  double objval = CPX_INFBOUND;
-  int ncomp = 0;
-  int *comp = (int *)malloc(inst->nnodes *
-                            sizeof(int));  // edges pertaining to each component
-  int *comp_count = (int *)malloc(inst->nnodes * sizeof(int));
-
-  int *elist = (int *)malloc(inst->ncols * 2 * sizeof(int));
-  int loader = 0;
-  int ecount = 0;
-  for (int i = 0; i < inst->nnodes; i++) {
-    for (int j = i + 1; j < inst->nnodes; j++) {
-      elist[loader++] = i;
-      elist[loader++] = j;
-      ecount++;
-    }
-  }
-
-  if (CPXcallbackgetrelaxationpoint(context, xstar, 0, inst->ncols - 1,
-                                    &objval))
-    ERROR_COMMENT("tspcplex.c:my_callback_relaxation",
-                  "CPXcallbackgetrelaxationpoint error");
 
   int mythread = -1;
   CPXcallbackgetinfoint(context, CPXCALLBACKINFO_THREADID, &mythread);
@@ -100,31 +77,57 @@ int my_callback_relaxation(CPXCALLBACKCONTEXTptr context, CPXLONG contextid,
   double incumbent = CPX_INFBOUND;
   CPXcallbackgetinfodbl(context, CPXCALLBACKINFO_BEST_SOL, &incumbent);
 
+  Instance *inst = (Instance *)userhandle;
+  double *xstar = (double *)calloc(sizeof(double), inst->ncols);
+  double objval = CPX_INFBOUND;
+  if (mynode % inst->nnodes != 0) return SUCCESS;
+  if (CPXcallbackgetrelaxationpoint(context, xstar, 0, inst->ncols - 1,
+                                    &objval))
+    ERROR_COMMENT("tspcplex.c:my_callback_relaxation",
+                  "CPXcallbackgetrelaxationpoint error");
+  int ncomp = 0;
+  int *comp = (int *)calloc(inst->nnodes,
+                            sizeof(int));  // edges pertaining to each component
+  int *comp_count = (int *)calloc(inst->nnodes, sizeof(int));
+
+  int *elist = (int *)calloc(inst->ncols * 2, sizeof(int));
+  int ecount = 0;
+
+  int loader = 0;
+  for (int i = 0; i < inst->nnodes; i++) {
+    for (int j = i + 1; j < inst->nnodes; j++) {
+      elist[loader++] = i;
+      elist[loader++] = j;
+      ecount++;
+    }
+  }
+
   DEBUG_COMMENT("tspcplex.c:my_callback_relaxation",
                 "calling CCcut_connect_components");
   if (CCcut_connect_components(inst->nnodes, ecount, elist, xstar, &ncomp,
                                &comp_count, &comp))
     ERROR_COMMENT("tspcplex.c:my_callback_relaxation",
                   "CCcut_connect_components error");
-  int position = 0;
 
   DEBUG_COMMENT("tspcplex.c:my_callback_relaxation", "ncomp= %d", ncomp);
 
-  ParamsConcorde *params = (ParamsConcorde *)malloc(sizeof(ParamsConcorde));
-  params->inst = inst;
-  params->context = context;
-  params->xstar = xstar;
+  ParamsConcorde params;
+  params.inst = inst;
+  params.context = context;
+  params.xstar = xstar;
   // inst->params = params;
 
   if (ncomp == 1) {
     DEBUG_COMMENT("tspcplex.c:my_callback_relaxation", "CCcut_violated_cuts");
+    // printf("§§§§§§ relaxation cust ncomp=1 §§§§§§\n");
     if (CCcut_violated_cuts(inst->nnodes, ecount, elist, xstar, 2.0 - EPSILON,
-                            relaxation_cuts, params))
+                            relaxation_cuts, &params))
       ERROR_COMMENT("tspcplex.c:my_callback_relaxation",
                     "CCcut_violated_cuts error");
   } else if (ncomp > 1) {
+    // printf("§§§§§§ relaxation cust ncomp>1 §§§§§§\n");
     DEBUG_COMMENT("tspcplex.c:my_callback_relaxation", "add SEC");
-    position = 0;
+    int position = 0;
     for (int i = 0; i < ncomp; i++) {
       int *succ = (int *)calloc(comp_count[i], sizeof(int));
 
@@ -133,7 +136,7 @@ int my_callback_relaxation(CPXCALLBACKCONTEXTptr context, CPXLONG contextid,
       }
       position += comp_count[i];
       double cutval = 0.0;
-      relaxation_cuts(cutval, comp_count[i], succ, params);
+      relaxation_cuts(cutval, comp_count[i], succ, &params);
       free(succ);
     }
   }
@@ -142,10 +145,10 @@ int my_callback_relaxation(CPXCALLBACKCONTEXTptr context, CPXLONG contextid,
   free(comp_count);
   free(xstar);
   free(elist);
-  free(params);
-  int status = INSTANCE_assert(inst);
-  if (status != SUCCESS) exit(status);
-  return status;
+  // int status = INSTANCE_assert(inst);
+  // if (status != SUCCESS)
+  //   exit(status);
+  return SUCCESS;
 }
 
 int my_callback_candidate(CPXCALLBACKCONTEXTptr context, CPXLONG contextid,
@@ -183,59 +186,49 @@ int my_callback_candidate(CPXCALLBACKCONTEXTptr context, CPXLONG contextid,
     int izero = 0;
     int nnz = 0;
     int num_nodes = 0;
-    // int comp_nodes[inst->nnodes];
-    // int size_comp;
 
+    CPXwriteprob(inst->env, inst->lp, "tsppre.lp", NULL);
     // For each component
+    // printf("$$$$$\n\nmycallback.c:my_callback_candidate: ncomp > 1 ||| "
+    //        "%d\n\n$$$$$\n",
+    //        ncomp);
+
     for (int k = 1; k <= ncomp; k++) {
       num_nodes = 0;
       nnz = 0;
       izero = 0;
 
-      // if (comp[i] == -1)
-      //   continue;
-
+      // printf("---------------------------------------------------\n");
+      // printf("LOOKINTO comp[%d] = %d\n", k, comp[k]);
       for (int i = 0; i < inst->nnodes; i++) {
+        // printf("working in comp[%d] = %d\n", i, comp[i]);
+
         if (comp[i] != k) continue;
 
         num_nodes++;
 
-        //      int current_component = comp[i];
-        //      size_comp = 0;
-
-        // Build list of nodes in component
         for (int j = i + 1; j < inst->nnodes; j++) {
           if (comp[j] != k) continue;
-
+          // printf("adding edge %d %d in comp %d \n", i, j, comp[j]);
           index[nnz] = xpos(i, j, inst);
-          if (index[nnz] == -1) printf("index = -1\n");
           value[nnz] = 1.0;
           nnz++;
-          // if (comp[j] == current_component) {
-          //   comp_nodes[size_comp++] = j;
-          //   comp[j] = -1;
-          // }
         }
-
-        // TODO: check if size_comp <= 2
-        // if (size_comp <= 2)
-        //   continue;
-
-        // build index and value
-        // for (int j = 0; j < size_comp; j++) {
-        //  for (int k = j + 1; k < size_comp; k++) {
-        //    rmatind[nnz] = xpos(comp_nodes[j], comp_nodes[k], inst);
-        //    rmatval[nnz] = 1.0;
-        //    nnz++;
-        //  }
-        //}
-        double rhs = num_nodes - 1;
-
-        if (CPXcallbackrejectcandidate(context, 1, nnz, &rhs, &sense, &izero,
-                                       index, value))
-          ERROR_COMMENT("constraint.c:my_callback", "CPXaddrows(): error 1");
       }
+      double rhs = num_nodes - 1;
+
+      // for (int i = 0; i < nnz; i++) {
+      //   printf("index[%d] = %d, value[%d] = %lf\n", i, index[i], i,
+      //   value[i]);
+      // }
+      // printf("nnz=%d, rhs=%lf izeor=%d\n", nnz, rhs, izero);
+      if (CPXcallbackrejectcandidate(context, 1, nnz, &rhs, &sense, &izero,
+                                     index, value))
+        ERROR_COMMENT("constraint.c:my_callback", "CPXaddrows(): error 1");
     }
+    // printf("$$$$$\n\nmycallback.c:my_callback_candidate: ncomp > 1 ||| "
+    //        "rejected candidate\n\n$$$$$\n");
+    CPXwriteprob(inst->env, inst->lp, "tspafter.lp", NULL);
     free(index);
     index = NULL;
     free(value);
@@ -268,10 +261,9 @@ int my_callback_candidate(CPXCALLBACKCONTEXTptr context, CPXLONG contextid,
     if (status)
       ERROR_COMMENT("mycallback.c:my_callback_candidate",
                     "CPXcallbackpostheursoln error %d", status);
-    printf(
-        "$$$$$\n\nmycallback.c:my_callback_candidate: ncomp = 1 ||| "
-        "accetted candidate tl=%lf\n\n$$$$$\n",
-        inst->tour_length);
+    //    printf("$$$$$\n\nmycallback.c:my_callback_candidate: ncomp = 1 ||| "
+    //"accetted candidate tl=%lf\n\n$$$$$\n",
+    // inst->tour_length);
   }
 
   free(xstar);
